@@ -1,31 +1,48 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { createSearchStore, searchHandler } from '$lib/stores/search';
+	
+	export let data: PageData;
 
 	import Stat from '$lib/components/Stat.svelte';
 
 	import { format } from 'date-fns';
 	import es from 'date-fns/locale/es/index';
-	import { utcToZonedTime } from 'date-fns-tz';
+	import { onDestroy } from 'svelte';
 
-	export let data: PageData;
 
-	let filter = '';
+	const searchPayment = data.product?.Payment.map((payment) => {
+		return {
+			...payment,
+			searchTerms: `${payment.customer_name} ${payment.customer_email} ${payment.rut}`
+		};
+	});
 
-	// Function to filter payments
-	function filterPayments() {
-		const filteredPayments = payments.filter((payment) => payment.includes(filter));
-		// Do something with filteredPayments
-	}
+	const searchStore = createSearchStore(searchPayment);
+
+	const unsubscribe = searchStore.subscribe((value) => {
+		searchHandler(value);
+	});
+
+	onDestroy(() => {
+		unsubscribe();
+	});
+
 </script>
 
-<input type="text" bind:value={filter} on:input={filterPayments} placeholder="Filter payments..." />
-<section class="flex justify-center">
+<header class="flex justify-between gap-4 items-end mb-6 mt-4">
 	<Stat
 		total={data.total._sum.price}
 		ticketsSold={data.ticketsSold._sum.ticketAmount}
 		originalStudioStock={data.product?.stock}
 	/>
-</section>
+	<label class="form-control w-full max-w-xs">
+		<div class="label">
+		  <span class="label-text">Busca a través de nombre, rut o email</span>
+		</div>
+		<input type="text" placeholder="..." class="input input-bordered input-primary w-full max-w-xs" bind:value={$searchStore.search} />
+	</label>
+</header>
 <div class="overflow-x-auto">
 	<table class="table">
 		<!-- head -->
@@ -41,7 +58,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			{#each data.product?.Payment as payment}
+			{#each $searchStore.filtered as payment}
 				<!-- row 1 -->
 				<tr class="hover">
 					<!-- <th>{payment.id.substring(0, 6)}</th> -->

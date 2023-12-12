@@ -1,23 +1,33 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-
 model Payment {
-  id            Int      @id @default(autoincrement())
-  name          String
-  rut           String
-  email         String
-  price         Float
-  ticketAmount  Int
-  date          DateTime @default(now())
+  id              String   @id @unique
+  rut             String?
+  price           Float
+  ticketAmount    Int
+  date            DateTime @default(now())
+  signature_token String
+  payment_status  String?
+  payment_token   String?
+  customer_email  String
+  customer_name   String
+  customer_phone  String?
+  productId       String
+  buys            Json
+  Product         Product  @relation(fields: [productId], references: [id])
+}
+
+model Product {
+  id      String    @id @unique
+  name    String
+  stock   Int?
+  Payment Payment[]
 }

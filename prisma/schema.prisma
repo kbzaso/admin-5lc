@@ -29,5 +29,6 @@ model Product {
   id      String    @id @unique
   name    String
   stock   Int?
+  date    DateTime? @db.Timestamp(6)
   Payment Payment[]
 }

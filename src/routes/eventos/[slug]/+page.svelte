@@ -30,17 +30,17 @@
 
 </script>
 
-<header class="flex justify-between gap-4 items-end mb-6 mt-4">
+<header class="flex justify-between flex-col lg:flex-row gap-4 items-end mb-6 mt-4">
 	<Stat
-		total={data.total._sum.price}
-		ticketsSold={data.ticketsSold._sum.ticketAmount}
-		originalStudioStock={data.product?.stock}
+		total={data.total._sum.price || 0}
+		ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
+		originalStudioStock={data.product?.stock || 0}
 	/>
-	<label class="form-control w-full max-w-xs">
+	<label class="form-control w-full max-w-md">
 		<div class="label">
 		  <span class="label-text">Busca a través de nombre, rut o email</span>
 		</div>
-		<input type="text" placeholder="..." class="input input-bordered input-primary w-full max-w-xs" bind:value={$searchStore.search} />
+		<input type="text" placeholder="..." class="input input-bordered input-primary w-full" bind:value={$searchStore.search} />
 	</label>
 </header>
 <div class="overflow-x-auto">

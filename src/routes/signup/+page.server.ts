@@ -1,7 +1,5 @@
 import { auth } from "$lib/server/lucia";
-import { fail, redirect } from "@sveltejs/kit";
-import { LuciaError } from "lucia";
-import { SECRET_QUESTIONS_RESPONSE } from '$env/static/private'
+import { redirect } from "@sveltejs/kit";
 
 import type { PageServerLoad, Actions } from "./$types";
 
@@ -13,6 +11,7 @@ const schema = z.object({
 	username: z.string().email("El correo debe ser válido"),
 	name: z.string().min(4, "El nombre debe tener al menos 4 caracteres"),
 	password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+	question: z.string()
   });
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -37,9 +36,9 @@ export const actions: Actions = {
 		const password = formData.get("password");
 		const question = formData.get("question");
 
-		if (question !== 'luchita_libreta') {
-			return setError(form, 'question', 'La respuesta no es correcta')
-		}
+		// if (question !== 'luchita_libreta') {
+		// 	return setError(form, 'question', 'La respuesta no es correcta')
+		// }
 		
 		try {
 			const user = await auth.createUser({

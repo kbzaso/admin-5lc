@@ -2,8 +2,28 @@
 	import type { PageData } from './$types';
 	import { superForm } from 'sveltekit-superforms/client';
 	export let data: PageData;
+	import { PUBLIC_RESPONSE } from '$env/static/public';
 
-	const { form, enhance, errors, delayed, message } = superForm(data.form);
+	const { form, enhance, errors, delayed, message } = superForm(data.form, {
+		validators: {
+			username: (username) => {
+				if (!username) return 'El email es requerido';
+				if (!username.includes('@')) return 'El email no es válido';
+				return null;
+			},
+			name: (name) => {
+				if (!name) return 'El nombre es requerido';
+				if (name.length < 3) return 'El nombre debe tener al menos 3 caracteres';
+				return null;
+			},
+			password: (password) => {
+				if (!password) return 'La contraseña es requerida';
+				if (password.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
+				return null;
+			},
+			question: (question) => question !== PUBLIC_RESPONSE ? 'La respuesta no es correcta' : null
+		}
+	});
 </script>
 
 <div class="h-full grow grid place-items-center">
@@ -17,7 +37,7 @@
 				bind:value={$form.username}
 				name="username"
 				id="username"
-				type="email"
+				type="text"
 				placeholder="bovedin@gmai..."
 				class="input input-bordered w-full max-w-md"
 			/>

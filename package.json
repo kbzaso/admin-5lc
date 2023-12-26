@@ -41,7 +41,6 @@
 	"type": "module",
 	"dependencies": {
 		"@lucia-auth/adapter-prisma": "^3.0.2",
-		"@lucia-auth/sveltekit": "^0.6.11",
 		"@prisma/client": "^5.5.2",
 		"@supabase/supabase-js": "^2.38.4",
 		"date-fns": "^2.30.0",

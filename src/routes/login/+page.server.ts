@@ -5,11 +5,11 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
 import { z } from 'zod';
-import { setError, superValidate } from 'sveltekit-superforms/server';
+import { message, setError, superValidate } from 'sveltekit-superforms/server';
 
 const schema = z.object({
-  username: z.string().email(),
-  password: z.string().min(8),
+  username: z.string().email("El correo debe ser válido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
 
@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 	if (session) throw redirect(302, "/eventos");
 	
 	const form = await superValidate(session, schema);
+	console.log(form)
 	return { 
 		form 
 	}
@@ -51,7 +52,9 @@ export const actions: Actions = {
 			) {
 				// user does not exist
 				// or invalid password
-				return setError(form, 'username', "Usuario o contraseña incorrectos");
+				return message(form, "Error: No se ha creado el usuario", {
+					status: 500
+				});
 				// return fail(400, {
 				// 	message: "Incorrect username or password"
 				// });

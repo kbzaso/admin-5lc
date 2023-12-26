@@ -1,46 +1,51 @@
 import { auth } from "$lib/server/lucia";
 import { fail, redirect } from "@sveltejs/kit";
-
 import { LuciaError } from "lucia";
+import { SECRET_QUESTIONS_RESPONSE } from '$env/static/private'
 
 import type { PageServerLoad, Actions } from "./$types";
+
+import { z } from 'zod';
+import { message, setError, superValidate } from 'sveltekit-superforms/server';
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+
+const schema = z.object({
+	username: z.string().email("El correo debe ser válido"),
+	name: z.string().min(4, "El nombre debe tener al menos 4 caracteres"),
+	password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  });
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals?.auth?.validate();
 	if (session) throw redirect(302, "/eventos");
-	return {};
+	
+	const form = await superValidate(session, schema);
+
+	return {
+		form
+	};
 };
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const formData = await request.formData();
+		
+		const form = await superValidate(formData, schema);
+
 		const username = formData.get("username");
 		const name = formData.get("name");
 		const password = formData.get("password");
-		// basic check
-		if (
-			typeof username !== "string" ||
-			username.length < 4 ||
-			username.length > 31
-		) {
-			return fail(400, {
-				message: "Invalid username"
-			});
+		const question = formData.get("question");
+
+		if (question !== 'luchita_libreta') {
+			return setError(form, 'question', 'La respuesta no es correcta')
 		}
-		if (
-			typeof password !== "string" ||
-			password.length < 6 ||
-			password.length > 255
-		) {
-			return fail(400, {
-				message: "Invalid password"
-			});
-		}
+		
 		try {
 			const user = await auth.createUser({
 				key: {
 					providerId: "username", // auth method
-					providerUserId: username.toLowerCase(), // unique id when using "username" auth method
+					providerUserId: username?.toLowerCase(), // unique id when using "username" auth method
 					password // hashed by Lucia
 				},
 				attributes: {
@@ -56,17 +61,13 @@ export const actions: Actions = {
 		} catch (e) {
 			// this part depends on the database you're using
 			// check for unique constraint error in user table
+			console.log(e)
 			if (
-				e instanceof LuciaError &&
-				e.message === "USER_TABLE_UNIQUE_CONSTRAINT_ERROR"
+				e instanceof PrismaClientKnownRequestError 
 			) {
-				return fail(400, {
-					message: "Username already taken"
-				});
+				return message(form, 'Error: El correo ya esta en uso')
 			}
-			return fail(500, {
-				message: "An unknown error occurred"
-			});
+			return message(form, 'Error: No se ha creado el usuario');
 		}
 		// redirect to
 		// make sure you don't throw inside a try/catch block!

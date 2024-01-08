@@ -25,8 +25,7 @@
 				<!-- row 1 -->
 				<tr class="hover">
 					<!-- <th>{product.date}</th> -->
-					<!-- <th>{format(product.date, 'dd/MM/yyyy', { locale: es })}</th> -->
-					<th>--</th>
+					<th>{format(product.date, 'dd/MM/yyyy', { locale: es })}</th>
 
 					<a
 						class="hover:underline text-blue-400 hover:text-primary"

@@ -30,6 +30,7 @@
 
 </script>
 
+<h1 class="text-4xl font-extrabold text-primary text-wrap">{data.product?.name}</h1>
 <header class="flex justify-between flex-col lg:flex-row gap-4 items-end mb-6 mt-4">
 	<Stat
 		total={data.total._sum.price || 0}

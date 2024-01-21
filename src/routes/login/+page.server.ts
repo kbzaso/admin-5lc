@@ -5,7 +5,7 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
 import { z } from 'zod';
-import { message, setError, superValidate } from 'sveltekit-superforms/server';
+import { message, superValidate } from 'sveltekit-superforms/server';
 
 const schema = z.object({
   username: z.string().email("El correo debe ser válido"),
@@ -13,19 +13,19 @@ const schema = z.object({
 });
 
 
-export const load: PageServerLoad = async ({ locals, cookies }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals?.auth?.validate();
 	if (session) throw redirect(302, "/eventos");
 	
 	const form = await superValidate(session, schema);
-	console.log(form)
+	
 	return { 
 		form 
 	}
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, cookies }) => {
+	default: async ({ request, locals }) => {
 		const formData = await request.formData();
 		
 		const form = await superValidate(formData, schema);

@@ -30,7 +30,7 @@
 </script>
 
 <h1 class="text-4xl font-extrabold text-primary text-wrap">{data.product?.name}</h1>
-<header class="flex justify-between flex-col lg:flex-row gap-4 items-end mb-6 mt-4">
+<header class="flex flex-col gap-4 mb-6 mt-4">
 	<Stat
 		total={data.total._sum.price || 0}
 		ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
@@ -49,18 +49,18 @@
 	</label>
 </header>
 <div class="overflow-x-auto">
-	<table class="table">
+	<table class="table table-xs">
 		<!-- head -->
 		<thead>
 			<tr>
 				<!-- <th>Id</th> -->
 				<th>Fecha de compra</th>
-				<th>Nombre</th>
+				<th>Nombre y rut</th>
 				<!-- <th>Rut</th> -->
-				<th>Email</th>
+				<th>Email y teléfono</th>
 				<th>Precio</th>
-				<th>Nº de entradas</th>
-				<th>Pasarela de pago</th>
+				<th>Cant.</th>
+				<th>Tipo de entrada</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -76,7 +76,10 @@
 						{payment.rut ? payment.rut : ''}
 					</td>
 					<!-- <td>{payment.rut ? payment.rut : ''}</td> -->
-					<td>{payment.customer_email}</td>
+					<td>
+						{payment.customer_email} <br/>
+						{payment.customer_phone}
+					</td>
 					<td
 						>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(
 							payment.price
@@ -84,7 +87,7 @@
 					>
 					<td>{payment.ticketAmount}</td>
 					<td>
-						<div class={`badge ${payment.payment_method === 'etpay' ? 'bg-green-800' : 'bg-purple-900'}`}>{payment.payment_method}</div>
+						<div class={`badge badge-xs ${payment.ticketsType === 'Ringside' ? 'badge-primary' : 'badge-accent'}`}>{payment.ticketsType}</div>
 					</td>
 				</tr>
 			{/each}

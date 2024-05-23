@@ -22,8 +22,8 @@ model Payment {
   customer_phone     String?
   productId          String
   buys               Json
-  payment_method     String   @default("--")
   payment_id_service String?  @unique
+  ticketsType        String   @default("--")
   Product            Product  @relation(fields: [productId], references: [id])
 }
 

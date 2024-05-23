@@ -27,7 +27,7 @@
 		"postcss": "^8.4.32",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.10.1",
-		"prisma": "^5.8.1",
+		"prisma": "^5.14.0",
 		"svelte": "^4.0.5",
 		"svelte-check": "^3.4.3",
 		"sveltekit-superforms": "^1.13.1",
@@ -41,7 +41,7 @@
 	"type": "module",
 	"dependencies": {
 		"@lucia-auth/adapter-prisma": "^3.0.2",
-		"@prisma/client": "^5.8.1",
+		"@prisma/client": "^5.14.0",
 		"@supabase/supabase-js": "^2.38.4",
 		"date-fns": "^2.30.0",
 		"date-fns-tz": "^2.0.0",

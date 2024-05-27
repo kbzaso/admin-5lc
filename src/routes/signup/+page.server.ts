@@ -4,7 +4,7 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
 import { z } from 'zod';
-import { message, setError, superValidate } from 'sveltekit-superforms/server';
+import { message, superValidate } from 'sveltekit-superforms/server';
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 const schema = z.object({

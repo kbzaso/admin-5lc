@@ -1,7 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 
 import type { PageServerLoad } from "./$types";
-import { th } from "date-fns/locale";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals?.auth?.validate();

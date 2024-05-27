@@ -6,7 +6,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals.auth.validate();
 	if (!session) throw redirect(302, "/login");
 
-	const products =  await client.product.findMany({
+	const events =  await client.product.findMany({
             orderBy: {
                 date: 'desc'
             },
@@ -19,14 +19,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 			},
 		});
 
-	const productsWithTotal = products.map(product => {
+	const productsWithTotal = events.map(product => {
         const totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
         const totalTicketsSold = product.Payment.reduce((sum, payment) => sum + payment.ticketAmount, 0);
         return { ...product, totalPayment, totalTicketsSold };
     });
 
 	return {
-		products: productsWithTotal,
+		events: productsWithTotal,
 		// user: session?.user
 	};
 };

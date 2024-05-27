@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Info about events
+- Countdown for active events
+
+### Fixed
+
+- % of sold tickets
+
 ## [0.0.1] - 2024-05-22
 
 ### Added

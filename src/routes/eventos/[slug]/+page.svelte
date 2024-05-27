@@ -10,7 +10,7 @@
 	import es from 'date-fns/locale/es/index';
 	import { onDestroy } from 'svelte';
 
-	const searchPayment = data.product?.Payment.map((payment) => {
+	const searchPayment = data.eventFromSupabase?.Payment.map((payment) => {
 		return {
 			...payment,
 			searchTerms: `${payment.customer_name} ${payment.customer_email} ${payment.rut}`
@@ -29,12 +29,12 @@
 
 </script>
 
-<h1 class="text-4xl font-extrabold text-primary text-wrap">{data.product?.name}</h1>
 <header class="flex flex-col gap-4 mb-6 mt-4">
 	<Stat
-		total={data.total._sum.price || 0}
+		totalMoneyRaised={data.totalMoneyRaised._sum.price || 0}
 		ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
-		originalStudioStock={data.product?.stock || 0}
+		studioTicketsAvailable={data.studioTicketsAvailable}
+		eventFromSanityStudio={data.eventFromSanityStudio}
 	/>
 	<label class="form-control w-full max-w-md">
 		<div class="label">
@@ -78,7 +78,7 @@
 					<!-- <td>{payment.rut ? payment.rut : ''}</td> -->
 					<td>
 						{payment.customer_email} <br/>
-						{payment.customer_phone}
+						{payment.customer_phone ? payment.customer_phone : ''}
 					</td>
 					<td
 						>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(

@@ -41,14 +41,15 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@clerk/types": "^4.5.1",
 		"@lucia-auth/adapter-prisma": "^3.0.2",
 		"@prisma/client": "^5.14.0",
 		"@sanity/client": "^6.18.3",
 		"@sanity/image-url": "^1.0.2",
 		"@supabase/supabase-js": "^2.38.4",
+		"clerk-sveltekit": "^0.4.2",
 		"date-fns": "^2.30.0",
 		"date-fns-tz": "^2.0.0",
-		"groq": "^3.43.0",
-		"lucia": "^2.7.6"
+		"groq": "^3.43.0"
 	}
 }

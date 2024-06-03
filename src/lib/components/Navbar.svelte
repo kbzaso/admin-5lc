@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { goto, invalidateAll } from "$app/navigation";
+	import UserButton from 'clerk-sveltekit/client/UserButton.svelte'
+	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte'
+	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte'
 
   function logout() {
 		fetch('/api/auth', {
@@ -26,6 +29,12 @@
 		>
 	</div>
 	<div class="navbar-end">
-		<button on:click={logout} class="btn">Logout</button>
+		<SignedIn>
+			<UserButton afterSignOutUrl="/" />
+		</SignedIn>
+		<SignedOut>
+			<a href="/sign-in">Sign in</a> <span>|</span> <a href="/sign-up">Sign up</a>
+			<!-- You could also use <SignInButton mode="modal" /> and <SignUpButton mode="modal" /> here -->
+		</SignedOut>
 	</div>
 </div>

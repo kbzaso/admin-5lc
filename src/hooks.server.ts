@@ -1,9 +1,12 @@
-import { auth } from "$lib/server/lucia";
 import type { Handle } from "@sveltejs/kit";
+import { sequence } from '@sveltejs/kit/hooks'
+import { handleClerk } from 'clerk-sveltekit/server'
+import { CLERK_SECRET_KEY } from '$env/static/private'
 
-export const handle: Handle = async ({ event, resolve }) => {
-	// we can pass `event` because we used the SvelteKit middleware
-
-	event.locals.auth = auth.handleRequest(event);
-	return await resolve(event);
-};
+export const handle: Handle = sequence(
+	handleClerk(CLERK_SECRET_KEY, {
+		debug: true,
+		protectedPaths: ['/eventos'],
+		signInUrl: '/login',
+	})
+)

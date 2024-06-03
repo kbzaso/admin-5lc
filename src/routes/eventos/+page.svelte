@@ -41,9 +41,6 @@
 							event.totalPayment
 						)}.-</td
 					>
-					<!-- <td>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(
-						total._sum.price
-					)}.-</td> -->
 				</tr>
 			{/each}
 		</tbody>

@@ -21,8 +21,7 @@ const getEvent = async (slugEvent: string) => {
 };
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const session = await locals.auth.validate();
-	if (!session) throw redirect(302, '/login');
+	if (!locals.session) throw redirect(302, '/login');
 
     // Get the available tickets on the Studio
 	const eventFromSanityStudio = await getEvent(params.slug);

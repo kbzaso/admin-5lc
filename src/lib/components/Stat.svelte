@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from "$lib/components/ui/badge";
 	import { PortableText } from '@portabletext/svelte';
 	import { urlFor } from '$lib/sanity';
 	import { onMount } from 'svelte';
@@ -6,6 +7,10 @@
 	export let ticketsSold: number;
 	export let studioTicketsAvailable: number;
 	export let eventFromSanityStudio: any;
+	export let sellType: string;
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { TicketPercent, DollarSign, Percent } from 'lucide-svelte';
+	import { SELL_TYPE } from '$lib/consts';
 
 	const percentage = (ticketsSold / (ticketsSold + studioTicketsAvailable)) * 100;
 
@@ -40,101 +45,127 @@
 
 		return () => clearInterval(intervalId); // cleanup on component unmount
 	});
+
+	
 </script>
 
-<div class="flex md:flex-row flex-col justify-between gap-4">
-	<div class="hidden lg:inline-block">
-		<img
-			class="rounded-lg"
-			alt="afiche del evento"
-			src={urlFor(eventFromSanityStudio.poster).height(300).quality(80).url()}
-		/>
-	</div>
-	<div class="grow  md:w-32 border border-neutral-content/25 rounded-lg p-4">
-		<h1 class="text-3xl text-primary text-wrap">{eventFromSanityStudio?.title}</h1>
-		<time>
-			{new Date(eventFromSanityStudio?.date).toLocaleDateString('es-CL', { dateStyle: 'full' })}
-		</time>
-		<p class="line-clamp-2 mt-4">
-			<PortableText value={eventFromSanityStudio?.description} components={{}} />
-		</p>
-		<div class="mt-4">
-			<span class="text-xs">El evento se {showCountdown ? 'realizará' : 'se realizo'} en:</span>
-			{#if eventFromSanityStudio?.boveda}
-				<p>
-					Bóveda Secreta - <a
-						class="text-primary hover:underline text-xs"
-						target="_blank"
-						rel="noreferrer"
-						href="https://goo.gl/maps/85ZfvTdLAoDpt9xr9"
+<div class="flex md:flex-row flex-col justify-between gap-2">
+	<div class="md:w-32 grow">
+		<Card.Root
+			data-x-chunk-name="card-01"
+			data-x-chunk-description="Una tarjeta que muestra la información del evento."
+			class="flex"
+		>
+			<div>
+				<Card.Header>
+					<Card.Title tag="h1" class="text-xl font-medium leading-none text-yellow-400"
+						>{eventFromSanityStudio?.title}</Card.Title
 					>
-						San Antonio 705, Santiago, Región Metropolitana</a
-					>
-				</p>
-			{:else}
-				<p>
-					{eventFromSanityStudio?.venue?.venueName} -
-					<a
-						class="text-primary hover:underline text-xs"
-						target="_blank"
-						rel="noreferrer"
-						href={eventFromSanityStudio?.venue?.venueUrl}
-					>
-						{eventFromSanityStudio?.venue?.venueAdress}</a
-					>
-				</p>
-			{/if}
-		</div>
-		{#if showCountdown}
-			<div class="flex flex-col mt-4">
-				<span class="text-xs"> Para el evento quedan: </span>
-				<span class="text-primary">
-					{countdown}
-				</span>
-			</div>
-		{/if}
-	</div>
-	<div class="flex flex-col md:w-fit w-full rounded-lg divide-y-2 shadow bg-gray-800">
-		<div class="stat">
-			<div class="stat-figure text-secondary">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					class="inline-block w-8 h-8 stroke-current"
-					><path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M13 10V3L4 14h7v7l9-11h-7z"
-					/></svg
-				>
-			</div>
-			<div class="stat-title">Entradas vendidas</div>
-			<div class="stat-value text-primary">{ticketsSold}</div>
-			<div class="stat-desc text-secondary">
-				Quedan por vender {studioTicketsAvailable} unidades
-			</div>
-		</div>
+					<Card.Description>
+						<time>
+							{new Date(eventFromSanityStudio?.date).toLocaleDateString('es-CL', {
+								dateStyle: 'full'
+							})}
+						</time>
+					</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<p class="text-sm font-medium">Descripción:</p>
+					<p class="line-clamp-3 text-muted-foreground text-sm">
+						<PortableText value={eventFromSanityStudio?.description} components={{}} />
+					</p>
 
-		<div class="stat">
-			<div class="stat-value">{percentage.toFixed(2)}%</div>
-			<div class="stat-title">De entradas vendidas</div>
-			<div class="stat-desc text-secondary">De un total de {stock} entradas</div>
-		</div>
-
-		<div class="stat">
-			<div class="stat-figure text-primary">
-				<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 256 256"
-					><path
-						fill="currentColor"
-						d="M128 88a40 40 0 1 0 40 40a40 40 0 0 0-40-40Zm0 64a24 24 0 1 1 24-24a24 24 0 0 1-24 24Zm112-96H16a8 8 0 0 0-8 8v128a8 8 0 0 0 8 8h224a8 8 0 0 0 8-8V64a8 8 0 0 0-8-8Zm-46.35 128H62.35A56.78 56.78 0 0 0 24 145.65v-35.3A56.78 56.78 0 0 0 62.35 72h131.3A56.78 56.78 0 0 0 232 110.35v35.3A56.78 56.78 0 0 0 193.65 184ZM232 93.37A40.81 40.81 0 0 1 210.63 72H232ZM45.37 72A40.81 40.81 0 0 1 24 93.37V72ZM24 162.63A40.81 40.81 0 0 1 45.37 184H24ZM210.63 184A40.81 40.81 0 0 1 232 162.63V184Z"
-					/></svg
-				>
+					<div class="mt-4">
+						<span class="text-sm font-medium"
+							>El evento se {showCountdown ? 'realizará' : 'se realizo'} en:</span
+						>
+						{#if eventFromSanityStudio?.boveda}
+							<p>
+								Bóveda Secreta - <a
+									class="text-primary hover:underline text-xs"
+									target="_blank"
+									rel="noreferrer"
+									href="https://goo.gl/maps/85ZfvTdLAoDpt9xr9"
+								>
+									San Antonio 705, Santiago, Región Metropolitana</a
+								>
+							</p>
+						{:else}
+							<p>
+								{eventFromSanityStudio?.venue?.venueName} -
+								<a
+									class="text-primary hover:underline text-xs"
+									target="_blank"
+									rel="noreferrer"
+									href={eventFromSanityStudio?.venue?.venueUrl}
+								>
+									{eventFromSanityStudio?.venue?.venueAdress}</a
+								>
+							</p>
+						{/if}
+					</div>
+					{#if showCountdown}
+						<div class="flex flex-col mt-4">
+							<span class="text-sm font-medium"> Para el evento quedan: </span>
+							<span class="text-primary">
+								{countdown}
+							</span>
+						</div>
+					{/if}
+					<Badge class="mt-4">{SELL_TYPE[sellType]}</Badge>
+				</Card.Content>
 			</div>
-			<div class="stat-title">Monto generado</div>
-			<div class="stat-value text-primary">{totalMoneyFormatted}</div>
-			<!-- <div class="stat-desc">21% more than last month</div> -->
-		</div>
+			<Card.Footer class="order-first hidden lg:inline-block pl-4 pt-4 pr-0 w-full min-w-fit">
+				<img
+					class="rounded-lg object-cover w-full h-full"
+					alt="afiche del evento"
+					src={urlFor(eventFromSanityStudio.poster).height(300).quality(80).url()}
+				/>
+			</Card.Footer>
+		</Card.Root>
+	</div>
+
+	<div class="flex flex-col md:w-fit gap-y-2">
+		<Card.Root
+			data-x-chunk-name="card-01"
+			data-x-chunk-description="Una tarjeta que muestra la cantidad de entradas vendidas y las que quedan por vender."
+		>
+			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<Card.Title class="text-sm font-medium">Entradas vendidas</Card.Title>
+				<TicketPercent class="h-4 w-4 text-muted-foreground" />
+			</Card.Header>
+			<Card.Content>
+				<div class="text-2xl font-bold">{ticketsSold}</div>
+				<p class="text-xs text-muted-foreground">
+					Quedan por vender {studioTicketsAvailable} unidades.
+				</p>
+			</Card.Content>
+		</Card.Root>
+		<Card.Root
+			data-x-chunk-name="card-02"
+			data-x-chunk-description="Una tarjeta que muestra el porcentaje de venta de entradas."
+		>
+			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<Card.Title class="text-sm font-medium">Porcentaje de venta</Card.Title>
+				<Percent class="h-4 w-4 text-muted-foreground" />
+			</Card.Header>
+			<Card.Content>
+				<div class="text-2xl font-bold">{percentage.toFixed(2)}%</div>
+				<p class="text-xs text-muted-foreground">De un total de {stock} entradas.</p>
+			</Card.Content>
+		</Card.Root>
+		<Card.Root
+			data-x-chunk-name="card-03"
+			data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
+		>
+			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<Card.Title class="text-sm font-medium">Monto generado</Card.Title>
+				<DollarSign class="h-4 w-4 text-muted-foreground" />
+			</Card.Header>
+			<Card.Content>
+				<div class="text-2xl font-bold">{totalMoneyFormatted}</div>
+				<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
+			</Card.Content>
+		</Card.Root>
 	</div>
 </div>

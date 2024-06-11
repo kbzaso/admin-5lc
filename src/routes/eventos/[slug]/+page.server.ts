@@ -89,6 +89,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	};
 
 	return {
+		sell_type: eventFromSanityStudio.sell_type,
 		eventFromSupabase: await eventFromSupabase(),
 		totalMoneyRaised: await totalMoneyRaised(),
 		ticketsSold: await ticketsSold(),

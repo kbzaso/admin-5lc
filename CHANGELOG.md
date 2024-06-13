@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2024-06-13
+
 ### Fix
 
 - Add data table to event's list
@@ -40,7 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.4...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.5...HEAD
+[0.0.5]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.3...v0.0.5
 [0.0.4]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.1...v0.0.2

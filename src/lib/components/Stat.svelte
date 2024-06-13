@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Badge } from "$lib/components/ui/badge";
+	import { Badge } from '$lib/components/ui/badge';
 	import { PortableText } from '@portabletext/svelte';
 	import { urlFor } from '$lib/sanity';
 	import { onMount } from 'svelte';
@@ -45,8 +45,6 @@
 
 		return () => clearInterval(intervalId); // cleanup on component unmount
 	});
-
-	
 </script>
 
 <div class="flex md:flex-row flex-col justify-between gap-2">
@@ -115,7 +113,9 @@
 					<Badge class="mt-4">{SELL_TYPE[sellType]}</Badge>
 				</Card.Content>
 			</div>
-			<Card.Footer class="order-first hidden lg:inline-block pl-4 pt-4 pr-0 w-full min-w-fit">
+			<Card.Footer
+				class="order-first hidden lg:inline-block pl-4 pt-4 pr-0 w-full min-w-fit max-w-sm"
+			>
 				<img
 					class="rounded-lg object-cover w-full h-full"
 					alt="afiche del evento"

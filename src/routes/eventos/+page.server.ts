@@ -5,7 +5,6 @@ import { redirect } from '@sveltejs/kit';
 
 
 export const load: PageServerLoad = async ({ locals }) => {
-	console.log('locals', locals.session);
 	if (!locals.session) throw redirect(302, '/login');
 
 	const events =  await client.product.findMany({

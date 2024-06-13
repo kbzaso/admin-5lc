@@ -38,7 +38,6 @@
 
 	let columns;
 
-	console.log(sellType)
 	if(sellType === 'batch'){
 		columns = table.createColumns([
 			table.column({

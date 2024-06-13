@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- Add data table to event's list
+
 ## [0.0.4] - 2024-06-11
 
 ### Add

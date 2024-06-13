@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import DataTable from "$lib/components/data-table/DataTable.svelte";
+	import DataTable from "$lib/components/data-table/DataTableEvent.svelte";
 	export let data: PageData;
 	import Stat from '$lib/components/Stat.svelte';
-	import { onMount } from 'svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
+	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 
 </script>
 
@@ -27,7 +27,7 @@
 			/>
 		</Tabs.Content>
 		<Tabs.Content value="buyers">
-			<DataTable Payments={data.eventFromSupabase?.Payment} sellType={data.eventFromSanityStudio.sell_type} />
+			<DataTableEvent Payments={data.eventFromSupabase?.Payment} sellType={data.eventFromSanityStudio.sell_type} />
 		</Tabs.Content>
 	</Tabs.Root>
 </div>

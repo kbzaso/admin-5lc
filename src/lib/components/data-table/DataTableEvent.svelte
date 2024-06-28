@@ -4,6 +4,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { addSortBy, addTableFilter, addHiddenColumns } from 'svelte-headless-table/plugins';
 	import { ChevronsUpDown, ChevronDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -38,7 +39,7 @@
 
 	let columns;
 
-	if(sellType === 'batch'){
+	if (sellType === 'batch') {
 		columns = table.createColumns([
 			table.column({
 				accessor: 'date',
@@ -92,6 +93,10 @@
 				filter: {
 					exclude: true
 				}
+			}),
+			table.column({
+				accessor: 'discount_code',
+				header: 'Código de dscto.',
 			}),
 			table.column({
 				accessor: 'buys',
@@ -167,6 +172,10 @@
 				}
 			}),
 			table.column({
+				accessor: 'discount_code',
+				header: 'Código de dscto.',
+			}),
+			table.column({
 				accessor: 'ticketAmount',
 				header: 'Cant.',
 				filter: {
@@ -179,7 +188,7 @@
 				filter: {
 					exclude: true
 				}
-			}),
+			})
 		]);
 	}
 

@@ -14,7 +14,12 @@ const getEvent = async (slugEvent: string) => {
 		 poster,
 		 venue,
 		 boveda,
-		 sell_type
+		 sell_type,
+		 "discounts": discounts[] -> {
+			code,
+			active,
+			percentage,
+ 		 },
       }`;
 	const event = await sanity.fetch(query);
 	return event;
@@ -23,28 +28,30 @@ const getEvent = async (slugEvent: string) => {
 export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!locals.session) throw redirect(302, '/login');
 
-    // Get the available tickets on the Studio
+	// Get the available tickets on the Studio
 	const eventFromSanityStudio = await getEvent(params.slug);
 
 	let studioTicketsAvailable;
 
-	if(eventFromSanityStudio.sell_type === 'ubication'){
-			const ticketTypes = eventFromSanityStudio?.ticket.ubication;
-			let total = 0;
-			for (const key in ticketTypes) {
-			  total += ticketTypes[key].amount;
-			}
-			studioTicketsAvailable = total;
+	if (eventFromSanityStudio.sell_type === 'ubication') {
+		const ticketTypes = eventFromSanityStudio?.ticket.ubication;
+		let total = 0;
+		for (const key in ticketTypes) {
+			total += ticketTypes[key].amount;
+		}
+		studioTicketsAvailable = total;
 	} else {
-			const ticketTypes = eventFromSanityStudio?.ticket.batch ? eventFromSanityStudio?.ticket.batch : eventFromSanityStudio?.ticket;
-			let total = 0;
-			for (const key in ticketTypes) {
-			  total += ticketTypes[key].amount;
-			}
-			studioTicketsAvailable = total;
+		const ticketTypes = eventFromSanityStudio?.ticket.batch
+			? eventFromSanityStudio?.ticket.batch
+			: eventFromSanityStudio?.ticket;
+		let total = 0;
+		for (const key in ticketTypes) {
+			total += ticketTypes[key].amount;
+		}
+		studioTicketsAvailable = total;
 	}
-    //   Get the total amount of tickets available
-    //   const studioTicketsAvailable = sumTicketAmounts(eventFromSanityStudio);
+	//   Get the total amount of tickets available
+	//   const studioTicketsAvailable = sumTicketAmounts(eventFromSanityStudio);
 
 	const eventFromSupabase = async () => {
 		return await client.product.findUnique({
@@ -63,7 +70,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}
 		});
 	};
-    // Get the total money made from the event
+
+	// Get the total money made from the event
 	const totalMoneyRaised = async () => {
 		return await client.payment.aggregate({
 			where: {
@@ -75,7 +83,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}
 		});
 	};
-    // Get the total tickets sold from the event
+	// Get the total tickets sold from the event
 	const ticketsSold = async () => {
 		return await client.payment.aggregate({
 			where: {
@@ -93,7 +101,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		eventFromSupabase: await eventFromSupabase(),
 		totalMoneyRaised: await totalMoneyRaised(),
 		ticketsSold: await ticketsSold(),
-        studioTicketsAvailable,
+		studioTicketsAvailable,
 		eventFromSanityStudio
 	};
 };

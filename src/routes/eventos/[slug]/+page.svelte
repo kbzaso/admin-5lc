@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import DataTable from "$lib/components/data-table/DataTableEvent.svelte";
 	export let data: PageData;
 	import Stat from '$lib/components/Stat.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
@@ -31,3 +30,5 @@
 		</Tabs.Content>
 	</Tabs.Root>
 </div>
+
+

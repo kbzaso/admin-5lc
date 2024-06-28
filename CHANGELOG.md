@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Add discount code column on event data table
+  
 ## [0.0.5] - 2024-06-13
 
 ### Fix

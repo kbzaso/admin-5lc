@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add badge to discount_code
+
 ## [0.0.6] - 2024-06-28
 
 ### Add

@@ -30,8 +30,6 @@
 
 	export let Payments: Payment[];
 
-	console.log(Payments);
-
 	const table = createTable(readable(Payments), {
 		sort: addSortBy(),
 		filter: addTableFilter({
@@ -275,7 +273,7 @@
 									{:else if cell.id === 'buys'}
 										{@html cell.render()}
 									{:else if cell.id === 'discount_code'}
-										{#if cell.render() && cell.render().trim() !== '' || cell.render() === null}
+										{#if cell.render().length > 1}
 											<Badge><Render of={cell.render()} /></Badge>
 										{/if}
 									{:else}

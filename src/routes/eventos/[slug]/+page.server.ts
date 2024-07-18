@@ -1,4 +1,4 @@
-import type { PageServerLoad } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { client } from '$lib/server/prisma';
 import { redirect } from '@sveltejs/kit';
 import { sanity } from '$lib/sanity';
@@ -104,4 +104,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		studioTicketsAvailable,
 		eventFromSanityStudio
 	};
+};
+
+export const actions: Actions = {
+    getAllProductIds: async () => {
+        const products = await client.product.findMany({
+            select: {
+                id: true
+            }
+        });
+        return {
+            status: 200,
+            body: products.map(product => product.id)
+        };
+    }
 };

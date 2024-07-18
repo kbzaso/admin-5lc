@@ -8,6 +8,7 @@
 	import { addSortBy, addTableFilter, addHiddenColumns } from 'svelte-headless-table/plugins';
 	import { ChevronsUpDown, ChevronDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
 	import { TANDAS_NAMES } from '$lib/consts';
 	export let sellType: string;
 
@@ -96,7 +97,7 @@
 			}),
 			table.column({
 				accessor: 'discount_code',
-				header: 'Código de dscto.',
+				header: 'Código de dscto.'
 			}),
 			table.column({
 				accessor: 'buys',
@@ -173,7 +174,7 @@
 			}),
 			table.column({
 				accessor: 'discount_code',
-				header: 'Código de dscto.',
+				header: 'Código de dscto.'
 			}),
 			table.column({
 				accessor: 'ticketAmount',
@@ -271,6 +272,10 @@
 										</div>
 									{:else if cell.id === 'buys'}
 										{@html cell.render()}
+									{:else if cell.id === 'discount_code'}
+										{#if cell.render() !== ''}
+											<Badge><Render of={cell.render()} /></Badge>
+										{/if}
 									{:else}
 										<Render of={cell.render()} />
 									{/if}

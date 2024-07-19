@@ -28,6 +28,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		events: productsWithTotal,
-		// user: session?.user
 	};
 };

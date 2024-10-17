@@ -2,5 +2,7 @@
 
 ## Agregar información en pagina de exito y error
 
-### Fix
-    - [ ] [Event date on list](https://sveltekit.io/blog/sveltekit-auth#clerk-with-sveltekit))
+### Add
+  - [x] data shoudn't show to validator in slug table
+  - [ ] Payments CRUD
+  - [ ] Send Slack notification

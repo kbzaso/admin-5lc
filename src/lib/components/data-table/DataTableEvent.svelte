@@ -10,6 +10,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { TANDAS_NAMES } from '$lib/consts';
+	import { page } from '$app/stores';
 	export let sellType: string;
 
 	type Payment = {

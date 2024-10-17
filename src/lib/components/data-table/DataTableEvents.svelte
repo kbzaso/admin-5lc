@@ -58,21 +58,17 @@
 			accessor: 'totalTicketsSold',
 			header: 'Adhesiones'
 		}),
-		...(!$page.data.validator
-			? [
-				table.column({
-					accessor: 'totalPayment',
-					header: 'Total recaudado',
-					cell: ({ value }) => {
-						const formatter = new Intl.NumberFormat('es-CL', {
-							style: 'currency',
-							currency: 'CLP'
-						});
-						return formatter.format(value);
-					}
-				})
-			]
-			: []),
+		table.column({
+			accessor: 'totalPayment',
+			header: 'Total recaudado',
+			cell: ({ value }) => {
+				const formatter = new Intl.NumberFormat('es-CL', {
+					style: 'currency',
+					currency: 'CLP'
+				});
+				return formatter.format(value);
+			}
+		}),
 		table.column({
 			header: '',
 			accessor: ({ id }) => id,
@@ -134,8 +130,6 @@
 										<div class="text-right font-medium">
 											<Render of={cell.render()} />
 										</div>
-									{:else if !$page.data.validator && cell.id === 'totalPayment'}
-									<Render of={cell.render()} />
 									{:else}
 										<Render of={cell.render()} />
 									{/if}

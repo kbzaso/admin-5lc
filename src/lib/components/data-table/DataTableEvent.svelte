@@ -4,13 +4,11 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
-	import * as Dialog from '$lib/components/ui/dialog';
 	import { addSortBy, addTableFilter, addHiddenColumns } from 'svelte-headless-table/plugins';
 	import { ChevronsUpDown, ChevronDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { TANDAS_NAMES } from '$lib/consts';
-	import { page } from '$app/stores';
 	export let sellType: string;
 
 	type Payment = {
@@ -210,7 +208,7 @@
 </script>
 
 <div class="flex items-center py-4">
-	<Input class="max-w-sm" placeholder="Filter emails..." type="text" bind:value={$filterValue} />
+	<Input class="max-w-sm" placeholder="Nombre, email o rut" type="text" bind:value={$filterValue} />
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger asChild let:builder>
 			<Button variant="outline" class="ml-auto" builders={[builder]}>

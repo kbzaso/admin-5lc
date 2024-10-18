@@ -7,6 +7,7 @@
 	import { ChevronsUpDown, ChevronDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import ButtonHref from '../ButtonHref.svelte';
+	import { page } from '$app/stores';
 
 	// type Payment = {
 	// 	date: string;
@@ -59,20 +60,20 @@
 		}),
 		table.column({
 			accessor: 'totalPayment',
-			header: 'Monto Generado',
+			header: 'Total recaudado',
 			cell: ({ value }) => {
-				const formatted = new Intl.NumberFormat('es-CL', {
+				const formatter = new Intl.NumberFormat('es-CL', {
 					style: 'currency',
 					currency: 'CLP'
-				}).format(value);
-				return formatted;
+				});
+				return formatter.format(value);
 			}
 		}),
 		table.column({
 			header: '',
 			accessor: ({ id }) => id,
 			cell: (item) => {
-				return createRender(ButtonHref, { href: `/eventos/${item.value}`});
+				return createRender(ButtonHref, { href: `/eventos/${item.value}` });
 			},
 			plugins: {
 				sort: {
@@ -125,7 +126,7 @@
 						{#each row.cells as cell (cell.id)}
 							<Subscribe attrs={cell.attrs()} let:attrs>
 								<Table.Cell {...attrs}>
-									{#if cell.id === 'totalPayment' || cell.id === ''}	
+									{#if cell.id === 'totalPayment' || cell.id === ''}
 										<div class="text-right font-medium">
 											<Render of={cell.render()} />
 										</div>

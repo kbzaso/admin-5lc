@@ -4,12 +4,12 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Input } from '$lib/components/ui/input';
-	import * as Dialog from '$lib/components/ui/dialog';
 	import { addSortBy, addTableFilter, addHiddenColumns } from 'svelte-headless-table/plugins';
 	import { ChevronsUpDown, ChevronDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { TANDAS_NAMES } from '$lib/consts';
+	import Drawer from '../Drawer.svelte';
 	export let sellType: string;
 
 	type Payment = {
@@ -174,7 +174,7 @@
 			}),
 			table.column({
 				accessor: 'discount_code',
-				header: 'Código de dscto.'
+				header: 'Código'
 			}),
 			table.column({
 				accessor: 'ticketAmount',
@@ -209,7 +209,8 @@
 </script>
 
 <div class="flex items-center py-4">
-	<Input class="max-w-sm" placeholder="Filter emails..." type="text" bind:value={$filterValue} />
+	<Input class="max-w-sm" placeholder="Nombre, email o rut" type="text" bind:value={$filterValue} />
+	<Drawer />
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger asChild let:builder>
 			<Button variant="outline" class="ml-auto" builders={[builder]}>
@@ -273,9 +274,9 @@
 									{:else if cell.id === 'buys'}
 										{@html cell.render()}
 									{:else if cell.id === 'discount_code'}
-										{#if cell.render().length > 1}
-											<Badge><Render of={cell.render()} /></Badge>
-										{/if}
+										<p class="uppercase">
+											<Render of={cell.render()} />
+										</p>
 									{:else}
 										<Render of={cell.render()} />
 									{/if}

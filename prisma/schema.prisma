@@ -9,7 +9,7 @@ datasource db {
 }
 
 model Payment {
-  id                 String   @id @unique
+  id                 String   @id @unique @default(uuid())
   rut                String?
   price              Float
   ticketAmount       Int

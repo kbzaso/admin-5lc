@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- remove info that is not neccesary in slug event
+
+### Add
+
+- Conditional logic for validator user that not show $$$
+- Percentage component on slug event
+
 ## [0.0.7] - 2024-06-19
 
 - Add badge to discount_code

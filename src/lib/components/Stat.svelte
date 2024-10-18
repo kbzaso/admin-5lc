@@ -17,10 +17,6 @@
 		style: 'currency',
 		currency: 'CLP'
 	}).format(totalMoneyRaised);
-
-	onMount(() => {
-		console.log(percentage.toFixed(0));
-	});
 </script>
 
 <div class="flex md:flex-row flex-col justify-between">
@@ -52,7 +48,7 @@
 				<div class="text-2xl font-bold">{percentage.toFixed(2)}%</div>
 				<p class="text-xs text-muted-foreground">De un total de {stock} entradas.</p>
 				<div class="mt-2">
-					<Progress value={percentage.toFixed(0)} max={stock} />
+					<Progress value={Number(ticketsSold)} max={stock} />
 				</div>
 			</Card.Content>
 		</Card.Root>

@@ -107,15 +107,51 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
-    getAllProductIds: async () => {
-        const products = await client.product.findMany({
-            select: {
-                id: true
-            }
-        });
-        return {
-            status: 200,
-            body: products.map(product => product.id)
-        };
+    addPayment: async ({ request, params }) => {
+
+		const formData = await request.formData()
+		const name = formData.get('name') as string || ''
+		const email = formData.get('email')
+		const phone = formData.get('phone')
+		const rut = formData.get('rut')
+		const ticketAmount = Number(formData.get('ticketAmount'))
+		const price = Number(formData.get('price')) || 0;
+
+        try {
+
+            // Create a new payment record
+            const newPayment = await client.payment.create({
+				data: {
+					id: crypto.randomUUID(),
+					customer_name: name,
+					rut,
+					customer_email: email as string,
+					customer_phone: phone as string,
+					price,
+					payment_status: 'success',
+					ticketAmount,
+					ticketsType: 'Tandas',
+					buys: {
+					},
+					Product: {
+						connect: {
+							id: params.slug // Assuming params.slug is the productId
+						}
+					}
+				}
+            });
+
+            // Return a success response
+            return {
+                status: 201,
+                body: { message: 'Payment added successfully', payment: newPayment }
+            };
+        } catch (error) {
+            console.error('Error adding payment:', error);
+            return {
+                status: 500,
+                body: { error: 'Failed to add payment' }
+            };
+        }
     }
 };

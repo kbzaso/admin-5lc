@@ -4,7 +4,6 @@
 	import Stat from '$lib/components/Stat.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
-	import { onMount } from 'svelte';
 </script>
 
 <Navbar />

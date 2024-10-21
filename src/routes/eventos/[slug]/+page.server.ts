@@ -60,9 +60,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			},
 			include: {
 				Payment: {
-					where: {
-						payment_status: 'success'
-					},
+					// where: {
+					// 	payment_status: 'success'
+					// },
 					orderBy: {
 						date: 'desc' // Use 'asc' for ascending order
 					}

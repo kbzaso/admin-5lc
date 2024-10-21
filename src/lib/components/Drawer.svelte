@@ -46,7 +46,9 @@
 					<Input type="number" name="price" min="0" id="price" required />
 				</div>
 			</div>
-			<Button type="submit">Save changes</Button>
+			<Button on:click={() => {
+				open = false;
+			}} type="submit">Save changes</Button>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>

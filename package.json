@@ -39,13 +39,14 @@
 		"tslib": "^2.4.1",
 		"typescript": "^5.2.2",
 		"vaul-svelte": "^0.3.2",
-		"vite": "^5.4.9",
+		"vite": "^4.4.2",
 		"zod": "^3.22.4"
 	},
 	"type": "module",
 	"dependencies": {
 		"@clerk/types": "^4.5.1",
 		"@prisma/client": "^5.16.1",
+		"@prisma/extension-pulse": "^1.2.0",
 		"@sanity/client": "^6.18.3",
 		"@sanity/image-url": "^1.0.2",
 		"@supabase/supabase-js": "^2.45.5",

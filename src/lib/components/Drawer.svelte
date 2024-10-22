@@ -5,9 +5,6 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
-
-	console.log($page.data.eventFromSanityStudio.sell_type);
 
 	let open = false;
 </script>

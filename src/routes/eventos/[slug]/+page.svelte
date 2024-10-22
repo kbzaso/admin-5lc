@@ -9,15 +9,16 @@
 	import supabaseClient from '$lib/supabaseClient';
 	import { onMount } from 'svelte';
 
+	import { toast } from 'svelte-sonner';
+	import { Button } from '$lib/components/ui/button';
 
 	let payments = writable(data.eventFromSupabase?.Payment || []);
 
 	onMount(() => {
 		// Create a function to handle inserts
 		const handleInserts = (payload) => {
-			console.log('Change received!', payload);
 			payments.update((current) => [payload.new, ...current]);
-			console.log($payments, 'payments');
+			(() => toast.success('Se registrado un pago con exito', {}))();
 		};
 
 		// Listen to inserts
@@ -29,7 +30,6 @@
 </script>
 
 <Navbar />
-
 <div class="flex flex-col gap-4 mb-6 mt-4">
 	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
 	<Stat
@@ -39,8 +39,5 @@
 		eventFromSanityStudio={data.eventFromSanityStudio}
 		sellType={data.eventFromSanityStudio.sell_type}
 	/>
-	<DataTableEvent
-		Payments={$payments}
-		sellType={data.eventFromSanityStudio.sell_type}
-	/>
+	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio.sell_type} />
 </div>

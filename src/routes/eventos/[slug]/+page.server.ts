@@ -175,6 +175,51 @@ export const actions: Actions = {
 		}
 
 		try {
+			// Get the available tickets on the Studio
+			const eventFromSanityStudio = await getEvent(params.slug);
+
+			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO
+			let mutations;
+			let newTicket;
+			if (eventFromSanityStudio.sell_type === 'ubication') {
+				newTicket = decrementTicketAmount(
+					eventFromSanityStudio.ticket,
+					ticketAmount,
+					eventFromSanityStudio.sell_type,
+					ticketType
+				).ubication
+				mutations = [
+					{
+						patch: {
+							id: params.slug, // replace with your document ID
+							set: {
+								ticket: {
+									ubication: newTicket
+								}
+							}
+						}
+					}
+				];
+			} else {
+				newTicket = decrementTicketAmount(
+					eventFromSanityStudio.ticket,
+					ticketAmount,
+					eventFromSanityStudio.sell_type
+				).batch
+				mutations = [
+					{
+						patch: {
+							id: params.slug, // replace with your document ID
+							set: {
+								ticket: {
+									batch: newTicket
+								}
+							}
+						}
+					}
+				];
+			}
+
 			// Create a new payment record
 			const newPayment = await client.payment.create({
 				data: {
@@ -186,8 +231,8 @@ export const actions: Actions = {
 					price,
 					payment_status: 'success',
 					ticketAmount,
-					ticketsType: 'Tandas',
-					buys: {},
+					ticketsType: ticketType || 'Tandas',
+					buys: newTicket,
 					Product: {
 						connect: {
 							id: params.slug // Assuming params.slug is the productId
@@ -195,48 +240,6 @@ export const actions: Actions = {
 					}
 				}
 			});
-
-			// Get the available tickets on the Studio
-			const eventFromSanityStudio = await getEvent(params.slug);
-
-			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO
-			let mutations;
-			if (eventFromSanityStudio.sell_type === 'ubication') {
-				mutations = [
-					{
-						patch: {
-							id: params.slug, // replace with your document ID
-							set: {
-								ticket: {
-									ubication: decrementTicketAmount(
-										eventFromSanityStudio.ticket,
-										ticketAmount,
-										eventFromSanityStudio.sell_type,
-										ticketType
-									).ubication
-								}
-							}
-						}
-					}
-				];
-			} else {
-				mutations = [
-					{
-						patch: {
-							id: params.slug, // replace with your document ID
-							set: {
-								ticket: {
-									batch: decrementTicketAmount(
-										eventFromSanityStudio.ticket,
-										ticketAmount,
-										eventFromSanityStudio.sell_type
-									).batch
-								}
-							}
-						}
-					}
-				];
-			}
 
 			// Actualizamos el stock en sanity
 			await fetch(`https://${projectId}.api.sanity.io/v2022-08-08/data/mutate/${datasetName}`, {

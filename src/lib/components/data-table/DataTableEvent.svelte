@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { TANDAS_NAMES } from '$lib/consts';
 	import Drawer from '../Drawer.svelte';
-	import { Ticket } from 'lucide-svelte';
+	import { Ticket, DollarSign } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
+	import { page } from '$app/stores';
+	import { formatDateToChile } from '$lib';
 	export let sellType: string;
 
 	type Payment = {
@@ -22,6 +24,11 @@
 		// status: 'pending' | 'processing' | 'success' | 'failed';
 	};
 
+	const traductions: { [key: string]: string } = {
+		ringside_tickets: 'Ringside',
+		general_tickets: 'General',
+	}
+
 	export let Payments: Payment[];
 
 	$: payments = Payments;
@@ -35,32 +42,46 @@
 	<ul class="divide-y">
 		{#each payments as payment, i}
 			<li>
-				<button class="p-6 flex flex-col relative w-full hover:bg-muted">
-					<span class="text-xl">
-						{payment.customer_name}
-					</span>
-					<span>
-						{payment.rut}
-					</span>
-					<span>
-						{payment.customer_email}
-					</span>
-					<span>
-						{payment.customer_phone}
-					</span>
-					<span class="absolute right-10 text-primary font-bold text-4xl flex items-center gap-2">
-						<Ticket />
-						{payment.ticketAmount}
-					</span>
-					<Badge
-						class={`absolute bottom-6 right-10 ${
-							payment.payment_status === 'success'
-								? 'bg-green-400 hover:bg-green-500'
-								: 'bg-red-400 bg-red-500'
-						}`}
-					>
-						{payment.payment_status}
-					</Badge>
+				<button class="p-6 w-full hover:bg-muted flex justify-between h-full">
+					<div class="flex flex-col items-start">
+						<span class="text-xl text-left truncate">
+							{payment.customer_name}
+						</span>
+						<span class="text-xs mb-2 text-zinc-400 uppercase">
+							{formatDateToChile(payment.date)}
+						</span>
+						<span>
+							{payment.rut}
+						</span>
+						<span>
+							{payment.customer_email}
+						</span>
+						<span>
+							{payment.customer_phone}
+						</span>
+					</div>
+					<div class="flex flex-col items-end gap-4">
+						<div class="text-right">
+							<span class="flex gap-2">
+								<Ticket />
+								{payment.ticketAmount}
+								{$page.data.eventFromSanityStudio.sell_type === 'batch' ? '' : traductions[payment.ticketsType]}
+							</span>
+							<span class="flex gap-2">
+								<DollarSign />
+								{payment.price}
+							</span>
+						</div>
+						<Badge
+							class={`${
+								payment.payment_status === 'success'
+									? 'bg-green-400 hover:bg-green-500'
+									: 'bg-red-400 hover:bg-red-500'
+							}`}
+						>
+							{payment.payment_status}
+						</Badge>
+					</div>
 				</button>
 			</li>
 		{/each}

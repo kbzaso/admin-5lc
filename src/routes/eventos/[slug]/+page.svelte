@@ -13,11 +13,14 @@
 	import { Button } from '$lib/components/ui/button';
 
 	let payments = writable(data.eventFromSupabase?.Payment || []);
+	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price || 0);
 
 	onMount(() => {
 		// Create a function to handle inserts
 		const handleInserts = (payload) => {
+			console.log(payload, 'payload')
 			payments.update((current) => [payload.new, ...current]);
+
 			(() => toast.success('Se registrado un pago con exito', {}))();
 		};
 

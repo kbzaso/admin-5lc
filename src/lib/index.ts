@@ -15,3 +15,7 @@
 //   return builder.image(source)
 // }
 
+export function formatDateToChile(date: string) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Intl.DateTimeFormat('es-CL', options).format(new Date(date));
+  }

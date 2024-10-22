@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - update studio tickets when add payment for both ubication and batch
 - Toast notification when add payment
+- Search input throught payments
 
 ## [0.0.8] - 2024-10-18
 

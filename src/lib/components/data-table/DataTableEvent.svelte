@@ -3,6 +3,7 @@
 	import Drawer from '../Drawer.svelte';
 	import { Ticket, DollarSign } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
+	import { Input } from "$lib/components/ui/input";
 	import { page } from '$app/stores';
 	import { formatDateToChile } from '$lib';
 	export let sellType: string;
@@ -31,6 +32,19 @@
 
 	export let Payments: Payment[];
 
+	let searchTerm = '';
+
+	// Reactive statement to filter payments based on search term
+	$: filteredPayments = Payments.filter(payment => {
+    return (
+      payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+	  payment.rut?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
 	$: payments = Payments;
 </script>
 
@@ -38,9 +52,13 @@
 	<h2 class="font-bold text-xl">Asistentes</h2>
 	<Drawer />
 </div>
+<!-- Example usage in your Svelte template -->
+<div>
+	<Input type="text" placeholder="Buscador..." class="max-w-xs" bind:value={searchTerm}/>
+  </div>
 <div class="rounded-md border">
 	<ul class="divide-y">
-		{#each payments as payment, i}
+		{#each filteredPayments as payment, i}
 			<li>
 				<button class="p-6 w-full hover:bg-muted flex justify-between h-full">
 					<div class="flex flex-col items-start">

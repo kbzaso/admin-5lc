@@ -19,7 +19,7 @@
 	}
 </script>
 
-<div class="bg-base-100 w-full">
+<div class="w-full">
 	<div class="flex py-6 justify-between">
 		<a href="/eventos" class="btn btn-ghost text-xl">
 			<img

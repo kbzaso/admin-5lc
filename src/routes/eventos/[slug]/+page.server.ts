@@ -4,6 +4,11 @@ import { redirect } from '@sveltejs/kit';
 import { sanity } from '$lib/sanity';
 import groq from 'groq';
 
+const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
+const datasetName = import.meta.env.VITE_SANITY_DATASET;
+
+import { VITE_SANITY_WRITE_ADMIN as tokenWithWriteAccess } from '$env/static/private';
+
 // Get event from Sanity Studio
 const getEvent = async (slugEvent: string) => {
 	const query = groq`*[_type == "event" && _id == "${slugEvent}"][0] {
@@ -50,8 +55,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 		studioTicketsAvailable = total;
 	}
-	//   Get the total amount of tickets available
-	//   const studioTicketsAvailable = sumTicketAmounts(eventFromSanityStudio);
 
 	const eventFromSupabase = async () => {
 		return await client.product.findUnique({
@@ -106,21 +109,74 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	};
 };
 
+type TicketBatch = {
+	amount: number;
+	price: number;
+};
+
+type Ticket = {
+	batch?: {
+		firsts_tickets: TicketBatch;
+		seconds_tickets: TicketBatch;
+		thirds_tickets: TicketBatch;
+	};
+	ubication?: {
+		general_tickets: TicketBatch;
+		ringside_tickets: TicketBatch;
+	};
+};
+
 export const actions: Actions = {
-    addPayment: async ({ request, params }) => {
-
-		const formData = await request.formData()
-		const name = formData.get('name') as string || ''
-		const email = formData.get('email')
-		const phone = formData.get('phone')
-		const rut = formData.get('rut')
-		const ticketAmount = Number(formData.get('ticketAmount'))
+	addPayment: async ({ request, params }) => {
+		const formData = await request.formData();
+		const name = (formData.get('name') as string) || '';
+		const email = formData.get('email');
+		const phone = formData.get('phone');
+		const rut = formData.get('rut');
+		const ticketAmount = Number(formData.get('ticketAmount'));
 		const price = Number(formData.get('price')) || 0;
+		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
 
-        try {
+		console.log(ticketType, 'ticketType')
 
-            // Create a new payment record
-            const newPayment = await client.payment.create({
+		// decrement ticket amount from batch events
+		function decrementTicketAmount(
+			ticket: Ticket,
+			ticketAmount: number,
+			sellType: 'batch' | 'ubication',
+			ticketType?: 'general_tickets' | 'ringside_tickets'
+		): Ticket {
+			let ticketTypes: TicketBatch[] = [];
+
+			if (sellType === 'batch' && ticket.batch) {
+				ticketTypes = [
+					ticket.batch.firsts_tickets,
+					ticket.batch.seconds_tickets,
+					ticket.batch.thirds_tickets
+				];
+			}  else if (sellType === 'ubication' && ticket.ubication) {
+				if (ticketType && ticket.ubication[ticketType]) {
+				  ticketTypes = [ticket.ubication[ticketType]];
+				} else {
+				  throw new Error(`Invalid ticket type: ${ticketType}`);
+				}
+			  }
+			for (const type of ticketTypes) {
+				if (ticketAmount <= 0) break;
+
+				if (type.amount > 0) {
+					const decrement = Math.min(type.amount, ticketAmount);
+					type.amount -= decrement;
+					ticketAmount -= decrement;
+				}
+			}
+
+			return ticket;
+		}
+
+		try {
+			// Create a new payment record
+			const newPayment = await client.payment.create({
 				data: {
 					id: crypto.randomUUID(),
 					customer_name: name,
@@ -131,27 +187,89 @@ export const actions: Actions = {
 					payment_status: 'success',
 					ticketAmount,
 					ticketsType: 'Tandas',
-					buys: {
-					},
+					buys: {},
 					Product: {
 						connect: {
 							id: params.slug // Assuming params.slug is the productId
 						}
 					}
 				}
-            });
+			});
 
-            // Return a success response
-            return {
-                status: 201,
-                body: { message: 'Payment added successfully', payment: newPayment }
-            };
-        } catch (error) {
-            console.error('Error adding payment:', error);
-            return {
-                status: 500,
-                body: { error: 'Failed to add payment' }
-            };
-        }
-    }
+			// Get the available tickets on the Studio
+			const eventFromSanityStudio = await getEvent(params.slug);
+
+			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO
+			let mutations;
+			if (eventFromSanityStudio.sell_type === 'ubication') {
+				mutations = [
+					{
+						patch: {
+							id: params.slug, // replace with your document ID
+							set: {
+								ticket: {
+									ubication: decrementTicketAmount(
+										eventFromSanityStudio.ticket,
+										ticketAmount,
+										eventFromSanityStudio.sell_type,
+										ticketType
+									).ubication
+								}
+							}
+						}
+					}
+				];
+			} else {
+				mutations = [
+					{
+						patch: {
+							id: params.slug, // replace with your document ID
+							set: {
+								ticket: {
+									batch: decrementTicketAmount(
+										eventFromSanityStudio.ticket,
+										ticketAmount,
+										eventFromSanityStudio.sell_type
+									).batch
+								}
+							}
+						}
+					}
+				];
+			}
+
+			// Actualizamos el stock en sanity
+			await fetch(`https://${projectId}.api.sanity.io/v2022-08-08/data/mutate/${datasetName}`, {
+				method: 'POST',
+				headers: {
+					'Content-type': 'application/json',
+					Authorization: `Bearer ${tokenWithWriteAccess}`,
+					'Access-Control-Allow-Origin': '*',
+					'Access-Control-Allow-Methods': 'POST',
+					'Access-Control-Allow-Headers': 'Content-Type'
+				},
+				body: JSON.stringify({ mutations })
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+					return response.json();
+				})
+				.then((result) => console.log(result))
+				.catch((error) => console.error(error));
+
+			// Return a success response
+			return {
+				status: 201,
+				body: { message: 'Payment added successfully', payment: newPayment }
+			};
+		} catch (error) {
+			console.error('Error adding payment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to add payment' }
+			};
+		}
+	}
 };

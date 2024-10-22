@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { mediaQuery } from 'svelte-legos';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { enhance } from '$app/forms';
+	import { page } from '$app/stores';
+	import * as RadioGroup from '$lib/components/ui/radio-group';
+
+	console.log($page.data.eventFromSanityStudio.sell_type);
 
 	let open = false;
-	const isDesktop = mediaQuery('(min-width: 768px)');
 </script>
 
 <Dialog.Root bind:open>
@@ -46,9 +47,37 @@
 					<Input type="number" name="price" min="0" id="price" required />
 				</div>
 			</div>
-			<Button on:click={() => {
-				open = false;
-			}} type="submit">Save changes</Button>
+			{#if $page.data.eventFromSanityStudio.sell_type === 'ubication'}
+				<div class="form-control">
+					<label class="label cursor-pointer">
+						<span class="label-text">General</span>
+						<input
+							type="radio"
+							name="ticketType"
+							class="radio checked:bg-primary"
+							checked="checked"
+							value="general_tickets"
+						/>
+					</label>
+				</div>
+				<div class="form-control">
+					<label class="label cursor-pointer">
+						<span class="label-text">Ringisde</span>
+						<input
+							type="radio"
+							name="ticketType"
+							class="radio checked:bg-primary"
+							value="ringside_tickets"
+						/>
+					</label>
+				</div>
+			{/if}
+			<Button
+				on:click={() => {
+					open = false;
+				}}
+				type="submit">Save changes</Button
+			>
 		</form>
 	</Dialog.Content>
 </Dialog.Root>

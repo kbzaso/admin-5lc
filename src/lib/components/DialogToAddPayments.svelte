@@ -11,7 +11,7 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Trigger asChild let:builder>
-		<Button class="mx-4" builders={[builder]}>Agregar pago</Button>
+		<Button class="w-full md:w-40 fixed left-0 bottom-0 md:relative" builders={[builder]}>Agregar pago</Button>
 	</Dialog.Trigger>
 	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
@@ -19,21 +19,21 @@
 		</Dialog.Header>
 		<form class="grid items-start gap-4" method="POST" action="?/addPayment" use:enhance>
 			<div class="flex gap-4">
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="name">Nombres</Label>
 					<Input type="text" id="name" name="name" placeholder="Pablito" required />
 				</div>
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="rut">RUT</Label>
 					<Input type="text" id="rut" name="rut" placeholder="1111111-0" required />
 				</div>
 			</div>
 			<div class="flex gap-4">
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="email">Email</Label>
 					<Input type="email" id="email" name="email" placeholder="pablito@5lc.cl" required />
 				</div>
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="phone">Teléfono</Label>
 					<Input id="phone" name="phone" type="text" placeholder="+56991291468" required />
 				</div>

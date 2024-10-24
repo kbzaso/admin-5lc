@@ -29,7 +29,7 @@
 		</Dialog.Header>
 		<form class="grid items-start gap-4" method="POST" action="?/updatePayment" use:enhance>
 			<div class="flex gap-4">
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="name">Nombres</Label>
 					<Input
 						type="text"
@@ -40,7 +40,7 @@
 						value={payment.customer_name}
 					/>
 				</div>
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="rut">RUT</Label>
 					<Input
 						type="text"
@@ -53,7 +53,7 @@
 				</div>
 			</div>
 			<div class="flex gap-4">
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="email">Email</Label>
 					<Input
 						type="email"
@@ -64,7 +64,7 @@
 						value={payment.customer_email}
 					/>
 				</div>
-				<div class="grid gap-2">
+				<div class="grid gap-2 w-full">
 					<Label for="phone">Teléfono</Label>
 					<Input
 						id="phone"

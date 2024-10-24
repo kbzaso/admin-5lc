@@ -63,10 +63,11 @@
 	});
 </script>
 
-<div class="flex items-center py-4 justify-between">
-	<div class="flex gap-4 items-center">
+<!-- HEADER -->
+<div class="flex flex-col md:flex-row items-center py-4 md:gap-4 justify-between">
+	<div class="flex flex-col md:flex-row gap-4 items-left w-full">
 		<h2 class="font-bold text-xl">Asistentes</h2>
-		<Input type="text" placeholder="Buscador..." class="w-72" bind:value={searchTerm} />
+		<Input type="text" placeholder="Buscador..." class="w-full md:w-96" bind:value={searchTerm} />
 	</div>
 	<DialogToAddPayments />
 </div>

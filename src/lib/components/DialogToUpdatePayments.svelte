@@ -120,7 +120,7 @@
 					</label>
 				</div>
 			{/if}
-			<Button on:click={() => closeDialog()} type="submit">Save changes</Button>
+			<Button on:click={() => closeDialog()} type="submit">Actualizar</Button>
 		</form>
 		<form method="POST" action="?/deletePayment" use:enhance class="w-full">
 			<input type="text" hidden value={payment.id} name="paymentId" />

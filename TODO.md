@@ -5,8 +5,9 @@
 ### Add
   - [ ] Payments CRUD
     - [x] Create
-    - [ ] Update
-    - [ ] Delete
+    - [x] Update
+      - [ ] Update money raised card
+    - [x] Delete
   - [ ] Add env to vercel when deploy
   - [ ] Send Slack notification
 

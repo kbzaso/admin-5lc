@@ -75,7 +75,7 @@
 				on:click={() => {
 					open = false;
 				}}
-				type="submit">Save changes</Button
+				type="submit">Crear pago</Button
 			>
 		</form>
 	</Dialog.Content>

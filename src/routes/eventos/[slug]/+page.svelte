@@ -69,8 +69,6 @@
 		totalMoneyRaised={data.totalMoneyRaised._sum.price || 0}
 		ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
 		studioTicketsAvailable={data.studioTicketsAvailable}
-		eventFromSanityStudio={data.eventFromSanityStudio}
-		sellType={data.eventFromSanityStudio.sell_type}
 	/>
 	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio.sell_type} />
 </div>

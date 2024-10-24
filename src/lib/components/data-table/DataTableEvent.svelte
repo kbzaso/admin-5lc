@@ -64,11 +64,13 @@
 </script>
 
 <div class="flex items-center py-4 justify-between">
-	<h2 class="font-bold text-xl">Asistentes</h2>
+	<div class="flex gap-4 items-center">
+		<h2 class="font-bold text-xl">Asistentes</h2>
+		<Input type="text" placeholder="Buscador..." class="w-72" bind:value={searchTerm} />
+	</div>
 	<DialogToAddPayments />
 </div>
 
-<Input type="text" placeholder="Buscador..." class="max-w-xs" bind:value={searchTerm} />
 <div class="rounded-md border">
 	<ul class="divide-y">
 		{#each filteredPayments as payment, i}

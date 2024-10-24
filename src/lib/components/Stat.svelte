@@ -1,15 +1,9 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge';
-	import { onMount } from 'svelte';
 	export let totalMoneyRaised: number;
 	export let ticketsSold: number;
 	export let studioTicketsAvailable: number;
-	export let eventFromSanityStudio: any;
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { TicketPercent, DollarSign, Percent } from 'lucide-svelte';
-	import { Progress } from '$lib/components/ui/progress';
-
-	const percentage = (ticketsSold / (ticketsSold + studioTicketsAvailable)) * 100;
+	import { TicketPercent, DollarSign } from 'lucide-svelte';
 
 	const stock = ticketsSold + studioTicketsAvailable;
 
@@ -34,22 +28,6 @@
 				<p class="text-xs text-muted-foreground">
 					Quedan por vender {studioTicketsAvailable} unidades.
 				</p>
-			</Card.Content>
-		</Card.Root>
-		<Card.Root
-			data-x-chunk-name="card-02"
-			data-x-chunk-description="Una tarjeta que muestra el porcentaje de venta de entradas."
-		>
-			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Porcentaje de venta</Card.Title>
-				<Percent class="h-4 w-4 text-muted-foreground" />
-			</Card.Header>
-			<Card.Content>
-				<div class="text-2xl font-bold">{percentage.toFixed(2)}%</div>
-				<p class="text-xs text-muted-foreground">De un total de {stock} entradas.</p>
-				<div class="mt-2">
-					<Progress value={Number(ticketsSold)} max={stock} />
-				</div>
 			</Card.Content>
 		</Card.Root>
 		<Card.Root

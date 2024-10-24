@@ -18,21 +18,25 @@
 			<Dialog.Title>Agregar pago</Dialog.Title>
 		</Dialog.Header>
 		<form class="grid items-start gap-4" method="POST" action="?/addPayment" use:enhance>
-			<div class="grid gap-2">
-				<Label for="name">Nombres</Label>
-				<Input type="text" id="name" name="name" placeholder="Pablito" required />
+			<div class="flex gap-4">
+				<div class="grid gap-2">
+					<Label for="name">Nombres</Label>
+					<Input type="text" id="name" name="name" placeholder="Pablito" required />
+				</div>
+				<div class="grid gap-2">
+					<Label for="rut">RUT</Label>
+					<Input type="text" id="rut" name="rut" placeholder="1111111-0" required />
+				</div>
 			</div>
-			<div class="grid gap-2">
-				<Label for="rut">RUT</Label>
-				<Input type="text" id="rut" name="rut" placeholder="1111111-0" required />
-			</div>
-			<div class="grid gap-2">
-				<Label for="email">Email</Label>
-				<Input type="email" id="email" name="email" placeholder="pablito@5lc.cl" required />
-			</div>
-			<div class="grid gap-2">
-				<Label for="phone">Teléfono</Label>
-				<Input id="phone" name="phone" type="text" placeholder="+56991291468" required />
+			<div class="flex gap-4">
+				<div class="grid gap-2">
+					<Label for="email">Email</Label>
+					<Input type="email" id="email" name="email" placeholder="pablito@5lc.cl" required />
+				</div>
+				<div class="grid gap-2">
+					<Label for="phone">Teléfono</Label>
+					<Input id="phone" name="phone" type="text" placeholder="+56991291468" required />
+				</div>
 			</div>
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">
@@ -45,9 +49,8 @@
 				</div>
 			</div>
 			{#if $page.data.eventFromSanityStudio.sell_type === 'ubication'}
-				<div class="form-control">
-					<label class="label cursor-pointer">
-						<span class="label-text">General</span>
+				<div class="flex gap-4">
+					<label class="label cursor-pointer flex flex-col">
 						<input
 							type="radio"
 							name="ticketType"
@@ -55,17 +58,16 @@
 							checked="checked"
 							value="general_tickets"
 						/>
+						<span class="label-text mt-2">General</span>
 					</label>
-				</div>
-				<div class="form-control">
-					<label class="label cursor-pointer">
-						<span class="label-text">Ringisde</span>
+					<label class="label cursor-pointer flex flex-col">
 						<input
 							type="radio"
 							name="ticketType"
 							class="radio checked:bg-primary"
 							value="ringside_tickets"
 						/>
+						<span class="label-text mt-2">Ringisde</span>
 					</label>
 				</div>
 			{/if}

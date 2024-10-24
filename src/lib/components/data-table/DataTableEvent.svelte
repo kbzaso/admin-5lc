@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { TANDAS_NAMES } from '$lib/consts';
 	import DialogToAddPayments from '../DialogToAddPayments.svelte';
-	import { Ticket, DollarSign } from 'lucide-svelte';
+	import { Ticket, CreditCard } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { page } from '$app/stores';
 	import { formatDateToChile } from '$lib';
 	import DialogToUpdatePayments from '../DialogToUpdatePayments.svelte';
-	export let sellType: string;
+	import { formatPriceToCLP } from '$lib';
 	import { getContext, setContext } from 'svelte';
 
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
@@ -42,7 +42,6 @@
 	export let Payments: Payment[];
 
 	let searchTerm = '';
-	let clickedDialogPaymentId: string | null = null;
 
 	// Function to open the dialog for a specific payment
 	function openDialog(paymentId: string) {
@@ -50,7 +49,6 @@
 			open: true,
 			id: paymentId
 		});
-		console.log('openDialog', paymentId);
 	}
 
 	// Reactive statement to filter payments based on search term
@@ -70,7 +68,7 @@
 	<DialogToAddPayments />
 </div>
 
-<!-- <Input type="text" placeholder="Buscador..." class="max-w-xs" bind:value={searchTerm} /> -->
+<Input type="text" placeholder="Buscador..." class="max-w-xs" bind:value={searchTerm} />
 <div class="rounded-md border">
 	<ul class="divide-y">
 		{#each filteredPayments as payment, i}
@@ -107,8 +105,8 @@
 									: traductions[payment.ticketsType]}
 							</span>
 							<span class="flex gap-2">
-								<DollarSign />
-								{payment.price}
+								<CreditCard />
+								{formatPriceToCLP(payment.price)}
 							</span>
 						</div>
 						<Badge

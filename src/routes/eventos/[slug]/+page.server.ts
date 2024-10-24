@@ -127,6 +127,70 @@ type Ticket = {
 };
 
 export const actions: Actions = {
+	deletePayment: async ({ request }) => {
+		const formData = await request.formData();
+		const paymentId = formData.get('paymentId');
+
+		console.log('paymentId:', paymentId);
+
+		try {
+			const payment = await client.payment.delete({
+				where: {
+					id: paymentId
+				}
+			});
+			return {
+				status: 200,
+				body: { message: 'Payment deleted successfully', payment }
+			};
+		} catch (error) {
+			console.error('Error deleting payment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to delete payment' }
+			};
+		}
+	},
+	updatePayment: async ({ request }) => {
+		const formData = await request.formData();
+		const name = (formData.get('name') as string) || '';
+		const email = formData.get('email');
+		const phone = formData.get('phone');
+		const rut = formData.get('rut');
+		const ticketAmount = Number(formData.get('ticketAmount'));
+		const price = Number(formData.get('price')) || 0;
+		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
+		const paymentId = formData.get('paymentId');
+
+		console.log('paymentId:', paymentId);
+
+		try {
+			const updatePayment = await client.payment.update({
+				where: {
+					id: paymentId
+				},
+				data: {
+					customer_name: name,
+					rut,
+					customer_email: email as string,
+					customer_phone: phone as string,
+					price,
+					ticketAmount,
+					ticketsType: ticketType || 'Tandas'
+				}
+			});
+			return {
+				status: 200,
+				body: { message: 'Payment updated successfully', payment: updatePayment }
+			}
+		} catch (error) {
+			console.error('Error updating payment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to update payment' }
+			};
+		}
+	},
 	addPayment: async ({ request, params }) => {
 		const formData = await request.formData();
 		const name = (formData.get('name') as string) || '';
@@ -136,8 +200,6 @@ export const actions: Actions = {
 		const ticketAmount = Number(formData.get('ticketAmount'));
 		const price = Number(formData.get('price')) || 0;
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
-
-		console.log(ticketType, 'ticketType')
 
 		// decrement ticket amount from batch events
 		function decrementTicketAmount(

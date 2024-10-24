@@ -13,22 +13,52 @@
 	import { Button } from '$lib/components/ui/button';
 
 	let payments = writable(data.eventFromSupabase?.Payment || []);
-	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price || 0);
 
 	onMount(() => {
 		// Create a function to handle inserts
 		const handleInserts = (payload) => {
-			console.log(payload, 'payload')
 			payments.update((current) => [payload.new, ...current]);
-
-			(() => toast.success('Se registrado un pago con exito', {}))();
+			toast.success('Se registrado un pago con exito', {});
 		};
 
-		// Listen to inserts
+		// Create a function to handle updates
+		const handleUpdates = (payload) => {
+			payments.update((current) =>
+				current.map((payment) => (payment.id === payload.new.id ? payload.new : payment))
+			);
+			toast.info('Se ha actualizado un pago con exito', {});
+		};
+
+		// Create a function to handle deletes
+		const handleDeletes = (payload) => {
+			payments.update((current) => current.filter((payment) => payment.id !== payload.old.id));
+			toast.warning('Se ha eliminado un pago con exito', {});
+		};
+
+		// Listen to inserts, updates, and deletes
 		const subscription = supabaseClient
 			.channel('Payment')
-			.on('postgres_changes', { event: '*', schema: 'public', table: 'Payment' }, handleInserts)
+			.on(
+				'postgres_changes',
+				{ event: 'INSERT', schema: 'public', table: 'Payment' },
+				handleInserts
+			)
+			.on(
+				'postgres_changes',
+				{ event: 'UPDATE', schema: 'public', table: 'Payment' },
+				handleUpdates
+			)
+			.on(
+				'postgres_changes',
+				{ event: 'DELETE', schema: 'public', table: 'Payment' },
+				handleDeletes
+			)
 			.subscribe();
+
+		// Cleanup subscription on component unmount
+		return () => {
+			supabaseClient.removeChannel(subscription);
+		};
 	});
 </script>
 

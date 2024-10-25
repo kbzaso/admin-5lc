@@ -65,8 +65,8 @@
 
 <!-- HEADER -->
 <div class="flex flex-col md:flex-row items-center py-4 md:gap-4 justify-between">
-	<div class="flex flex-col md:flex-row gap-4 items-left w-full">
-		<h2 class="font-bold text-xl">Asistentes</h2>
+	<div class="flex flex-col md:flex-row md:items-center gap-4 items-left w-full">
+		<h2 class="font-bold text-xl">Listado de compras</h2>
 		<Input type="text" placeholder="Buscador..." class="w-full md:w-96" bind:value={searchTerm} />
 	</div>
 	<DialogToAddPayments />

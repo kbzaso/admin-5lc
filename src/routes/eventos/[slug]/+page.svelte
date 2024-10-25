@@ -39,7 +39,8 @@
 			);
 			
 			// MANDA LA NOTIFICACIÓN
-			toast.info('Se ha actualizado un pago con exito', {});
+			toast.info(`Se actualizo el pago de ${payload.new.customer_name}`, {
+			});
 		};
 
 		// Create a function to handle deletes
@@ -81,7 +82,6 @@
 <Navbar />
 <div class="flex flex-col gap-4 mb-6 mt-4">
 	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
-	{$totalMoneyRaised}
 	<Stat
 		totalMoneyRaised={$totalMoneyRaised}
 		ticketsSold={data.ticketsSold._sum.ticketAmount || 0}

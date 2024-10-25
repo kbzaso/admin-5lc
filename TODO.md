@@ -6,10 +6,11 @@
   - [ ] Payments CRUD
     - [x] Create
     - [x] Update
-      - [ ] Update money raised card
+      - [x] Update money raised card
+      - [ ] Update studio when a payment is updated
     - [x] Delete
+      - [ ] Update studio when a payment is deleted
   - [ ] Add env to vercel when deploy
-  - [ ] Send Slack notification
 
 ## Validate Feature
 

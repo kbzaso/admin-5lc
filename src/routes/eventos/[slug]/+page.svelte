@@ -48,7 +48,7 @@
 			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price );
 
 			payments.update((current) => current.filter((payment) => payment.id !== payload.old.id));
-			toast.warning('Se ha eliminado un pago con exito', {});
+			toast.warning(`Se ha eliminado un pago con exito`, {});
 		};
 
 		// Listen to inserts, updates, and deletes

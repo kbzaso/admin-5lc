@@ -79,39 +79,26 @@
 			<li>
 				<button
 					on:click={() => openDialog(payment.id)}
-					class="p-6 w-full hover:bg-muted flex justify-between h-full"
+					class="p-6 w-full hover:bg-muted flex justify-between"
 				>
 					<div class="flex flex-col items-start">
-						<span class="text-xl text-left truncate">
+						<span class=" md:text-xl text-left truncate">
 							{payment.customer_name}
 						</span>
 						<span class="text-xs mb-2 text-zinc-400 uppercase">
 							{formatDateToChile(payment.date)}
 						</span>
-						<span>
+						<span class="text-sm">
 							{payment.rut}
 						</span>
-						<span>
+						<span class="text-sm">
 							{payment.customer_email}
 						</span>
-						<span>
+						<span class="text-sm">
 							{payment.customer_phone}
 						</span>
 					</div>
 					<div class="flex flex-col items-end gap-4">
-						<div class="text-right">
-							<span class="flex gap-2">
-								<Ticket />
-								{payment.ticketAmount}
-								{$page.data.eventFromSanityStudio.sell_type === 'batch'
-									? ''
-									: traductions[payment.ticketsType]}
-							</span>
-							<span class="flex gap-2">
-								<CreditCard />
-								{formatPriceToCLP(payment.price)}
-							</span>
-						</div>
 						<Badge
 							class={`${
 								payment.payment_status === 'success'
@@ -121,6 +108,19 @@
 						>
 							{payment.payment_status}
 						</Badge>
+						<div class="text-right text-xs md:text-base">
+							<span class="flex gap-2 items-center">
+								<Ticket class="h-4 md:h-10"/>
+								{payment.ticketAmount}
+								{$page.data.eventFromSanityStudio.sell_type === 'batch'
+									? ''
+									: traductions[payment.ticketsType]}
+							</span>
+							<span class="flex gap-2 items-center">
+								<CreditCard class="h-4 md:h-10" />
+								{formatPriceToCLP(payment.price)}
+							</span>
+						</div>
 					</div>
 				</button>
 			</li>

@@ -39,7 +39,7 @@
 				<DollarSign class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
-				<div class="text-2xl font-bold">{totalMoneyFormatted}</div>
+				<div class="text-2xl font-bold">{totalMoneyRaised}</div>
 				<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
 			</Card.Content>
 		</Card.Root>

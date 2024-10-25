@@ -13,24 +13,40 @@
 	import { Button } from '$lib/components/ui/button';
 
 	let payments = writable(data.eventFromSupabase?.Payment || []);
+	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price);
+
+	console.log($totalMoneyRaised, 'totalMoneyRaised');
+	console.log(data.totalMoneyRaised._sum.price, 'data.totalMoneyRaised._sum.price');
 
 	onMount(() => {
 		// Create a function to handle inserts
 		const handleInserts = (payload) => {
+			// ACTUALIZA EL MONTO TOTAL RECAUDADO
+			totalMoneyRaised.update((current) => payload.new.price + $totalMoneyRaised);
+
 			payments.update((current) => [payload.new, ...current]);
 			toast.success('Se registrado un pago con exito', {});
 		};
 
 		// Create a function to handle updates
 		const handleUpdates = (payload) => {
+			// ACTUALIZA EL MONTO TOTAL RECAUDADO
+			totalMoneyRaised.update((current) => current + payload.new.price - payload.old.price);
+			
+			// ACTUALIZA EL PAGO
 			payments.update((current) =>
 				current.map((payment) => (payment.id === payload.new.id ? payload.new : payment))
 			);
+			
+			// MANDA LA NOTIFICACIÓN
 			toast.info('Se ha actualizado un pago con exito', {});
 		};
 
 		// Create a function to handle deletes
 		const handleDeletes = (payload) => {
+			// ACTUALIZA EL MONTO TOTAL RECAUDADO
+			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price );
+
 			payments.update((current) => current.filter((payment) => payment.id !== payload.old.id));
 			toast.warning('Se ha eliminado un pago con exito', {});
 		};
@@ -45,7 +61,7 @@
 			)
 			.on(
 				'postgres_changes',
-				{ event: 'UPDATE', schema: 'public', table: 'Payment' },
+				{ event: 'UPDATE', schema: 'public', table: 'Payment'},
 				handleUpdates
 			)
 			.on(
@@ -65,8 +81,9 @@
 <Navbar />
 <div class="flex flex-col gap-4 mb-6 mt-4">
 	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
+	{$totalMoneyRaised}
 	<Stat
-		totalMoneyRaised={data.totalMoneyRaised._sum.price || 0}
+		totalMoneyRaised={$totalMoneyRaised}
 		ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
 		studioTicketsAvailable={data.studioTicketsAvailable}
 	/>

@@ -17,7 +17,7 @@
 		<Dialog.Header>
 			<Dialog.Title>Agregar pago</Dialog.Title>
 		</Dialog.Header>
-		<form class="grid items-start gap-4" method="POST" action="?/addPayment" use:enhance>
+		<form class="grid items-start gap-4" method="POST" action="?/addPayment" use:enhance on:submit={() => open = false}>
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">
 					<Label for="name">Nombres</Label>
@@ -72,9 +72,6 @@
 				</div>
 			{/if}
 			<Button
-				on:click={() => {
-					open = false;
-				}}
 				type="submit">Crear pago</Button
 			>
 		</form>

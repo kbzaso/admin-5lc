@@ -10,13 +10,9 @@
 	import { onMount } from 'svelte';
 
 	import { toast } from 'svelte-sonner';
-	import { Button } from '$lib/components/ui/button';
 
 	let payments = writable(data.eventFromSupabase?.Payment || []);
 	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price);
-
-	console.log($totalMoneyRaised, 'totalMoneyRaised');
-	console.log(data.totalMoneyRaised._sum.price, 'data.totalMoneyRaised._sum.price');
 
 	onMount(() => {
 		// Create a function to handle inserts
@@ -25,7 +21,7 @@
 			totalMoneyRaised.update((current) => payload.new.price + $totalMoneyRaised);
 
 			payments.update((current) => [payload.new, ...current]);
-			toast.success('Se registrado un pago con exito', {});
+			toast.success(`Se registrado el pago de ${payload.new.customer_name}`, {});
 		};
 
 		// Create a function to handle updates
@@ -49,7 +45,7 @@
 			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price );
 
 			payments.update((current) => current.filter((payment) => payment.id !== payload.old.id));
-			toast.warning(`Se ha eliminado un pago con exito`, {});
+			toast.warning(`Se ha eliminado el pago de ${payload.old.customer_name}`, {});
 		};
 
 		// Listen to inserts, updates, and deletes

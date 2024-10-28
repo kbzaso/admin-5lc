@@ -7,7 +7,7 @@ import groq from 'groq';
 const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
 const datasetName = import.meta.env.VITE_SANITY_DATASET;
 
-import { VITE_SANITY_WRITE_ADMIN as tokenWithWriteAccess } from '$env/static/private';
+import { SANITY_WRITE_ADMIN as tokenWithWriteAccess } from '$env/static/private';
 
 // Get event from Sanity Studio
 const getEvent = async (slugEvent: string) => {
@@ -136,7 +136,7 @@ export const actions: Actions = {
 		try {
 			const payment = await client.payment.delete({
 				where: {
-					id: paymentId
+					id: paymentId as string
 				}
 			});
 			return {
@@ -167,7 +167,7 @@ export const actions: Actions = {
 		try {
 			const updatePayment = await client.payment.update({
 				where: {
-					id: paymentId
+					id: paymentId as string
 				},
 				data: {
 					customer_name: name,
@@ -182,7 +182,7 @@ export const actions: Actions = {
 			return {
 				status: 200,
 				body: { message: 'Payment updated successfully', payment: updatePayment }
-			}
+			};
 		} catch (error) {
 			console.error('Error updating payment:', error);
 			return {
@@ -201,6 +201,11 @@ export const actions: Actions = {
 		const price = Number(formData.get('price')) || 0;
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
 
+		const traductions: { [key: string]: string } = {
+			ringside_tickets: 'Ringside',
+			general_tickets: 'General'
+		};
+
 		// decrement ticket amount from batch events
 		function decrementTicketAmount(
 			ticket: Ticket,
@@ -216,13 +221,13 @@ export const actions: Actions = {
 					ticket.batch.seconds_tickets,
 					ticket.batch.thirds_tickets
 				];
-			}  else if (sellType === 'ubication' && ticket.ubication) {
+			} else if (sellType === 'ubication' && ticket.ubication) {
 				if (ticketType && ticket.ubication[ticketType]) {
-				  ticketTypes = [ticket.ubication[ticketType]];
+					ticketTypes = [ticket.ubication[ticketType]];
 				} else {
-				  throw new Error(`Invalid ticket type: ${ticketType}`);
+					throw new Error(`Invalid ticket type: ${ticketType}`);
 				}
-			  }
+			}
 			for (const type of ticketTypes) {
 				if (ticketAmount <= 0) break;
 
@@ -249,7 +254,7 @@ export const actions: Actions = {
 					ticketAmount,
 					eventFromSanityStudio.sell_type,
 					ticketType
-				).ubication
+				).ubication;
 				mutations = [
 					{
 						patch: {
@@ -267,7 +272,7 @@ export const actions: Actions = {
 					eventFromSanityStudio.ticket,
 					ticketAmount,
 					eventFromSanityStudio.sell_type
-				).batch
+				).batch;
 				mutations = [
 					{
 						patch: {
@@ -293,7 +298,7 @@ export const actions: Actions = {
 					price,
 					payment_status: 'success',
 					ticketAmount,
-					ticketsType: ticketType || 'Tandas',
+					ticketsType: traductions[ticketType] || 'Tandas',
 					buys: newTicket,
 					Product: {
 						connect: {

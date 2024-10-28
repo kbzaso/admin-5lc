@@ -81,8 +81,8 @@
 					on:click={() => openDialog(payment.id)}
 					class="p-6 w-full hover:bg-muted flex justify-between"
 				>
-					<div class="flex flex-col items-start">
-						<span class=" md:text-xl text-left truncate">
+					<div class="flex flex-col items-start ">
+						<span class=" md:text-xl text-left">
 							{payment.customer_name}
 						</span>
 						<span class="text-xs mb-2 text-zinc-400 uppercase">
@@ -114,7 +114,7 @@
 								{payment.ticketAmount}
 								{$page.data.eventFromSanityStudio.sell_type === 'batch'
 									? ''
-									: traductions[payment.ticketsType]}
+									: payment.ticketsType}
 							</span>
 							<span class="flex gap-2 items-center">
 								<CreditCard class="h-4 md:h-10" />

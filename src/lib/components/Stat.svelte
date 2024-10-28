@@ -4,13 +4,11 @@
 	export let studioTicketsAvailable: number;
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { TicketPercent, DollarSign } from 'lucide-svelte';
+	import { formatPriceToCLP } from '$lib';
 
 	const stock = ticketsSold + studioTicketsAvailable;
 
-	const totalMoneyFormatted = new Intl.NumberFormat('es-CL', {
-		style: 'currency',
-		currency: 'CLP'
-	}).format(totalMoneyRaised);
+	
 </script>
 
 <div class="flex md:flex-row flex-col justify-between">
@@ -39,7 +37,7 @@
 				<DollarSign class="h-4 w-4 text-muted-foreground" />
 			</Card.Header>
 			<Card.Content>
-				<div class="text-2xl font-bold">{totalMoneyRaised || 0}</div>
+				<div class="text-2xl font-bold">{formatPriceToCLP(totalMoneyRaised)}</div>
 				<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
 			</Card.Content>
 		</Card.Root>

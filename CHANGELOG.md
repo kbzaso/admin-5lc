@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Filter success payments
+
+### Fix
+- Format money raised on stat component
+
 ## [0.0.9] - 2024-10-28
 
 ### Add

@@ -1,18 +1,22 @@
 <script lang="ts">
-	import { createTable, Render, Subscribe } from 'svelte-headless-table';
-	import { readable } from 'svelte/store';
-	import * as Table from '$lib/components/ui/table';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { Input } from '$lib/components/ui/input';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { addSortBy, addTableFilter, addHiddenColumns } from 'svelte-headless-table/plugins';
-	import { ChevronsUpDown, ChevronDown } from 'lucide-svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
 	import { TANDAS_NAMES } from '$lib/consts';
-	export let sellType: string;
+	import DialogToAddPayments from '../DialogToAddPayments.svelte';
+	import { Ticket, CreditCard } from 'lucide-svelte';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Input } from '$lib/components/ui/input';
+	import { page } from '$app/stores';
+	import { formatDateToChile } from '$lib';
+	import DialogToUpdatePayments from '../DialogToUpdatePayments.svelte';
+	import { formatPriceToCLP } from '$lib';
+	import { getContext, setContext } from 'svelte';
+
+	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
+
+	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
+	getContext('idUpdateDialogOpen');
 
 	type Payment = {
+		id: string;
 		date: string;
 		customer_name: string;
 		rut: string;
@@ -21,270 +25,105 @@
 		price: number;
 		ticketAmount: number;
 		ticketsType: string;
+		payment_status: string;
 		buys: {
 			amount: number;
 			status: string;
 		}[];
+		status: string;
 		// status: 'pending' | 'processing' | 'success' | 'failed';
+	};
+
+	const traductions: { [key: string]: string } = {
+		ringside_tickets: 'Ringside',
+		general_tickets: 'General'
 	};
 
 	export let Payments: Payment[];
 
-	const table = createTable(readable(Payments), {
-		sort: addSortBy(),
-		filter: addTableFilter({
-			fn: ({ filterValue, value }) => value.toLowerCase().includes(filterValue.toLowerCase())
-		}),
-		hide: addHiddenColumns()
-	});
+	let searchTerm = '';
 
-	let columns;
-
-	if (sellType === 'batch') {
-		columns = table.createColumns([
-			table.column({
-				accessor: 'date',
-				header: 'Fecha',
-				cell: ({ value }) => {
-					const formatted = new Intl.DateTimeFormat('es-CL', {
-						year: 'numeric',
-						month: 'long',
-						day: 'numeric'
-					}).format(new Date(value));
-					return formatted;
-				},
-				filter: {
-					exclude: true
-				}
-			}),
-			table.column({
-				accessor: 'customer_name',
-				header: 'Comprador'
-			}),
-			table.column({
-				accessor: 'rut',
-				header: 'Rut'
-			}),
-			table.column({
-				accessor: 'customer_email',
-				header: 'Email'
-			}),
-			table.column({
-				accessor: 'customer_phone',
-				header: 'Teléfono',
-				filter: {
-					exclude: true
-				}
-			}),
-			table.column({
-				accessor: 'price',
-				header: 'Pagó',
-				plugins: {
-					sort: {
-						disable: true
-					}
-				},
-				cell: ({ value }) => {
-					const formatted = new Intl.NumberFormat('es-CL', {
-						style: 'currency',
-						currency: 'CLP'
-					}).format(value);
-					return formatted;
-				},
-				filter: {
-					exclude: true
-				}
-			}),
-			table.column({
-				accessor: 'discount_code',
-				header: 'Código de dscto.'
-			}),
-			table.column({
-				accessor: 'buys',
-				header: 'Compras',
-				cell: ({ value }) => {
-					let output = '';
-					for (const [key, innerValue] of Object.entries(value)) {
-						if (innerValue.amount > 0) {
-							output += `${TANDAS_NAMES[key]}: ${innerValue.amount} </br>`;
-						}
-					}
-					// Remove the trailing comma and space
-					return output.slice(0, -2);
-				},
-				filter: {
-					exclude: true
-				}
-			})
-		]);
-	} else {
-		columns = table.createColumns([
-			table.column({
-				accessor: 'date',
-				header: 'Fecha',
-				cell: ({ value }) => {
-					const formatted = new Intl.DateTimeFormat('es-CL', {
-						year: 'numeric',
-						month: 'long',
-						day: 'numeric'
-					}).format(new Date(value));
-					return formatted;
-				},
-				filter: {
-					exclude: true
-				}
-			}),
-			table.column({
-				accessor: 'customer_name',
-				header: 'Comprador'
-			}),
-			table.column({
-				accessor: 'rut',
-				header: 'Rut'
-			}),
-			table.column({
-				accessor: 'customer_email',
-				header: 'Email'
-			}),
-			table.column({
-				accessor: 'customer_phone',
-				header: 'Teléfono',
-				filter: {
-					exclude: true
-				}
-			}),
-			table.column({
-				accessor: 'price',
-				header: 'Pagó',
-				plugins: {
-					sort: {
-						disable: true
-					}
-				},
-				cell: ({ value }) => {
-					const formatted = new Intl.NumberFormat('es-CL', {
-						style: 'currency',
-						currency: 'CLP'
-					}).format(value);
-					return formatted;
-				},
-				filter: {
-					exclude: true
-				}
-			}),
-			table.column({
-				accessor: 'discount_code',
-				header: 'Código de dscto.'
-			}),
-			table.column({
-				accessor: 'ticketAmount',
-				header: 'Cant.',
-				filter: {
-					exclude: true
-				}
-			}),
-			table.column({
-				accessor: 'ticketsType',
-				header: 'Tipo de entrada',
-				filter: {
-					exclude: true
-				}
-			})
-		]);
+	// Function to open the dialog for a specific payment
+	function openDialog(paymentId: string) {
+		idUpdateDialogOpen.set({
+			open: true,
+			id: paymentId
+		});
 	}
 
-	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, flatColumns } =
-		table.createViewModel(columns);
-	const { filterValue } = pluginStates.filter;
-	const { hiddenColumnIds } = pluginStates.hide;
-
-	const ids = flatColumns.map((col) => col.id);
-	let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
-
-	$: $hiddenColumnIds = Object.entries(hideForId)
-		.filter(([, hide]) => !hide)
-		.map(([id]) => id);
-
-	const hidableCols = ['date', 'rut', 'customer_phone', 'price', 'ticketAmount', 'ticketsType'];
+	// Reactive statement to filter payments based on search term
+	$: filteredPayments = Payments.filter((payment) => {
+		return (
+			payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.rut?.toLowerCase().includes(searchTerm.toLowerCase())
+		);
+	});
 </script>
 
-<div class="flex items-center py-4">
-	<Input class="max-w-sm" placeholder="Filter emails..." type="text" bind:value={$filterValue} />
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger asChild let:builder>
-			<Button variant="outline" class="ml-auto" builders={[builder]}>
-				Columnas <ChevronDown class="ml-2 h-4 w-4" />
-			</Button>
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Content>
-			{#each flatColumns as col}
-				{#if hidableCols.includes(col.id)}
-					<DropdownMenu.CheckboxItem bind:checked={hideForId[col.id]}>
-						{col.header}
-					</DropdownMenu.CheckboxItem>
-				{/if}
-			{/each}
-		</DropdownMenu.Content>
-	</DropdownMenu.Root>
+<!-- HEADER -->
+<div class="flex flex-col md:flex-row items-center py-4 md:gap-4 justify-between">
+	<div class="flex flex-col md:flex-row md:items-center gap-4 items-left w-full">
+		<h2 class="font-bold text-xl">Listado de compras</h2>
+		<Input type="text" placeholder="Buscador..." class="w-full md:w-96" bind:value={searchTerm} />
+	</div>
+	<DialogToAddPayments />
 </div>
+
 <div class="rounded-md border">
-	<Table.Root {...$tableAttrs}>
-		<Table.Header>
-			{#each $headerRows as headerRow}
-				<Subscribe rowAttrs={headerRow.attrs()}>
-					<Table.Row>
-						{#each headerRow.cells as cell (cell.id)}
-							<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-								<Table.Head {...attrs}>
-									{#if cell.id === 'amount'}
-										<div class="text-right">
-											<Render of={cell.render()} />
-										</div>
-									{:else if cell.id === 'customer_email' || cell.id === 'date' || cell.id === 'customer_name'}
-										<Button variant="ghost" on:click={props.sort.toggle}>
-											<Render of={cell.render()} />
-											<ChevronsUpDown class={'ml-2 h-4 w-4'} />
-										</Button>
-									{:else}
-										<Render of={cell.render()} />
-									{/if}
-								</Table.Head>
-							</Subscribe>
-						{/each}
-					</Table.Row>
-				</Subscribe>
-			{/each}
-		</Table.Header>
-		<Table.Body {...$tableBodyAttrs}>
-			{#each $pageRows as row (row.id)}
-				<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-					<Table.Row {...rowAttrs}>
-						{#each row.cells as cell (cell.id)}
-							<Subscribe attrs={cell.attrs()} let:attrs>
-								<Table.Cell {...attrs}>
-									{#if cell.id === 'amount'}
-										<div class="text-right font-medium">
-											<Render of={cell.render()} />
-										</div>
-									{:else if cell.id === 'status'}
-										<div class="capitalize">
-											<Render of={cell.render()} />
-										</div>
-									{:else if cell.id === 'buys'}
-										{@html cell.render()}
-									{:else if cell.id === 'discount_code'}
-										{#if cell.render().length > 1}
-											<Badge><Render of={cell.render()} /></Badge>
-										{/if}
-									{:else}
-										<Render of={cell.render()} />
-									{/if}
-								</Table.Cell>
-							</Subscribe>
-						{/each}
-					</Table.Row>
-				</Subscribe>
-			{/each}
-		</Table.Body>
-	</Table.Root>
+	<ul class="divide-y">
+		{#each filteredPayments as payment, i}
+			<DialogToUpdatePayments dialogOpen={$idUpdateDialogOpen.id === payment.id} {payment} />
+			<li>
+				<button
+					on:click={() => openDialog(payment.id)}
+					class="p-6 w-full hover:bg-muted flex justify-between"
+				>
+					<div class="flex flex-col items-start ">
+						<span class=" md:text-xl text-left">
+							{payment.customer_name}
+						</span>
+						<span class="text-xs mb-2 text-zinc-400 uppercase">
+							{formatDateToChile(payment.date)}
+						</span>
+						<span class="text-sm">
+							{payment.rut}
+						</span>
+						<span class="text-sm">
+							{payment.customer_email}
+						</span>
+						<span class="text-sm">
+							{payment.customer_phone}
+						</span>
+					</div>
+					<div class="flex flex-col items-end gap-4">
+						<Badge
+							class={`${
+								payment.payment_status === 'success'
+									? 'bg-green-400 hover:bg-green-500'
+									: 'bg-red-400 hover:bg-red-500'
+							}`}
+						>
+							{payment.payment_status}
+						</Badge>
+						<div class="text-right text-xs md:text-base">
+							<span class="flex gap-2 items-center">
+								<Ticket class="h-4 md:h-10"/>
+								{payment.ticketAmount}
+								{$page.data.eventFromSanityStudio.sell_type === 'batch'
+									? ''
+									: payment.ticketsType}
+							</span>
+							<span class="flex gap-2 items-center">
+								<CreditCard class="h-4 md:h-10" />
+								{formatPriceToCLP(payment.price)}
+							</span>
+						</div>
+					</div>
+				</button>
+			</li>
+		{/each}
+	</ul>
 </div>

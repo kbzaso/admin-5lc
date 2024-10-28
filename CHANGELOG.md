@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- update studio tickets when add payment for both ubication and batch
+- Toast notification when add payment
+- Search input throught payments
+
+## [0.0.8] - 2024-10-18
+
+### Fix
+
+- remove info that is not neccesary in slug event
+
+### Add
+
+- Conditional logic for validator user that not show $$$
+- Percentage component on slug event
+
 ## [0.0.7] - 2024-06-19
 
 - Add badge to discount_code
@@ -52,7 +69,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.7...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.8...HEAD
+[0.0.8]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.4...v0.0.5

@@ -59,18 +59,17 @@
 
 	// Reactive statement to filter payments based on search term and switch state
 	$: filteredPayments = Payments.filter((payment) => {
-    const matchesSearchTerm = (
-      payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.rut?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+		const matchesSearchTerm =
+			payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			payment.rut?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesSuccessFilter = $showOnlySuccess || payment.payment_status === 'success';
+		const matchesSuccessFilter = $showOnlySuccess || payment.payment_status === 'success';
 
-    return matchesSearchTerm && matchesSuccessFilter;
-  });
+		return matchesSearchTerm && matchesSuccessFilter;
+	});
 </script>
 
 <!-- HEADER -->
@@ -114,18 +113,17 @@
 					</div>
 					<div class="flex flex-col items-end gap-4">
 						<Badge
-							class={`${
-								payment.payment_status === 'success'
-									? 'bg-green-400 hover:bg-green-500'
-									: 'bg-red-400 hover:bg-red-500'
-							}`}
+							class={`${payment.payment_status === 'success' ? 'bg-yellow-400' : 'bg-red-400 hover:bg-red-500'}`}
 						>
 							{payment.payment_status}
 						</Badge>
+						{#if payment.ticketAmount === payment.ticketValidated}
+							<Badge class="bg-green-400 hover:bg-green-500">validado</Badge>
+						{/if}
 						<div class="text-right text-xs md:text-base">
 							<span class="flex gap-2 items-center">
 								<Ticket class="h-4 md:h-10" />
-								{payment.ticketAmount}
+								{payment.ticketValidated}/{payment.ticketAmount}
 								{$page.data.eventFromSanityStudio.sell_type === 'batch' ? '' : payment.ticketsType}
 							</span>
 							<span class="flex gap-2 items-center">

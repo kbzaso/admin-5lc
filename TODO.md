@@ -15,7 +15,11 @@
 ### Add
 
   - [ ] Add validator users
-  - [ ] Validate tickets
+    - [x] Disabled inputs for update payments
+    - [x] Disabled inputs for delete payments
+  - [x] Validate tickets
+  - [ ] Add a badge to payments already validated
+  - [ ] npx db push to production database
 
 ## Events
 

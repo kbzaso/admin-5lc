@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Validate tickets
+
 ## [0.0.10] - 2024-10-28
 
 ### Add

@@ -27,6 +27,7 @@
 		customer_phone: string;
 		price: number;
 		ticketAmount: number;
+		ticketValidated: number;
 		ticketsType: string;
 		payment_status: string;
 		buys: {

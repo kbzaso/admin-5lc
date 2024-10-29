@@ -127,11 +127,38 @@ type Ticket = {
 };
 
 export const actions: Actions = {
+	validateTickets: async ({ request }) => {
+		const formData = await request.formData();
+		const paymentId = formData.get('paymentId');
+		const ticketValidated = Number(formData.get('ticketValidated'));
+
+		console.log('paymentId:', paymentId);
+		console.log('ticketValidated:', ticketValidated);
+
+		try {
+			const updatePayment = await client.payment.update({
+				where: {
+					id: paymentId as string
+				},
+				data: {
+					ticketValidated,
+				}
+			});
+			return {
+				status: 200,
+				body: { message: 'Payment updated successfully', payment: updatePayment }
+			};
+		} catch (error) {
+			console.error('Error updating payment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to update payment' }
+			};
+		}
+	},
 	deletePayment: async ({ request }) => {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
-
-		console.log('paymentId:', paymentId);
 
 		try {
 			const payment = await client.payment.delete({
@@ -161,8 +188,6 @@ export const actions: Actions = {
 		const price = Number(formData.get('price')) || 0;
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
 		const paymentId = formData.get('paymentId');
-
-		console.log('paymentId:', paymentId);
 
 		try {
 			const updatePayment = await client.payment.update({

@@ -5,10 +5,11 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { TicketPercent, DollarSign } from 'lucide-svelte';
 	import { formatPriceToCLP } from '$lib';
+	import DataTableEvent from './data-table/DataTableEvent.svelte';
+	import DataTableEvents from './data-table/DataTableEvents.svelte';
+	import { page } from '$app/stores';
 
 	const stock = ticketsSold + studioTicketsAvailable;
-
-	
 </script>
 
 <div class="flex md:flex-row flex-col justify-between">
@@ -28,18 +29,20 @@
 				</p>
 			</Card.Content>
 		</Card.Root>
-		<Card.Root
-			data-x-chunk-name="card-03"
-			data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
-		>
-			<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-				<Card.Title class="text-sm font-medium">Monto generado</Card.Title>
-				<DollarSign class="h-4 w-4 text-muted-foreground" />
-			</Card.Header>
-			<Card.Content>
-				<div class="text-2xl font-bold">{formatPriceToCLP(totalMoneyRaised)}</div>
-				<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
-			</Card.Content>
-		</Card.Root>
+		{#if !$page.data.validator}
+			<Card.Root
+				data-x-chunk-name="card-03"
+				data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
+			>
+				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+					<Card.Title class="text-sm font-medium">Monto generado</Card.Title>
+					<DollarSign class="h-4 w-4 text-muted-foreground" />
+				</Card.Header>
+				<Card.Content>
+					<div class="text-2xl font-bold">{formatPriceToCLP(totalMoneyRaised)}</div>
+					<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
+				</Card.Content>
+			</Card.Root>
+		{/if}
 	</div>
 </div>

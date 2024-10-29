@@ -19,10 +19,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	const productsWithTotal = events.map(product => {
-		let totalPayment;
-		if (!locals.session.user?.public_metadata.validator){
-			totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
-		}
+		const totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
         const totalTicketsSold = product.Payment.reduce((sum, payment) => sum + payment.ticketAmount, 0);
         return { ...product, totalPayment, totalTicketsSold };
     });

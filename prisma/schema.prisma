@@ -13,6 +13,7 @@ model Payment {
   rut                String?
   price              Float
   ticketAmount       Int
+  ticketValidated    Int      @default(0)
   date               DateTime @default(now())
   signature_token    String?
   payment_status     String?

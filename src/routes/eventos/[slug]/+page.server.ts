@@ -69,7 +69,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					orderBy: {
 						date: 'desc' // Use 'asc' for ascending order
 					}
-				}
+				},
 			}
 		});
 	};

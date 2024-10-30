@@ -68,7 +68,7 @@
 						<Alert.Description>{STATUS.rejected.description}</Alert.Description>
 					</Alert.Root>
 				{:else if $page.data.validator}
-					<div class="space-y-2">
+					<div class="space-y-2 text-white">
 						<div class="flex items-center space-x-2">
 							<User class="h-4 w-4 text-muted-foreground" />
 							<span>{payment.customer_name}</span>
@@ -106,7 +106,7 @@
 								</Button>
 								<input type="text" name="ticketValidated" hidden value={validatedTickets} />
 								<input type="text" name="paymentId" hidden value={payment.id} />
-								<span class="text-4xl font-bold">{validatedTickets}</span>
+								<span class="text-4xl text-primary font-bold">{validatedTickets}</span>
 								<Button
 									variant="outline"
 									on:click={() => (validatedTickets += 1)}
@@ -210,8 +210,8 @@
 										type="radio"
 										name="ticketType"
 										class="radio checked:bg-primary"
-										checked={payment.ticketsType === 'general_tickets' ? 'checked' : ''}
-										value="general_tickets"
+										checked={payment.ticketsType === 'General' ? 'checked' : ''}
+										value="General"
 									/>
 									<span class="label-text mt-2">General</span>
 								</label>
@@ -221,8 +221,8 @@
 										type="radio"
 										name="ticketType"
 										class="radio checked:bg-primary"
-										value="ringside_tickets"
-										checked={payment.ticketsType === 'ringside_tickets' ? 'checked' : ''}
+										value="Ringside"
+										checked={payment.ticketsType === 'Ringside' ? 'checked' : ''}
 									/>
 									<span class="label-text mt-2">Ringisde</span>
 								</label>

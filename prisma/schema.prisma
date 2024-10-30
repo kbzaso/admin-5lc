@@ -14,6 +14,7 @@ model Payment {
   price              Float
   ticketAmount       Int
   ticketValidated    Int      @default(0)
+  client_id          String?
   date               DateTime @default(now())
   signature_token    String?
   payment_status     String?

@@ -95,6 +95,9 @@
 					class="p-6 w-full hover:bg-muted flex justify-between"
 				>
 					<div class="flex flex-col items-start">
+						<span class="text-xs text-primary uppercase">
+							{payment.client_id ? payment.client_id : '' }
+						</span>
 						<span class=" md:text-xl text-left">
 							{payment.customer_name}
 						</span>
@@ -110,6 +113,7 @@
 						<span class="text-sm">
 							{payment.customer_phone}
 						</span>
+						
 					</div>
 					<div class="flex flex-col items-end gap-4">
 						<Badge

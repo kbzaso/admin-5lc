@@ -69,7 +69,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					orderBy: {
 						date: 'desc' // Use 'asc' for ascending order
 					}
-				},
+				}
 			}
 		});
 	};
@@ -141,7 +141,7 @@ export const actions: Actions = {
 					id: paymentId as string
 				},
 				data: {
-					ticketValidated,
+					ticketValidated
 				}
 			});
 			return {
@@ -231,6 +231,22 @@ export const actions: Actions = {
 			general_tickets: 'General'
 		};
 
+		async function generatePaymentCode(eventName: string, eventId: string): Promise<string> {
+			const sanitizedEventName = eventName.replace(/\s+/g, '-');
+			// Fetch the current count of payments for the event
+			const paymentCount = await client.payment.count({
+				where: {
+					productId: eventId
+				}
+			});
+
+			// Generate the code using the event name and a zero-padded sequential number
+			const sequentialNumber = (paymentCount + 1).toString().padStart(3, '0');
+			const paymentCode = `${sanitizedEventName}-${sequentialNumber}`;
+
+			return paymentCode;
+		}
+
 		// decrement ticket amount from batch events
 		function decrementTicketAmount(
 			ticket: Ticket,
@@ -312,6 +328,10 @@ export const actions: Actions = {
 				];
 			}
 
+			// Generate a payment code
+			const paymentCode = await generatePaymentCode(eventFromSanityStudio.title, params.slug);
+			console.log('paymentCode:', paymentCode);
+
 			// Create a new payment record
 			const newPayment = await client.payment.create({
 				data: {
@@ -323,6 +343,7 @@ export const actions: Actions = {
 					price,
 					payment_status: 'success',
 					ticketAmount,
+					client_id: paymentCode,
 					ticketsType: traductions[ticketType] || 'Tandas',
 					buys: newTicket,
 					Product: {

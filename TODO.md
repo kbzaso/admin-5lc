@@ -9,7 +9,8 @@
 
 ### Add
   - [ ] Confirmation on delete payments
-  - [ ] Replace customer_name to payment code to Toaster
+  - [ ] Add filter to see how many batches were on every payment
+  - [x] Replace customer_name to payment code to Toaster
 
 ## Validate Feature
 

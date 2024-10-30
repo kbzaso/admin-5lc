@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { TANDAS_NAMES } from '$lib/consts';
-	import DialogToAddPayments from '../DialogToAddPayments.svelte';
+	import DialogToAddPayments from '../SheetToAddPayments.svelte';
 	import { Ticket, CreditCard } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { page } from '$app/stores';
 	import { formatDateToChile } from '$lib';
-	import DialogToUpdatePayments from '../DialogToUpdatePayments.svelte';
+	import DialogToUpdatePayments from '../SheetToUpdatePayments.svelte';
 	import { formatPriceToCLP } from '$lib';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';

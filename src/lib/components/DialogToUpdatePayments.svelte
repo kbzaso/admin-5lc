@@ -6,9 +6,10 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { setContext } from 'svelte';
-	import { CreditCard, Mail, Phone, User, Plus, Minus } from 'lucide-svelte';
+	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
+	import * as Alert from '$lib/components/ui/alert';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 
@@ -23,20 +24,46 @@
 	export let payment;
 
 	let validatedTickets = payment.ticketValidated;
+
+	const STATUS = {
+		register: {
+			code: 'register',
+			title: 'Pago registrado',
+			description: 'El pago se ha registrado, pero no se ha completado el proceso de pago.'
+		},
+		rejected: {
+			code: 'rejected',
+			title: 'Pago rechazado',
+			description:
+				'El pago ha sido rechazado por el banco. En el caso que se haya realizado el descuento en la cuenta del cliente, el banco hace el reembolso en unos minutos.'
+		}
+	};
 </script>
 
 <Dialog.Root bind:open={dialogOpen} onOpenChange={() => closeDialog()}>
 	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
 			<Dialog.Title>
-				{#if $page.data.validator}
+				{#if payment.payment_status === STATUS.register.code || payment.payment_status === STATUS.rejected.code}{:else if $page.data.validator}
 					Validar entradas
 				{:else}
 					Actualizar pago
 				{/if}
 			</Dialog.Title>
 		</Dialog.Header>
-		{#if $page.data.validator}
+		{#if payment.payment_status === 'register'}
+			<Alert.Root>
+				<CircleAlert class="h-4 w-4" />
+				<Alert.Title>{STATUS.register.title}</Alert.Title>
+				<Alert.Description>{STATUS.register.description}</Alert.Description>
+			</Alert.Root>
+		{:else if payment.payment_status === 'rejected'}
+			<Alert.Root>
+				<CircleAlert class="h-4 w-4" />
+				<Alert.Title>{STATUS.rejected.title}</Alert.Title>
+				<Alert.Description>{STATUS.rejected.description}</Alert.Description>
+			</Alert.Root>
+		{:else if $page.data.validator}
 			<div class="space-y-2">
 				<div class="flex items-center space-x-2">
 					<User class="h-4 w-4 text-muted-foreground" />

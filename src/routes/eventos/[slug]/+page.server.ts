@@ -127,11 +127,38 @@ type Ticket = {
 };
 
 export const actions: Actions = {
+	validateTickets: async ({ request }) => {
+		const formData = await request.formData();
+		const paymentId = formData.get('paymentId');
+		const ticketValidated = Number(formData.get('ticketValidated'));
+
+		console.log('paymentId:', paymentId);
+		console.log('ticketValidated:', ticketValidated);
+
+		try {
+			const updatePayment = await client.payment.update({
+				where: {
+					id: paymentId as string
+				},
+				data: {
+					ticketValidated
+				}
+			});
+			return {
+				status: 200,
+				body: { message: 'Payment updated successfully', payment: updatePayment }
+			};
+		} catch (error) {
+			console.error('Error updating payment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to update payment' }
+			};
+		}
+	},
 	deletePayment: async ({ request }) => {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
-
-		console.log('paymentId:', paymentId);
 
 		try {
 			const payment = await client.payment.delete({
@@ -161,8 +188,6 @@ export const actions: Actions = {
 		const price = Number(formData.get('price')) || 0;
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
 		const paymentId = formData.get('paymentId');
-
-		console.log('paymentId:', paymentId);
 
 		try {
 			const updatePayment = await client.payment.update({
@@ -205,6 +230,22 @@ export const actions: Actions = {
 			ringside_tickets: 'Ringside',
 			general_tickets: 'General'
 		};
+
+		async function generatePaymentCode(eventName: string, eventId: string): Promise<string> {
+			const sanitizedEventName = eventName.replace(/\s+/g, '-');
+			// Fetch the current count of payments for the event
+			const paymentCount = await client.payment.count({
+				where: {
+					productId: eventId
+				}
+			});
+
+			// Generate the code using the event name and a zero-padded sequential number
+			const sequentialNumber = (paymentCount + 1).toString().padStart(3, '0');
+			const paymentCode = `${sanitizedEventName}-${sequentialNumber}`;
+
+			return paymentCode;
+		}
 
 		// decrement ticket amount from batch events
 		function decrementTicketAmount(
@@ -287,6 +328,10 @@ export const actions: Actions = {
 				];
 			}
 
+			// Generate a payment code
+			const paymentCode = await generatePaymentCode(eventFromSanityStudio.title, params.slug);
+			console.log('paymentCode:', paymentCode);
+
 			// Create a new payment record
 			const newPayment = await client.payment.create({
 				data: {
@@ -298,6 +343,7 @@ export const actions: Actions = {
 					price,
 					payment_status: 'success',
 					ticketAmount,
+					client_id: paymentCode,
 					ticketsType: traductions[ticketType] || 'Tandas',
 					buys: newTicket,
 					Product: {

@@ -73,6 +73,7 @@
 			supabaseClient.removeChannel(subscription);
 		};
 	});
+	console.log(data)
 </script>
 
 <Navbar />

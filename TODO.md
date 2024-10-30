@@ -9,13 +9,19 @@
 
 ### Add
   - [ ] Confirmation on delete payments
+  - [ ] Add filter to see how many batches were on every payment
+  - [x] Replace customer_name to payment code to Toaster
 
 ## Validate Feature
 
 ### Add
 
   - [ ] Add validator users
-  - [ ] Validate tickets
+    - [x] Disabled inputs for update payments
+    - [x] Disabled inputs for delete payments
+  - [x] Validate tickets
+  - [x] Add a badge to payments already validated
+  - [ ] npx db push to production database
 
 ## Events
 

@@ -18,6 +18,7 @@ const getEvent = async (slugEvent: string) => {
 		 date,
 		 poster,
 		 venue,
+		 buys,
 		 boveda,
 		 sell_type,
 		 "discounts": discounts[] -> {

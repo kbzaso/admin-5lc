@@ -76,6 +76,10 @@
 	console.log(data)
 </script>
 
+<svelte:head>
+	 <title>{data.eventFromSupabase?.name} | Eventos</title>
+</svelte:head>
+
 <Navbar />
 <div class="flex flex-col gap-4 mb-6 mt-4">
 	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>

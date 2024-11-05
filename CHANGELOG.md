@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.12] - 2024-11-05
+
 ### Add
 
 - Confirmation modal when delete a payment
@@ -94,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.11...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.12...HEAD
+[0.0.12]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.8...v0.0.9

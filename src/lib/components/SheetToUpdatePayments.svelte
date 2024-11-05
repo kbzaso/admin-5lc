@@ -11,11 +11,11 @@
 	import { Progress } from './ui/progress';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import { mediaQuery } from "svelte-legos";
+	import { mediaQuery } from 'svelte-legos';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 
-	const isDesktop = mediaQuery("(min-width: 768px)");
+	const isDesktop = mediaQuery('(min-width: 768px)');
 
 	function closeDialog(paymentId?: string) {
 		idUpdateDialogOpen.set({
@@ -25,6 +25,7 @@
 	}
 
 	export let dialogOpen: boolean = false;
+	let confirmationDialogOpen: boolean = false;
 	export let payment;
 
 	let validatedTickets = payment.ticketValidated;
@@ -45,7 +46,7 @@
 </script>
 
 <Sheet.Root bind:open={dialogOpen} onOpenChange={() => closeDialog()}>
-	<Sheet.Content side={$isDesktop ? "right" : "bottom" }>
+	<Sheet.Content side={$isDesktop ? 'right' : 'bottom'}>
 		<Sheet.Header>
 			<Sheet.Title>
 				{#if payment.payment_status === STATUS.register.code || payment.payment_status === STATUS.rejected.code}{:else if $page.data.validator}
@@ -232,16 +233,34 @@
 					</form>
 				{/if}
 				{#if !$page.data.validator}
-					<form method="POST" action="?/deletePayment" use:enhance class="w-full mt-4">
-						<input type="text" hidden value={payment.id} name="paymentId" />
-						<Button
-							class="w-full bg-error hover:bg-red-500"
-							on:click={() => closeDialog()}
-							type="submit">Eliminar pago</Button
-						>
-					</form>
+					<Button
+						class="w-full bg-error hover:bg-red-500 mt-4"
+						on:click={() => {
+							closeDialog();
+							confirmationDialogOpen = true;
+						}}>Eliminar pago</Button
+					>
 				{/if}
 			</Sheet.Description>
 		</Sheet.Header>
 	</Sheet.Content>
 </Sheet.Root>
+
+<Dialog.Root bind:open={confirmationDialogOpen}>
+		<Dialog.Content>
+			<Dialog.Title class="leading-normal">
+				¿Estás seguro de que deseas eliminar el pago de {payment.customer_name}?
+			</Dialog.Title>
+			<Dialog.Description>
+				Una vez eliminado, no podrás recuperar la información.
+			</Dialog.Description>
+				<form method="POST" action="?/deletePayment" use:enhance class="w-full" on:submit={() => confirmationDialogOpen = false}>
+					<input type="text" hidden value={payment.id} name="paymentId" />
+					<Button
+						class="w-full bg-error hover:bg-red-500"
+						type="submit">Eliminar pago</Button
+					>
+				</form>
+			<Dialog.Close />
+		</Dialog.Content>
+</Dialog.Root>

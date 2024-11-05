@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Confirmation modal when delete a payment
+
 ## [0.0.11] - 2024-10-30
 
 ### Fix

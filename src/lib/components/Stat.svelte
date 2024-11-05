@@ -5,8 +5,6 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { TicketPercent, DollarSign } from 'lucide-svelte';
 	import { formatPriceToCLP } from '$lib';
-	import DataTableEvent from './data-table/DataTableEvent.svelte';
-	import DataTableEvents from './data-table/DataTableEvents.svelte';
 	import { page } from '$app/stores';
 
 	const stock = ticketsSold + studioTicketsAvailable;

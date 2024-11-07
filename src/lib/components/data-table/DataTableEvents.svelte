@@ -8,6 +8,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import ButtonHref from '../ButtonHref.svelte';
 	import { page } from '$app/stores';
+	import { mediaQuery } from 'svelte-legos';
+	import is from 'date-fns/locale/is';
+	const isDesktop = mediaQuery('(min-width: 768px)');
 
 	// type Payment = {
 	// 	date: string;
@@ -25,6 +28,8 @@
 	// 	// status: 'pending' | 'processing' | 'success' | 'failed';
 	// };
 
+	console.log(isDesktop)
+
 	export let Events;
 
 	const table = createTable(readable(Events), {
@@ -35,18 +40,23 @@
 	});
 
 	let columns = table.createColumns([
-		table.column({
-			accessor: 'date',
-			header: 'Fecha',
-			cell: ({ value }) => {
-				const formatted = new Intl.DateTimeFormat('es-CL', {
-					year: 'numeric',
-					month: 'long',
-					day: 'numeric'
-				}).format(new Date(value));
-				return formatted;
-			}
-		}),
+		...($isDesktop
+			? [
+					table.column({
+						accessor: 'date',
+						header: 'Fecha',
+						cell: ({ value }) => {
+							const date = new Date(value);
+							const formatter = new Intl.DateTimeFormat('es-CL', {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric'
+							});
+							return formatter.format(date);
+						}
+					})
+			  ]
+			: []),
 		table.column({
 			accessor: 'name',
 			header: 'Eventos'
@@ -54,21 +64,25 @@
 			// 	exclude: true
 			// }
 		}),
-		table.column({
-			accessor: 'totalTicketsSold',
-			header: 'Adhesiones'
-		}),
-		table.column({
-			accessor: 'totalPayment',
-			header: 'Total recaudado',
-			cell: ({ value }) => {
-				const formatter = new Intl.NumberFormat('es-CL', {
-					style: 'currency',
-					currency: 'CLP'
-				});
-				return formatter.format(value);
-			}
-		}),
+		...($isDesktop && !$page.data.validator
+			? [
+					table.column({
+						accessor: 'totalTicketsSold',
+						header: 'Adhesiones'
+					}),
+					table.column({
+						accessor: 'totalPayment',
+						header: 'Total recaudado',
+						cell: ({ value }) => {
+							const formatter = new Intl.NumberFormat('es-CL', {
+								style: 'currency',
+								currency: 'CLP'
+							});
+							return formatter.format(value);
+						}
+					})
+			  ]
+			: []),
 		table.column({
 			header: '',
 			accessor: ({ id }) => id,

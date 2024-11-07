@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Conditional view of sensitive data
+
 ## [0.0.12] - 2024-11-05
 
 ### Add

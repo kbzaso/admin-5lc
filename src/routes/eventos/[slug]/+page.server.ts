@@ -346,7 +346,7 @@ export const actions: Actions = {
 					ticketAmount,
 					client_id: paymentCode,
 					ticketsType: traductions[ticketType] || 'Tandas',
-					buys: newTicket,
+					buys: {},
 					Product: {
 						connect: {
 							id: params.slug // Assuming params.slug is the productId

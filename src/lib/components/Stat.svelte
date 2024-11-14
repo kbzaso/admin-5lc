@@ -43,7 +43,7 @@
 					<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
 				</Card.Content>
 			</Card.Root>
-		{:else if $page.data.validator}
+		{/if}
 			<Card.Root
 				data-x-chunk-name="card-03"
 				data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
@@ -57,6 +57,5 @@
 					<p class="text-xs text-muted-foreground">De un total de {ticketsSold} unidades.</p>
 				</Card.Content>
 			</Card.Root>
-		{/if}
 	</div>
 </div>

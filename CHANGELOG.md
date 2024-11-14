@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.14] - 2024-11-13
+
 ### Add
 
 - Stat box of validated tickets
@@ -106,7 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.13...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.14...HEAD
+[0.0.14]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.10...v0.0.11

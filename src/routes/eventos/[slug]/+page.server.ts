@@ -100,13 +100,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 	};
 
+	const ticketValidated = async () => {
+		return await client.payment.aggregate({
+			where: {
+				productId: params.slug,
+				payment_status: 'success',
+			},
+			_sum: {
+				ticketValidated: true
+			}
+		});
+	}
+
 	return {
 		sell_type: eventFromSanityStudio.sell_type,
 		eventFromSupabase: await eventFromSupabase(),
 		totalMoneyRaised: await totalMoneyRaised(),
 		ticketsSold: await ticketsSold(),
 		studioTicketsAvailable,
-		eventFromSanityStudio
+		eventFromSanityStudio,
+		ticketValidated: await ticketValidated()
 	};
 };
 

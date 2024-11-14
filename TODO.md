@@ -3,20 +3,20 @@
 ## Development
 
 ### Add
-- [ ] Adapt beta.admin.5luchas.cl to development
+- [ ] Adapt beta.admin.5luchas.cl to development deploy
 
 ## Payments
 
 ### Add
-  - [ ] Confirmation on delete payments
   - [ ] Add filter to see how many batches were on every payment
+  - [x] Confirmation on delete payments
   - [x] Replace customer_name to payment code to Toaster
 
 ## Validate Feature
 
 ### Add
 
-  - [ ] Add validator users
+  - [x] Add validator users
     - [x] Disabled inputs for update payments
     - [x] Disabled inputs for delete payments
   - [x] Validate tickets

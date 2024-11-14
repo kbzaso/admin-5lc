@@ -30,6 +30,7 @@
 		ticketValidated: number;
 		ticketsType: string;
 		payment_status: string;
+		client_id: string;
 		buys: {
 			amount: number;
 			status: string;
@@ -55,7 +56,7 @@
 		});
 	}
 
-	let showOnlySuccess = writable(true);
+	let showOnlySuccess = writable(false);
 
 	// Reactive statement to filter payments based on search term and switch state
 	$: filteredPayments = Payments.filter((payment) => {
@@ -96,7 +97,7 @@
 				>
 					<div class="flex flex-col items-start">
 						<span class="text-xs text-primary uppercase">
-							{payment.client_id ? payment.client_id : '' }
+							{payment.client_id ? payment.client_id : ''}
 						</span>
 						<span class=" md:text-xl text-left">
 							{payment.customer_name}
@@ -113,11 +114,14 @@
 						<span class="text-sm">
 							{payment.customer_phone}
 						</span>
-						
 					</div>
 					<div class="flex flex-col items-end gap-4">
 						<Badge
-							class={`${payment.payment_status === 'success' ? 'bg-yellow-400' : 'bg-red-400 hover:bg-red-500'}`}
+							class={`${
+								payment.payment_status === 'success'
+									? 'bg-yellow-400'
+									: 'bg-red-400 hover:bg-red-500'
+							}`}
 						>
 							{payment.payment_status}
 						</Badge>

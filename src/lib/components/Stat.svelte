@@ -7,6 +7,8 @@
 	import { formatPriceToCLP } from '$lib';
 	import { page } from '$app/stores';
 
+	console.log($page.data)
+
 	const stock = ticketsSold + studioTicketsAvailable;
 </script>
 
@@ -39,6 +41,20 @@
 				<Card.Content>
 					<div class="text-2xl font-bold">{formatPriceToCLP(totalMoneyRaised)}</div>
 					<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
+				</Card.Content>
+			</Card.Root>
+		{:else if $page.data.validator}
+			<Card.Root
+				data-x-chunk-name="card-03"
+				data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
+			>
+				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+					<Card.Title class="text-sm font-medium">Quedan por validar</Card.Title>
+					<TicketPercent class="h-4 w-4 text-muted-foreground" />
+				</Card.Header>
+				<Card.Content>
+					<div class="text-2xl font-bold">{$page.data.ticketValidated._sum.ticketValidated}</div>
+					<p class="text-xs text-muted-foreground">De un total de {ticketsSold} unidades.</p>
 				</Card.Content>
 			</Card.Root>
 		{/if}

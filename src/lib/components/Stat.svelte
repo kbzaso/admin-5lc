@@ -53,7 +53,7 @@
 					<TicketPercent class="h-4 w-4 text-muted-foreground" />
 				</Card.Header>
 				<Card.Content>
-					<div class="text-2xl font-bold">{$page.data.ticketValidated._sum.ticketValidated}</div>
+					<div class="text-2xl font-bold">{ticketsSold - $page.data.ticketValidated._sum.ticketValidated}</div>
 					<p class="text-xs text-muted-foreground">De un total de {ticketsSold} unidades.</p>
 				</Card.Content>
 			</Card.Root>

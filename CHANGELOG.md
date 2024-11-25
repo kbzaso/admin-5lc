@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- Border color of search input
+- Only show rejected payment Switch
+
 ## [0.0.14] - 2024-11-13
 
 ### Add

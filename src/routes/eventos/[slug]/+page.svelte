@@ -15,9 +15,12 @@
 	let payments = writable(data.eventFromSupabase?.Payment || []);
 	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price);
 
+	const currentSlug = $page.params.slug;
 	onMount(() => {
+
 		// Create a function to handle inserts
 		const handleInserts = (payload) => {
+			if (payload.new.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => payload.new.price + $totalMoneyRaised);
 
@@ -27,6 +30,7 @@
 
 		// Create a function to handle updates
 		const handleUpdates = (payload) => {
+			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => current + payload.new.price - payload.old.price);
 
@@ -41,6 +45,7 @@
 
 		// Create a function to handle deletes
 		const handleDeletes = (payload) => {
+			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price);
 
@@ -73,7 +78,6 @@
 			supabaseClient.removeChannel(subscription);
 		};
 	});
-	console.log($page.data);
 </script>
 
 <svelte:head>

@@ -40,8 +40,12 @@
 	};
 
 	const traductions: { [key: string]: string } = {
-		ringside_tickets: 'Ringside',
-		general_tickets: 'General'
+		success: 'Web',
+		system: 'Sistema',
+		register: 'Registro',
+		rejected: 'Rechazado',
+		refund: 'Reembolso',
+		changed: 'Cambio'
 	};
 
 	export let Payments: Payment[];
@@ -67,14 +71,29 @@
 			payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			payment.rut?.toLowerCase().includes(searchTerm.toLowerCase());
 
-		const matchesSuccessFilter = $showRejected || payment.payment_status === 'success';
+		const matchesSuccessFilter = $showRejected || payment.payment_status === 'success' || payment.payment_status === 'system';
 
 		if ($showRejected) {
-			return payment.payment_status !== 'success';
+			return (payment.payment_status === 'register' || payment.payment_status === 'rejected' || payment.payment_status === null) && matchesSearchTerm;
 		}
 
 		return matchesSearchTerm && matchesSuccessFilter;
 	});
+
+	// Function to determine the badge class based on payment status
+	function getBadgeClass(paymentStatus: string): string {
+		switch (paymentStatus) {
+			case 'success':
+				return 'bg-green-300 text-green-800';
+			case 'rejected':
+				return 'bg-red-300 bg-red-800';
+			case 'system':
+				return 'bg-blue-300 text-blue-800';
+			default:
+				return 'bg-gray-400';
+		}
+	}
+
 </script>
 
 <!-- HEADER -->
@@ -120,13 +139,9 @@
 					</div>
 					<div class="flex flex-col items-end gap-4">
 						<Badge
-							class={`${
-								payment.payment_status === 'success'
-									? 'bg-yellow-400'
-									: 'bg-red-400 hover:bg-red-500'
-							}`}
+							class={getBadgeClass(payment.payment_status)}
 						>
-							{payment.payment_status}
+							{traductions[payment.payment_status]}
 						</Badge>
 						{#if payment.ticketAmount === payment.ticketValidated}
 							<Badge class="bg-green-400 hover:bg-green-500">validado</Badge>

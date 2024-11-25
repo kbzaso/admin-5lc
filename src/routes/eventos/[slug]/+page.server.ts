@@ -64,9 +64,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			},
 			include: {
 				Payment: {
-					// where: {
-					// 	payment_status: 'success'
-					// },
 					orderBy: {
 						date: 'desc' // Use 'asc' for ascending order
 					}
@@ -92,7 +89,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return await client.payment.aggregate({
 			where: {
 				productId: params.slug,
-				payment_status: 'success'
+				payment_status: {
+					in: ['success', 'system']
+				}
 			},
 			_sum: {
 				ticketAmount: true
@@ -344,7 +343,6 @@ export const actions: Actions = {
 
 			// Generate a payment code
 			const paymentCode = await generatePaymentCode(eventFromSanityStudio.title, params.slug);
-			console.log('paymentCode:', paymentCode);
 
 			// Create a new payment record
 			const newPayment = await client.payment.create({
@@ -355,7 +353,7 @@ export const actions: Actions = {
 					customer_email: email as string,
 					customer_phone: phone as string,
 					price,
-					payment_status: 'success',
+					payment_status: 'system',
 					ticketAmount,
 					client_id: paymentCode,
 					ticketsType: traductions[ticketType] || 'Tandas',

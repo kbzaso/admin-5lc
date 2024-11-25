@@ -29,7 +29,6 @@
 				</p>
 			</Card.Content>
 		</Card.Root>
-		{#if !$page.data.validator}
 			<Card.Root
 				data-x-chunk-name="card-03"
 				data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
@@ -43,7 +42,6 @@
 					<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
 				</Card.Content>
 			</Card.Root>
-		{/if}
 			<Card.Root
 				data-x-chunk-name="card-03"
 				data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."

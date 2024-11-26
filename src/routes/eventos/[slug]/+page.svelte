@@ -10,13 +10,17 @@
 	import { onMount } from 'svelte';
 
 	import { toast } from 'svelte-sonner';
+	import { page } from '$app/stores';
 
 	let payments = writable(data.eventFromSupabase?.Payment || []);
 	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price);
 
+	const currentSlug = $page.params.slug;
 	onMount(() => {
+
 		// Create a function to handle inserts
 		const handleInserts = (payload) => {
+			if (payload.new.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => payload.new.price + $totalMoneyRaised);
 
@@ -26,23 +30,24 @@
 
 		// Create a function to handle updates
 		const handleUpdates = (payload) => {
+			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => current + payload.new.price - payload.old.price);
-			
+
 			// ACTUALIZA EL PAGO
 			payments.update((current) =>
-				current.map((payment) => (payment.id === payload.new.id ? payload.new : payment))
-			);
-			
+			current.map((payment) => (payment.id === payload.new.id ? payload.new : payment))
+		);
+
 			// MANDA LA NOTIFICACIÓN
-			toast.info(`Se actualizo el pago de ${payload.new.customer_name}`, {
-			});
+			toast.info(`Se actualizo el pago de ${payload.new.customer_name}`, {});
 		};
 
 		// Create a function to handle deletes
 		const handleDeletes = (payload) => {
+			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
-			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price );
+			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price);
 
 			payments.update((current) => current.filter((payment) => payment.id !== payload.old.id));
 			toast.warning(`Se ha eliminado el pago de ${payload.old.customer_name}`, {});
@@ -58,7 +63,7 @@
 			)
 			.on(
 				'postgres_changes',
-				{ event: 'UPDATE', schema: 'public', table: 'Payment'},
+				{ event: 'UPDATE', schema: 'public', table: 'Payment' },
 				handleUpdates
 			)
 			.on(
@@ -73,20 +78,21 @@
 			supabaseClient.removeChannel(subscription);
 		};
 	});
-	console.log(data)
 </script>
 
 <svelte:head>
-	 <title>{data.eventFromSupabase?.name} | Eventos</title>
+	<title>{data.eventFromSupabase?.name} | Eventos</title>
 </svelte:head>
 
 <Navbar />
 <div class="flex flex-col gap-4 mb-6 mt-4">
 	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
-	<Stat
-		totalMoneyRaised={$totalMoneyRaised}
-		ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
-		studioTicketsAvailable={data.studioTicketsAvailable}
-	/>
+	{#if $page.data.admin}
+		<Stat
+			totalMoneyRaised={$totalMoneyRaised}
+			ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
+			studioTicketsAvailable={data.studioTicketsAvailable}
+		/>
+	{/if}
 	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio.sell_type} />
 </div>

@@ -29,7 +29,6 @@
 				</p>
 			</Card.Content>
 		</Card.Root>
-		{#if !$page.data.validator}
 			<Card.Root
 				data-x-chunk-name="card-03"
 				data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
@@ -43,18 +42,17 @@
 					<p class="text-xs text-muted-foreground">Sin descuentos aplicados.</p>
 				</Card.Content>
 			</Card.Root>
-		{/if}
 			<Card.Root
 				data-x-chunk-name="card-03"
 				data-x-chunk-description="Una tarjeta que muestra el monto total generado por la venta de entradas."
 			>
 				<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-					<Card.Title class="text-sm font-medium">Quedan por validar</Card.Title>
+					<Card.Title class="text-sm font-medium">Entradas validadas</Card.Title>
 					<TicketPercent class="h-4 w-4 text-muted-foreground" />
 				</Card.Header>
 				<Card.Content>
-					<div class="text-2xl font-bold">{ticketsSold - $page.data.ticketValidated._sum.ticketValidated}</div>
-					<p class="text-xs text-muted-foreground">De un total de {ticketsSold} unidades.</p>
+					<div class="text-2xl font-bold">{$page.data.ticketValidated._sum.ticketValidated}</div>
+					<p class="text-xs text-muted-foreground">No hicieron ingreso {ticketsSold - $page.data.ticketValidated._sum.ticketValidated} unidades.</p>
 				</Card.Content>
 			</Card.Root>
 	</div>

@@ -31,7 +31,7 @@
 		"postcss": "^8.4.32",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.10.1",
-		"prisma": "^5.16.1",
+		"prisma": "^5.22.0",
 		"svelte": "^4.2.19",
 		"svelte-check": "^3.4.3",
 		"svelte-headless-table": "^0.18.2",
@@ -48,7 +48,7 @@
 	"type": "module",
 	"dependencies": {
 		"@clerk/types": "^4.5.1",
-		"@prisma/client": "^5.16.1",
+		"@prisma/client": "^5.22.0",
 		"@prisma/extension-pulse": "^1.2.0",
 		"@sanity/client": "^6.18.3",
 		"@sanity/image-url": "^1.0.2",

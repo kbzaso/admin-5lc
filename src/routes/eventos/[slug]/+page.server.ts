@@ -64,16 +64,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			},
 			include: {
 				Payment: {
-					// where: {
-					// 	payment_status: 'success'
-					// },
 					orderBy: {
 						date: 'desc' // Use 'asc' for ascending order
+						},
+						include: {
+							Comment: true
+						}
 					}
 				}
-			}
-		});
-	};
+			});
+		};
 
 	// Get the total money made from the event
 	const totalMoneyRaised = async () => {
@@ -92,7 +92,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return await client.payment.aggregate({
 			where: {
 				productId: params.slug,
-				payment_status: 'success'
+				payment_status: {
+					in: ['success', 'system']
+				}
 			},
 			_sum: {
 				ticketAmount: true
@@ -202,6 +204,17 @@ export const actions: Actions = {
 		const price = Number(formData.get('price')) || 0;
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
 		const paymentId = formData.get('paymentId');
+		const refund = formData.get('refund');
+		const change = formData.get('change');
+
+		const changeStatus = (refund: string, change: string) => {
+			const refundMoney = Boolean(refund);
+			const changeEvent = Boolean(change);
+
+			if (refundMoney) return 'refund';
+			if (changeEvent) return 'change';
+			return 'system';
+		}
 
 		try {
 			const updatePayment = await client.payment.update({
@@ -215,7 +228,10 @@ export const actions: Actions = {
 					customer_phone: phone as string,
 					price,
 					ticketAmount,
-					ticketsType: ticketType || 'Tandas'
+					payment_status: changeStatus(refund, change),
+					ticketsType: ticketType || 'Tandas',
+					refund: Boolean(refund),
+					changeEvent: Boolean(change)
 				}
 			});
 			return {
@@ -344,7 +360,6 @@ export const actions: Actions = {
 
 			// Generate a payment code
 			const paymentCode = await generatePaymentCode(eventFromSanityStudio.title, params.slug);
-			console.log('paymentCode:', paymentCode);
 
 			// Create a new payment record
 			const newPayment = await client.payment.create({
@@ -355,7 +370,7 @@ export const actions: Actions = {
 					customer_email: email as string,
 					customer_phone: phone as string,
 					price,
-					payment_status: 'success',
+					payment_status: 'system',
 					ticketAmount,
 					client_id: paymentCode,
 					ticketsType: traductions[ticketType] || 'Tandas',

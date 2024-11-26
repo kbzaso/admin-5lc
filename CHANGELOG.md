@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Change status of payment; add refund and changeEvent status
+
 ### Fix
 
 - Border color of search input

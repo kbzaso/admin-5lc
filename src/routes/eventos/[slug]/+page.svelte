@@ -36,8 +36,8 @@
 
 			// ACTUALIZA EL PAGO
 			payments.update((current) =>
-				current.map((payment) => (payment.id === payload.new.id ? payload.new : payment))
-			);
+			current.map((payment) => (payment.id === payload.new.id ? payload.new : payment))
+		);
 
 			// MANDA LA NOTIFICACIÓN
 			toast.info(`Se actualizo el pago de ${payload.new.customer_name}`, {});

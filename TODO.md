@@ -8,9 +8,9 @@
 ## Payments
 
 ### Add
-  - [ ] Add filter to see how many batches were on every payment
   - [ ] Add comments to payments
-  - [ ] Add statues to payment
+  - [ ] Add filter to see how many batches were on every payment
+  - [x] Add statues to payment
   - [x] Confirmation on delete payments
   - [x] Replace customer_name to payment code to Toaster
 

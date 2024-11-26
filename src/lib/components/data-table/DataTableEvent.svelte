@@ -45,7 +45,7 @@
 		register: 'Registro',
 		rejected: 'Rechazado',
 		refund: 'Reembolso',
-		changed: 'Cambio'
+		change: 'Cambio'
 	};
 
 	export let Payments: Payment[];
@@ -71,7 +71,7 @@
 			payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			payment.rut?.toLowerCase().includes(searchTerm.toLowerCase());
 
-		const matchesSuccessFilter = $showRejected || payment.payment_status === 'success' || payment.payment_status === 'system';
+		const matchesSuccessFilter = $showRejected || payment.payment_status === 'success' || payment.payment_status === 'system' || payment.payment_status === 'refund' || payment.payment_status === 'change';
 
 		if ($showRejected) {
 			return (payment.payment_status === 'register' || payment.payment_status === 'rejected' || payment.payment_status === null) && matchesSearchTerm;
@@ -84,16 +84,21 @@
 	function getBadgeClass(paymentStatus: string): string {
 		switch (paymentStatus) {
 			case 'success':
-				return 'bg-green-300 text-green-800';
+				return 'bg-orange-300 text-orange-900';
 			case 'rejected':
-				return 'bg-red-300 bg-red-800';
+				return 'bg-text-300 bg-text-800';
 			case 'system':
-				return 'bg-blue-300 text-blue-800';
+				return 'bg-blue-300 text-blue-900';
+			case 'register':
+				return 'bg-gray-300 text-gray-900';
+			case 'refund':
+				return 'bg-red-300 text-red-900';
+			case 'change':
+				return 'bg-yellow-300 text-yellow-900';
 			default:
 				return 'bg-gray-400';
 		}
 	}
-
 </script>
 
 <!-- HEADER -->
@@ -115,7 +120,7 @@
 			<li>
 				<button
 					on:click={() => openDialog(payment.id)}
-					class="p-6 w-full hover:bg-muted flex justify-between"
+					class={`p-6 w-full hover:bg-muted flex justify-between ${payment.ticketAmount === payment.ticketValidated ? 'bg-green-500/10' : ''}`}
 				>
 					<div class="flex flex-col items-start">
 						<span class="text-xs text-primary uppercase">

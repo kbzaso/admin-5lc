@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import { setContext } from 'svelte';
+	import { onMount, setContext } from 'svelte';
 	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
@@ -16,13 +16,6 @@
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 
 	const isDesktop = mediaQuery('(min-width: 768px)');
-
-	function closeDialog(paymentId?: string) {
-		idUpdateDialogOpen.set({
-			open: false,
-			id: ''
-		});
-	}
 
 	export let dialogOpen: boolean = false;
 	let confirmationDialogOpen: boolean = false;
@@ -43,6 +36,14 @@
 				'El pago ha sido rechazado por el banco. En el caso que se haya realizado el descuento en la cuenta del cliente, el banco hace el reembolso en unos minutos.'
 		}
 	};
+
+	function closeDialog(paymentId?: string) {
+		idUpdateDialogOpen.set({
+			open: false,
+			id: ''
+		});
+	}
+
 </script>
 
 <Sheet.Root bind:open={dialogOpen} onOpenChange={() => closeDialog()}>
@@ -126,7 +127,7 @@
 					<form class="grid items-start gap-4" method="POST" action="?/updatePayment" use:enhance>
 						<div class="flex gap-4">
 							<div class="grid gap-2 w-full">
-								<Label for="name">Nombres</Label>
+								<Label for="name" class="text-left">Nombres</Label>
 								<Input
 									type="text"
 									id="name"
@@ -138,7 +139,7 @@
 								/>
 							</div>
 							<div class="grid gap-2 w-full">
-								<Label for="rut">RUT</Label>
+								<Label for="rut" class="text-left">RUT</Label>
 								<Input
 									type="text"
 									id="rut"
@@ -152,7 +153,7 @@
 						</div>
 						<div class="flex gap-4">
 							<div class="grid gap-2 w-full">
-								<Label for="email">Email</Label>
+								<Label for="email" class="text-left">Email</Label>
 								<Input
 									type="email"
 									id="email"
@@ -164,7 +165,7 @@
 								/>
 							</div>
 							<div class="grid gap-2 w-full">
-								<Label for="phone">Teléfono</Label>
+								<Label for="phone" class="text-left">Teléfono</Label>
 								<Input
 									id="phone"
 									name="phone"
@@ -179,7 +180,7 @@
 						<input type="text" hidden value={payment.id} name="paymentId" />
 						<div class="flex gap-4">
 							<div class="grid gap-2 w-full">
-								<Label for="ticketAmount">Entradas</Label>
+								<Label for="ticketAmount" class="text-left">Entradas</Label>
 								<Input
 									type="number"
 									name="ticketAmount"
@@ -192,7 +193,7 @@
 								/>
 							</div>
 							<div class="grid gap-2 w-full">
-								<Label for="price">Precio</Label>
+								<Label for="price" class="text-left">Precio</Label>
 								<Input
 									type="number"
 									name="price"
@@ -229,17 +230,45 @@
 								</label>
 							</div>
 						{/if}
-						<Button on:click={() => closeDialog()} type="submit">Actualizar</Button>
+						<div class="form-control">
+							<label class="label cursor-pointer justify-start gap-4">
+								<input
+									name="refund"
+									type="checkbox"
+									checked={payment.refund}
+									class="checkbox border-yellow-400 [--chkbg:theme(colors.yellow.400)] [--chkfg:black] checked:border-yellow-800"
+								/>
+								<span class="label-text text-white">Devolución</span>
+							</label>
+							<label class="label cursor-pointer justify-start gap-4">
+								<input
+									name="change"
+									type="checkbox"
+									checked={payment.changeEvent}
+									class="checkbox border-yellow-400 [--chkbg:theme(colors.yellow.400)] [--chkfg:black] checked:border-yellow-800"
+								/>
+								<span class="label-text text-white">Cambio de evento</span>
+							</label>
+						</div>
+						<div class="w-full flex gap-4">
+							{#if !$page.data.validator}
+								<Button
+									class="w-full bg-error hover:bg-red-500"
+									on:click={() => {
+										closeDialog();
+										confirmationDialogOpen = true;
+									}}>Eliminar pago</Button
+								>
+							{/if}
+							<Button
+								class="w-full bg-primary hover:bg-primary-dark"
+								on:click={() => {
+									closeDialog();
+								}}
+								type="submit">Actualizar</Button
+							>
+						</div>
 					</form>
-				{/if}
-				{#if !$page.data.validator}
-					<Button
-						class="w-full bg-error hover:bg-red-500 mt-4"
-						on:click={() => {
-							closeDialog();
-							confirmationDialogOpen = true;
-						}}>Eliminar pago</Button
-					>
 				{/if}
 			</Sheet.Description>
 		</Sheet.Header>
@@ -247,20 +276,21 @@
 </Sheet.Root>
 
 <Dialog.Root bind:open={confirmationDialogOpen}>
-		<Dialog.Content>
-			<Dialog.Title class="leading-normal">
-				¿Estás seguro de que deseas eliminar el pago de {payment.customer_name}?
-			</Dialog.Title>
-			<Dialog.Description>
-				Una vez eliminado, no podrás recuperar la información.
-			</Dialog.Description>
-				<form method="POST" action="?/deletePayment" use:enhance class="w-full" on:submit={() => confirmationDialogOpen = false}>
-					<input type="text" hidden value={payment.id} name="paymentId" />
-					<Button
-						class="w-full bg-error hover:bg-red-500"
-						type="submit">Eliminar pago</Button
-					>
-				</form>
-			<Dialog.Close />
-		</Dialog.Content>
+	<Dialog.Content>
+		<Dialog.Title class="leading-normal">
+			¿Estás seguro de que deseas eliminar el pago de {payment.customer_name}?
+		</Dialog.Title>
+		<Dialog.Description>Una vez eliminado, no podrás recuperar la información.</Dialog.Description>
+		<form
+			method="POST"
+			action="?/deletePayment"
+			use:enhance
+			class="w-full"
+			on:submit={() => (confirmationDialogOpen = false)}
+		>
+			<input type="text" hidden value={payment.id} name="paymentId" />
+			<Button class="w-full bg-error hover:bg-red-500" type="submit">Eliminar pago</Button>
+		</form>
+		<Dialog.Close />
+	</Dialog.Content>
 </Dialog.Root>

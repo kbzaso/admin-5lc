@@ -8,14 +8,22 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Product {
+  id      String    @id @unique
+  name    String
+  stock   Int?
+  date    DateTime? @db.Timestamptz(6)
+  Payment Payment[]
+}
+
 model Payment {
-  id                 String   @id @unique @default(uuid())
+  id                 String    @id @unique
   rut                String?
   price              Float
   ticketAmount       Int
-  ticketValidated    Int      @default(0)
+  ticketValidated    Int       @default(0)
   client_id          String?
-  date               DateTime @default(now())
+  date               DateTime  @default(now())
   signature_token    String?
   payment_status     String?
   payment_token      String?
@@ -24,16 +32,19 @@ model Payment {
   customer_phone     String?
   productId          String
   buys               Json
-  payment_id_service String?  @unique
+  payment_id_service String?   @unique
   ticketsType        String
   discount_code      String?
-  Product            Product  @relation(fields: [productId], references: [id])
+  refund             Boolean   @default(false)
+  changeEvent        Boolean   @default(false)
+  Product            Product   @relation(fields: [productId], references: [id])
+  Comment            Comment[]
 }
 
-model Product {
-  id      String    @id @unique
-  name    String
-  stock   Int?
-  date    DateTime? @db.Timestamptz(6)
-  Payment Payment[]
+model Comment {
+  id          String   @id @unique
+  paymentId   String
+  commentText String
+  createdAt   DateTime @default(now())
+  Payment     Payment  @relation(fields: [paymentId], references: [id])
 }

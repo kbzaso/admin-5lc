@@ -12,6 +12,7 @@
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { mediaQuery } from 'svelte-legos';
+	import { toast } from 'svelte-sonner';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 
@@ -57,7 +58,7 @@
 				}
 			});
 			navigator.clipboard.writeText(JSON.stringify(data)).then(() => {
-				alert('Formulario copiado al portapapeles');
+				toast.info(`Se copio la información del comprador/a`, {});
 			});
 		}
 	}

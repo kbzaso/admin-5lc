@@ -10,6 +10,7 @@
 ### Add
   - [ ] Add comments to payments
   - [ ] Add filter to see how many batches were on every payment
+  - [x] Copy paste payment info
   - [x] Add statues to payment
   - [x] Confirmation on delete payments
   - [x] Replace customer_name to payment code to Toaster
@@ -23,7 +24,7 @@
     - [x] Disabled inputs for delete payments
   - [x] Validate tickets
   - [x] Add a badge to payments already validated
-  - [ ] npx db push to production database
+  - [x] npx db push to production database
 
 ## Events
 

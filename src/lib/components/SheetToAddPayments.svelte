@@ -86,10 +86,13 @@
 				</div>
 			</div>
 			{#if $page.data.eventFromSanityStudio.sell_type === 'ubication'}
+			<fieldset>
+				<legend>Entrada:</legend>
 				<div class="flex gap-4">
 					<label class="label cursor-pointer flex flex-col">
 						<input
 							type="radio"
+							id="general_tickets"
 							name="ticketType"
 							class="radio checked:bg-primary"
 							checked="checked"
@@ -101,12 +104,14 @@
 						<input
 							type="radio"
 							name="ticketType"
+							id="ringside_tickets"
 							class="radio checked:bg-primary"
 							value="ringside_tickets"
 						/>
 						<span class="label-text mt-2">Ringisde</span>
 					</label>
 				</div>
+			</fieldset>
 			{/if}
 			<Button type="submit">Crear pago</Button>
 		</form>

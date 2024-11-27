@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Copy paste payment info
+
 ## [0.0.15] - 2024-11-26
 
 ### Add

@@ -6,12 +6,13 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { onMount, setContext } from 'svelte';
-	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert } from 'lucide-svelte';
+	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert, Copy } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { mediaQuery } from 'svelte-legos';
+	import { toast } from 'svelte-sonner';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 
@@ -44,16 +45,39 @@
 		});
 	}
 
+	let copiedForm = '';
+
+	function copyFormData() {
+		const form = document.getElementById('updateForm');
+		if (form) {
+			const formData = new FormData(form as HTMLFormElement);
+			const data: { [key: string]: FormDataEntryValue } = {};
+			formData.forEach((value, key) => {
+				if (key !== 'paymentId') {
+					data[key] = value;
+				}
+			});
+			navigator.clipboard.writeText(JSON.stringify(data)).then(() => {
+				toast.info(`Se copio la información del comprador/a`, {});
+			});
+		}
+	}
+
 </script>
 
 <Sheet.Root bind:open={dialogOpen} onOpenChange={() => closeDialog()}>
 	<Sheet.Content side={$isDesktop ? 'right' : 'bottom'}>
 		<Sheet.Header>
-			<Sheet.Title>
+			<Sheet.Title class="flex gap-4 items-center">
 				{#if payment.payment_status === STATUS.register.code || payment.payment_status === STATUS.rejected.code}{:else if $page.data.validator}
 					Validar entradas
 				{:else}
 					Actualizar pago
+				{/if}
+				{#if $page.data.admin}
+				<Button variant="ghost" on:click={copyFormData}>
+					<Copy class="text-primary"/>
+				</Button>
 				{/if}
 			</Sheet.Title>
 			<Sheet.Description>
@@ -124,7 +148,7 @@
 						</form>
 					</div>
 				{:else}
-					<form class="grid items-start gap-4" method="POST" action="?/updatePayment" use:enhance>
+					<form id="updateForm" class="grid items-start gap-4" method="POST" action="?/updatePayment" use:enhance>
 						<div class="flex gap-4">
 							<div class="grid gap-2 w-full">
 								<Label for="name" class="text-left">Nombres</Label>

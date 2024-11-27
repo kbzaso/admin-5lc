@@ -148,9 +148,6 @@ export const actions: Actions = {
 		const paymentId = formData.get('paymentId');
 		const ticketValidated = Number(formData.get('ticketValidated'));
 
-		console.log('paymentId:', paymentId);
-		console.log('ticketValidated:', ticketValidated);
-
 		try {
 			const updatePayment = await client.payment.update({
 				where: {

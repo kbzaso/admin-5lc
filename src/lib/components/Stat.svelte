@@ -6,9 +6,6 @@
 	import { TicketPercent, DollarSign } from 'lucide-svelte';
 	import { formatPriceToCLP } from '$lib';
 	import { page } from '$app/stores';
-
-	console.log($page.data)
-
 	const stock = ticketsSold + studioTicketsAvailable;
 </script>
 

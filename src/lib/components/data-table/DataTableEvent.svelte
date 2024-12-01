@@ -84,17 +84,17 @@
 	function getBadgeClass(paymentStatus: string): string {
 		switch (paymentStatus) {
 			case 'success':
-				return 'bg-orange-300 text-orange-900';
+				return 'bg-orange-300 text-orange-900 hover:bg-orange-400';
 			case 'rejected':
-				return 'bg-text-300 bg-text-800';
+				return 'bg-red-800 text-red-300 hover:bg-red-900';
 			case 'system':
-				return 'bg-blue-300 text-blue-900';
+				return 'bg-blue-300 text-blue-900 hover:bg-blue-400';
 			case 'register':
-				return 'bg-gray-300 text-gray-900';
+				return 'bg-gray-300 text-gray-900 hover:bg-gray-400';
 			case 'refund':
-				return 'bg-red-300 text-red-900';
+				return 'bg-red-300 text-red-900 hover:bg-red-400';
 			case 'change':
-				return 'bg-yellow-300 text-yellow-900';
+				return 'bg-yellow-300 text-yellow-900 hover:bg-yellow-400';
 			default:
 				return 'bg-gray-400';
 		}

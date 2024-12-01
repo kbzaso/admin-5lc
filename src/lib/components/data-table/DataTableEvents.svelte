@@ -28,8 +28,6 @@
 	// 	// status: 'pending' | 'processing' | 'success' | 'failed';
 	// };
 
-	console.log(isDesktop)
-
 	export let Events;
 
 	const table = createTable(readable(Events), {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Validators jumps direct to the next active event
+
 ## [0.0.16] - 2024-11-27
 
 ### Add

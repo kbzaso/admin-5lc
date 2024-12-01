@@ -8,5 +8,4 @@ export const load: PageServerLoad = async ({ locals }) => {
 	} else {
 		throw redirect(302, "/eventos")
 	}
-
 };

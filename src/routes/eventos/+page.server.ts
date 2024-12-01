@@ -20,31 +20,31 @@ export const load: PageServerLoad = async ({ locals }) => {
 		if (nextEvent) {
 			throw redirect(302, `/eventos/${nextEvent.id}`);
 		}
-	}
-
-	const events = await client.product.findMany({
-		orderBy: {
-			date: 'desc'
-		},
-		include: {
-			Payment: {
-				where: {
-					payment_status: 'success'
+	} else {
+		const events = await client.product.findMany({
+			orderBy: {
+				date: 'desc'
+			},
+			include: {
+				Payment: {
+					where: {
+						payment_status: 'success'
+					}
 				}
 			}
-		}
-	});
+		});
 
-	const productsWithTotal = events.map((product) => {
-		const totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
-		const totalTicketsSold = product.Payment.reduce(
-			(sum, payment) => sum + payment.ticketAmount,
-			0
-		);
-		return { ...product, totalPayment, totalTicketsSold };
-	});
+		const productsWithTotal = await Promise.all(events.map(async (product) => {
+			const totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
+			const totalTicketsSold = product.Payment.reduce(
+				(sum, payment) => sum + payment.ticketAmount,
+				0
+			);
+			return { ...product, totalPayment, totalTicketsSold };
+		}));
 
-	return {
-		events: productsWithTotal
-	};
+		return {
+			events: productsWithTotal
+		};
+	}
 };

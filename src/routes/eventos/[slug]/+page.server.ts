@@ -31,6 +31,52 @@ const getEvent = async (slugEvent: string) => {
 	return event;
 };
 
+// Function to sum amounts in Payment.buys
+interface Buy {
+	amount: number;
+}
+// Function to create an object with the sum of every buys object inside Payment
+interface Payment {
+	payment_status: string;
+	buys: Record<string, Buy>;
+	ticketAmount: number;
+}
+
+interface BuysSum {
+	[key: string]: Buy;
+}
+
+const createBuysSumObject = (payments: Payment[]): BuysSum => {
+	const buysSum: BuysSum = {};
+	let systemPaymentsSum = 0;
+
+	payments
+		.filter(
+			(payment) => payment.payment_status === 'success' || payment.payment_status === 'system'
+		)
+		.forEach((payment) => {
+			const orderedKeys = ['firsts_tickets', 'seconds_tickets', 'thirds_tickets', 'system_payments'];
+			const sortedEntries = Object.entries(payment.buys).sort(
+				([a], [b]) => orderedKeys.indexOf(a) - orderedKeys.indexOf(b)
+			);
+
+			for (const [key, value] of sortedEntries) {
+				if (!buysSum[key]) {
+					buysSum[key] = { amount: 0 };
+				}
+				buysSum[key].amount += value.amount;
+			}
+
+			if (payment.payment_status === 'system') {
+				systemPaymentsSum += payment.ticketAmount
+			}
+		});
+
+	buysSum['system_payments'] = { amount: systemPaymentsSum };
+
+	return buysSum;
+};
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!locals.session) throw redirect(302, '/login');
 
@@ -58,7 +104,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	const eventFromSupabase = async () => {
-		return await client.product.findUnique({
+		const product = await client.product.findUnique({
 			where: {
 				id: params.slug
 			},
@@ -66,14 +112,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				Payment: {
 					orderBy: {
 						date: 'desc' // Use 'asc' for ascending order
-						},
-						include: {
-							Comment: true
-						}
+					},
+					include: {
+						Comment: true
 					}
 				}
-			});
-		};
+			}
+		});
+
+		// Create the buys sum object
+		const buysSumObject = createBuysSumObject(product.Payment);
+
+		return { ...product, buysSumObject };
+	};
 
 	// Get the total money made from the event
 	const totalMoneyRaised = async () => {
@@ -106,13 +157,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return await client.payment.aggregate({
 			where: {
 				productId: params.slug,
-				payment_status: 'success',
+				payment_status: 'success'
 			},
 			_sum: {
 				ticketValidated: true
 			}
 		});
-	}
+	};
 
 	return {
 		sell_type: eventFromSanityStudio.sell_type,
@@ -211,7 +262,7 @@ export const actions: Actions = {
 			if (refundMoney) return 'refund';
 			if (changeEvent) return 'change';
 			return 'system';
-		}
+		};
 
 		try {
 			const updatePayment = await client.payment.update({

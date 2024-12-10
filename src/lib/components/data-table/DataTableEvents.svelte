@@ -101,7 +101,7 @@
 </script>
 
 <div class="flex items-center py-4">
-	<Input class="max-w-sm" placeholder="Filtrar eventos..." type="text" bind:value={$filterValue} />
+	<Input class="max-w-sm border-primary" placeholder="Filtrar eventos..." type="text" bind:value={$filterValue} />
 </div>
 <div class="rounded-md border">
 	<Table.Root {...$tableAttrs}>

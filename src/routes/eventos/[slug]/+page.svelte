@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	export let data: PageData;
+
 	import Stat from '$lib/components/Stat.svelte';
 	import Navbar from '$lib/components/Navbar.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
@@ -78,6 +79,8 @@
 			supabaseClient.removeChannel(subscription);
 		};
 	});
+
+	console.log(data.eventFromSupabase)
 </script>
 
 <svelte:head>
@@ -92,6 +95,7 @@
 			totalMoneyRaised={$totalMoneyRaised}
 			ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
 			studioTicketsAvailable={data.studioTicketsAvailable}
+			buysSumObject={data.eventFromSupabase.buysSumObject}
 		/>
 	{/if}
 	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio.sell_type} />

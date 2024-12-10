@@ -149,7 +149,7 @@
 							{traductions[payment.payment_status]}
 						</Badge>
 						{#if payment.ticketAmount === payment.ticketValidated}
-							<Badge class="bg-green-400 hover:bg-green-500">validado</Badge>
+							<Badge class="bg-green-400 hover:bg-green-500">Validado</Badge>
 						{/if}
 						<div class="text-right text-xs md:text-base">
 							<span class="flex gap-2 items-center">

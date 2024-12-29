@@ -85,7 +85,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	let studioTicketsAvailable;
 
-	if (eventFromSanityStudio.sell_type === 'ubication') {
+	if (eventFromSanityStudio?.sell_type === 'ubication') {
 		const ticketTypes = eventFromSanityStudio?.ticket.ubication;
 		let total = 0;
 		for (const key in ticketTypes) {
@@ -166,7 +166,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	};
 
 	return {
-		sell_type: eventFromSanityStudio.sell_type,
+		sell_type: eventFromSanityStudio?.sell_type,
 		eventFromSupabase: await eventFromSupabase(),
 		totalMoneyRaised: await totalMoneyRaised(),
 		ticketsSold: await ticketsSold(),

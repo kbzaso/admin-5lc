@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.19] - 2024-12-29
+
 ### Add
 
 - Error page when no active event (validator view)
@@ -141,7 +143,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.17...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.18...HEAD
+[0.0.18]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.18...v0.0.19
 [0.0.17]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.17...v0.0.18
 [0.0.17]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.16...v0.0.17
 [0.0.16]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.15...v0.0.16

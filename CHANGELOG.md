@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Error page when no active event (validator view)
+
 ## [0.0.18] - 2024-12-10
 
 ### Add

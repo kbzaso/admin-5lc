@@ -19,6 +19,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 		if (nextEvent) {
 			throw redirect(302, `/eventos/${nextEvent.id}`);
+		} else {
+			throw redirect(302, '/no-event');
 		}
 	} else {
 		const events = await client.product.findMany({

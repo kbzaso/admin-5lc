@@ -14,6 +14,8 @@
 	import { mediaQuery } from 'svelte-legos';
 	import { toast } from 'svelte-sonner';
 	import * as Tabs from '$lib/components/ui/tabs';
+	import { Textarea } from '$lib/components/ui/textarea/index.js';
+	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 
@@ -152,6 +154,7 @@
 						<Tabs.List class="w-full mb-4">
 							<Tabs.Trigger class="w-full" value="general">General</Tabs.Trigger>
 							<Tabs.Trigger class="w-full" value="validator">Validador</Tabs.Trigger>
+							<Tabs.Trigger class="w-full" value="comments">Comentarios</Tabs.Trigger>
 						</Tabs.List>
 						<Tabs.Content value="general">
 							<form
@@ -360,6 +363,42 @@
 									>
 								</form>
 							</div>
+						</Tabs.Content>
+						<Tabs.Content value="comments">
+							<ScrollArea class="h-[200px] text-left rounded-md border bg-muted/20 p-4 mb-4">
+								{#each payment.Comment as comment, i}
+									<div class="flex flex-col gap-2 py-4 border-b border-muted">
+										<span class="text-xs text-primary"
+											>{new Date(comment.createdAt).toLocaleString('es-CL', {
+												day: 'numeric',
+												month: 'short',
+												year: 'numeric',
+												hour: 'numeric',
+												minute: 'numeric'
+											})}</span
+										>
+										<span class="text-sm">{comment.commentText}</span>
+									</div>
+								{/each}
+							</ScrollArea>
+
+							<form
+								id="updateForm"
+								class="grid items-start gap-4"
+								method="POST"
+								action="?/addComment"
+								use:enhance
+							>
+								<Textarea name="comment" placeholder="Type your message here." />
+								<input type="text" hidden value={payment.id} name="paymentId" />
+								<Button
+									class="w-full bg-primary hover:bg-primary-dark"
+									on:click={() => {
+										closeDialog();
+									}}
+									type="submit">Agregar comentario</Button
+								>
+							</form>
 						</Tabs.Content>
 					</Tabs.Root>
 				{/if}

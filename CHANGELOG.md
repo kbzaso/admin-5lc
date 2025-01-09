@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- [ ] Realtime update
+- Comments to each payment
+
 ### Fix
 
 - Admin user can validate payments

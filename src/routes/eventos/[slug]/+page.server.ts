@@ -310,7 +310,7 @@ export const actions: Actions = {
 		};
 
 		async function generatePaymentCode(eventName: string, eventId: string): Promise<string> {
-			const sanitizedEventName = eventName.replace(/\s+/g, '-');
+			const sanitizedEventName = eventName.replace(/\s+/g, '-').substring(0, 10);
 			// Fetch the current count of payments for the event
 			const paymentCount = await client.payment.count({
 				where: {

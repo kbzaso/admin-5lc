@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- Admin user can validate payments
+
 ## [0.0.19] - 2024-12-29
 
 ### Add

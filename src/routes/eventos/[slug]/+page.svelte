@@ -98,5 +98,5 @@
 			buysSumObject={data.eventFromSupabase.buysSumObject}
 		/>
 	{/if}
-	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio.sell_type} />
+	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio?.sell_type} />
 </div>

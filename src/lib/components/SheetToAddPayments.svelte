@@ -85,7 +85,7 @@
 					<Input type="number" name="price" min="0" id="price" required />
 				</div>
 			</div>
-			{#if $page.data.eventFromSanityStudio.sell_type === 'ubication'}
+			{#if $page.data.eventFromSanityStudio?.sell_type === 'ubication'}
 			<fieldset>
 				<legend>Entrada:</legend>
 				<div class="flex gap-4">

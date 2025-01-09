@@ -123,7 +123,7 @@
 					class={`p-6 w-full hover:bg-muted flex justify-between ${payment.ticketAmount === payment.ticketValidated ? 'bg-green-500/10' : ''}`}
 				>
 					<div class="flex flex-col items-start">
-						<span class="text-xs text-primary uppercase">
+						<span class="text-xs text-primary uppercase text-left">
 							{payment.client_id ? payment.client_id : ''}
 						</span>
 						<span class=" md:text-xl text-left">
@@ -155,7 +155,7 @@
 							<span class="flex gap-2 items-center">
 								<Ticket class="h-4 md:h-10" />
 								{payment.ticketValidated}/{payment.ticketAmount}
-								{$page.data.eventFromSanityStudio.sell_type === 'batch' ? '' : payment.ticketsType}
+								{$page.data.eventFromSanityStudio?.sell_type === 'batch' ? '' : payment.ticketsType}
 							</span>
 							<span class="flex gap-2 items-center">
 								<CreditCard class="h-4 md:h-10" />

@@ -79,8 +79,6 @@
 			supabaseClient.removeChannel(subscription);
 		};
 	});
-
-	console.log(data.eventFromSupabase)
 </script>
 
 <svelte:head>

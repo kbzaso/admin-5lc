@@ -361,7 +361,13 @@
 									toast.success(`Se agrego un comentario`, {});
 								}}
 							>
-								<Textarea required name="comment" class="text-[16px]" placeholder="Escribe tu comentario." />
+								<Textarea
+									required
+									name="comment"
+									class="text-[16px]"
+									placeholder="Escribe tu comentario."
+									on:focus={() => (dialogOpen = true)}
+								/>
 								<input type="hidden" id="paymentId" value={payment.id} name="paymentId" />
 								<Button class="w-full bg-primary hover:bg-primary-dark" type="submit"
 									>Agregar comentario</Button

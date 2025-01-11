@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- Fix the focus of text area when adding comment to payments
+
+### Add
+
+- Realtime update througth stores
+- Comments to each payment
+
+### Fix
+
+- Admin user can validate payments
+
 ## [0.0.19] - 2024-12-29
 
 ### Add

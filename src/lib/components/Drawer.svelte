@@ -44,7 +44,7 @@
 					<Input type="number" name="price" min="0" id="price" required />
 				</div>
 			</div>
-			{#if $page.data.eventFromSanityStudio.sell_type === 'ubication'}
+			{#if $page.data.eventFromSanityStudio?.sell_type === 'ubication'}
 				<div class="form-control">
 					<label class="label cursor-pointer">
 						<span class="label-text">General</span>

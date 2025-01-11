@@ -8,6 +8,7 @@ const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
 const datasetName = import.meta.env.VITE_SANITY_DATASET;
 
 import { SANITY_WRITE_ADMIN as tokenWithWriteAccess } from '$env/static/private';
+import { add } from 'date-fns';
 
 // Get event from Sanity Studio
 const getEvent = async (slugEvent: string) => {
@@ -194,6 +195,31 @@ type Ticket = {
 };
 
 export const actions: Actions = {
+	addComment: async ({ request }) => {
+		const formData = await request.formData();
+		const paymentId = formData.get('paymentId');
+		const comment = formData.get('comment');
+
+		try {
+			const newComment = await client.comment.create({
+				data: {
+					id: crypto.randomUUID(),
+					paymentId: paymentId as string,
+					commentText: comment as string
+				},
+			});
+			return {
+				status: 201,
+				body: { message: 'Comment added successfully', comment: newComment }
+			};
+		} catch (error) {
+			console.error('Error adding comment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to add comment' }
+			};
+		}
+	},
 	validateTickets: async ({ request }) => {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
@@ -310,7 +336,7 @@ export const actions: Actions = {
 		};
 
 		async function generatePaymentCode(eventName: string, eventId: string): Promise<string> {
-			const sanitizedEventName = eventName.replace(/\s+/g, '-');
+			const sanitizedEventName = eventName.replace(/\s+/g, '-').substring(0, 10);
 			// Fetch the current count of payments for the event
 			const paymentCount = await client.payment.count({
 				where: {

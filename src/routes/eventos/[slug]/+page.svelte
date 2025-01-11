@@ -79,8 +79,6 @@
 			supabaseClient.removeChannel(subscription);
 		};
 	});
-
-	console.log(data.eventFromSupabase)
 </script>
 
 <svelte:head>
@@ -98,5 +96,5 @@
 			buysSumObject={data.eventFromSupabase.buysSumObject}
 		/>
 	{/if}
-	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio.sell_type} />
+	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio?.sell_type} />
 </div>

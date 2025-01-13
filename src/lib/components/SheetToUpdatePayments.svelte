@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import { onMount, setContext } from 'svelte';
+	import { getContext, onMount, setContext } from 'svelte';
 	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert, Copy } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
@@ -27,8 +27,6 @@
 	let confirmationDialogOpen: boolean = false;
 
 	export let payment;
-	
-	let comments = writable(payment.Comment);
 
 	let validatedTickets = payment.ticketValidated;
 
@@ -76,12 +74,12 @@
 	<Sheet.Content side={$isDesktop ? 'right' : 'bottom'}>
 		<Sheet.Header>
 			<Sheet.Title class="flex gap-4 items-center">
-				{#if payment.payment_status === STATUS.register.code || payment.payment_status === STATUS.rejected.code}{:else if $page.data.validator}
+				{#if payment.payment_status === STATUS.register.code || payment.payment_status === STATUS.rejected.code}{:else if $page.data.user.validator}
 					Validar entradas
 				{:else}
 					Actualizar pago
 				{/if}
-				{#if $page.data.admin}
+				{#if $page.data.user.admin && payment.payment_status !== STATUS.register.code}
 					<Button variant="ghost" on:click={copyFormData}>
 						<Copy class="text-primary" />
 					</Button>
@@ -102,15 +100,15 @@
 					</Alert.Root>
 				{:else}
 
-					<Tabs.Root value={$page.data.validator ? 'validator' : 'general'} class="w-full">
+					<Tabs.Root value={$page.data.user.validator ? 'validator' : 'general'} class="w-full">
 						<Tabs.List class="w-full mb-4">
-							{#if !$page.data.validator}
+							{#if !$page.data.user.validator}
 							<Tabs.Trigger class="w-full" value="general">General</Tabs.Trigger>
 							{/if}
 							<Tabs.Trigger class="w-full" value="validator">Validador</Tabs.Trigger>
 							<Tabs.Trigger class="w-full" value="comments">Comentarios</Tabs.Trigger>
 						</Tabs.List>
-						{#if !$page.data.validator}
+						{#if !$page.data.user.validator}
 						<Tabs.Content value="general">
 							<form
 								id="updateForm"
@@ -129,7 +127,7 @@
 											class="text-lg"
 											placeholder="Pablito"
 											required
-											disabled={$page.data.validator}
+											disabled={$page.data.user.validator}
 											value={payment.customer_name}
 										/>
 									</div>
@@ -142,7 +140,7 @@
 											class="text-lg"
 											placeholder="1111111-0"
 											required
-											disabled={$page.data.validator}
+											disabled={$page.data.user.validator}
 											value={payment.rut}
 										/>
 									</div>
@@ -157,7 +155,7 @@
 											class="text-lg"
 											placeholder="pablito@5lc.cl"
 											required
-											disabled={$page.data.validator}
+											disabled={$page.data.user.validator}
 											value={payment.customer_email}
 										/>
 									</div>
@@ -170,7 +168,7 @@
 											class="text-lg"
 											placeholder="+56991291468"
 											required
-											disabled={$page.data.validator}
+											disabled={$page.data.user.validator}
 											value={payment.customer_phone}
 										/>
 									</div>
@@ -187,7 +185,7 @@
 											class="text-lg"
 											id="ticketAmount"
 											required
-											disabled={$page.data.validator}
+											disabled={$page.data.user.validator}
 											value={payment.ticketAmount}
 										/>
 									</div>
@@ -199,7 +197,7 @@
 											min="0"
 											class="text-lg"
 											id="price"
-											disabled={$page.data.validator}
+											disabled={$page.data.user.validator}
 											required
 											value={payment.price}
 										/>
@@ -251,7 +249,7 @@
 									</label>
 								</div>
 								<div class="w-full flex gap-4">
-									{#if !$page.data.validator}
+									{#if !$page.data.user.validator}
 										<Button
 											class="w-full bg-error hover:bg-red-600 text-white"
 											on:click={() => {
@@ -328,7 +326,7 @@
 						</Tabs.Content>
 						<Tabs.Content value="comments">
 							<ScrollArea class="h-[200px] text-left rounded-md border bg-muted/20 p-4 mb-4">
-								{#each $comments?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
+								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
 									<div class="flex flex-col gap-2 py-4 border-b border-muted" id={comment.id}>
 										<span class="text-xs text-primary"
 											>{new Date(comment.createdAt).toLocaleString('es-CL', {
@@ -350,14 +348,7 @@
 								method="POST"
 								action="?/addComment"
 								use:enhance={() => {
-									comments.update((current) => [
-										{
-											commentText: document.querySelector('textarea[name="comment"]')?.value || '',
-											createdAt: new Date(),
-											id: Math.random().toString(36).substring(7)
-										},
-										...current
-									]);
+									
 									toast.success(`Se agrego un comentario`, {});
 								}}
 							>
@@ -369,6 +360,8 @@
 									on:focus={() => (dialogOpen = true)}
 								/>
 								<input type="hidden" id="paymentId" value={payment.id} name="paymentId" />
+								<input type="hidden" id="first_name" value={$page.data.user.first_name} name="first_name" />
+								<input type="hidden" id="last_name" value={$page.data.user.last_name} name="last_name" />
 								<Button class="w-full bg-primary hover:bg-primary-dark" type="submit"
 									>Agregar comentario</Button
 								>

@@ -13,7 +13,9 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 
-	let payments = writable(data.eventFromSupabase?.Payment || []);
+	import { payments } from '$lib/stores/payments';
+
+	payments.set(data.eventFromSupabase?.Payment || []);
 	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price);
 
 	const currentSlug = $page.params.slug;

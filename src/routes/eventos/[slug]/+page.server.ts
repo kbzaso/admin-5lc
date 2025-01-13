@@ -122,7 +122,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 
 		// Create the buys sum object
-		const buysSumObject = createBuysSumObject(product.Payment);
+		const buysSumObject = createBuysSumObject(product?.Payment);
 
 		return { ...product, buysSumObject };
 	};
@@ -199,13 +199,16 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
 		const comment = formData.get('comment');
+		const first_name = formData.get('first_name');
+		const last_name = formData.get('last_name');
 
 		try {
 			const newComment = await client.comment.create({
 				data: {
 					id: crypto.randomUUID(),
 					paymentId: paymentId as string,
-					commentText: comment as string
+					commentText: comment as string,
+					username: `${first_name} ${last_name}`
 				},
 			});
 			return {

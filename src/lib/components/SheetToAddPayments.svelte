@@ -37,7 +37,7 @@
 		<Sheet.Header >
 			<Sheet.Title class="flex gap-4 items-center mb-2">
 				Agregar pago
-				{#if $page.data.admin}
+				{#if $page.data.user.admin}
 					<Button variant="ghost" on:click={pasteFormData}>
 						<ClipboardPenLine class="text-primary" />
 					</Button>

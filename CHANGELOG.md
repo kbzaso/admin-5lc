@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fix
 
+- Preserve comments when update payments
+- Fixes ts errors
 - UI Fixes on mobile
 
 ## [0.0.21] - 2025-01-13

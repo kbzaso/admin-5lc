@@ -16,7 +16,8 @@
 	import { payments } from '$lib/stores/payments';
 
 	payments.set(data.eventFromSupabase?.Payment || []);
-	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price);
+
+	let totalMoneyRaised = writable(data.totalMoneyRaised?._sum.price);
 
 	const currentSlug = $page.params.slug;
 	onMount(() => {
@@ -39,8 +40,16 @@
 
 			// ACTUALIZA EL PAGO
 			payments.update((current) =>
-			current.map((payment) => (payment.id === payload.new.id ? payload.new : payment))
-		);
+				current.map((payment) => {
+					if (payment.id === payload.new.id) {
+						return {
+							...payload.new,
+							Comment: payment.Comment // Preserve existing comments
+						};
+					}
+					return payment;
+				})
+			);
 
 			// MANDA LA NOTIFICACIÓN
 			toast.info(`Se actualizo el pago de ${payload.new.customer_name}`, {});
@@ -51,8 +60,7 @@
 			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price);
-
-			payments.update((current) => current.filter((payment) => payment.id !== payload.old.id));
+			payments.update((current) => current.filter((payment) => payment?.id !== payload.old.id));
 			toast.warning(`Se ha eliminado el pago de ${payload.old.customer_name}`, {});
 		};
 

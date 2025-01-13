@@ -110,7 +110,7 @@
 			case 'refund':
 				return 'bg-red-300 text-red-900 hover:bg-red-400';
 			case 'change':
-				return 'bg-yellow-300 text-yellow-900 hover:bg-yellow-400';
+				return 'bg-cyan-300 text-cyan-900 hover:bg-cyan-400';
 			default:
 				return 'bg-gray-400';
 		}
@@ -145,9 +145,15 @@
 						payment.ticketAmount === payment.ticketValidated ? 'bg-green-500/10' : ''
 					}`}
 				>
-					<div class="flex flex-col items-start w-3/4">
+					<div class="flex flex-col items-start">
 						<span class="text-xs text-primary uppercase text-left flex gap-2 items-center">
 							{payment.client_id ? payment.client_id : ''}
+							{#if payment.Comment.length > 0}
+								<Badge variant="primary" class=""
+									><MessageSquare class="h-4" />
+									{payment.Comment ? payment.Comment.length : ''}</Badge
+								>
+							{/if}
 						</span>
 						<span class=" md:text-xl text-left">
 							{payment.customer_name}
@@ -158,23 +164,17 @@
 						<span class="text-sm">
 							{payment.rut}
 						</span>
-						<span class="text-sm truncate w-full text-left">
+						<span class="text-sm">
 							{payment.customer_email}
 						</span>
 						<span class="text-sm">
 							{payment.customer_phone}
 						</span>
 					</div>
-					<div class="flex flex-col items-end gap-4 w-1/4">
+					<div class="flex flex-col items-end gap-4">
 						<Badge class={getBadgeClass(payment.payment_status)}>
 							{traductions[payment.payment_status]}
 						</Badge>
-						{#if payment.Comment && payment.Comment.length > 0}
-								<Badge variant="default" class=""
-									><MessageSquare class="h-4" />
-									{payment.Comment ? payment.Comment.length : ''}</Badge
-								>
-							{/if}
 						{#if payment.ticketAmount === payment.ticketValidated}
 							<Badge class="bg-green-400 hover:bg-green-500">Validado</Badge>
 						{/if}

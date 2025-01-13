@@ -47,4 +47,5 @@ model Comment {
   commentText String
   createdAt   DateTime @default(now())
   Payment     Payment  @relation(fields: [paymentId], references: [id])
+  username    String
 }

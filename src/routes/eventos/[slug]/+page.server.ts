@@ -8,7 +8,6 @@ const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
 const datasetName = import.meta.env.VITE_SANITY_DATASET;
 
 import { SANITY_WRITE_ADMIN as tokenWithWriteAccess } from '$env/static/private';
-import { add } from 'date-fns';
 
 // Get event from Sanity Studio
 const getEvent = async (slugEvent: string) => {
@@ -53,7 +52,7 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 
 	payments
 		.filter(
-			(payment) => payment.payment_status === 'success' || payment.payment_status === 'system'
+			(payment) => payment?.payment_status === 'success' || payment?.payment_status === 'system'
 		)
 		.forEach((payment) => {
 			const orderedKeys = ['firsts_tickets', 'seconds_tickets', 'thirds_tickets', 'system_payments'];
@@ -122,7 +121,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 
 		// Create the buys sum object
-		const buysSumObject = createBuysSumObject(product.Payment);
+		const buysSumObject = createBuysSumObject(product?.Payment);
 
 		return { ...product, buysSumObject };
 	};
@@ -199,13 +198,16 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
 		const comment = formData.get('comment');
+		const first_name = formData.get('first_name');
+		const last_name = formData.get('last_name');
 
 		try {
 			const newComment = await client.comment.create({
 				data: {
 					id: crypto.randomUUID(),
 					paymentId: paymentId as string,
-					commentText: comment as string
+					commentText: comment as string,
+					username: `${first_name} ${last_name}` as string,
 				},
 			});
 			return {
@@ -217,6 +219,28 @@ export const actions: Actions = {
 			return {
 				status: 500,
 				body: { error: 'Failed to add comment' }
+			};
+		}
+	},
+	deleteComment: async ({ request }) => {
+		const formData = await request.formData();
+		const commentId = formData.get('commentId');
+
+		try {
+			const comment = await client.comment.delete({
+				where: {
+					id: commentId as string
+				}
+			});
+			return {
+				status: 200,
+				body: { message: 'Comment deleted successfully', comment }
+			};
+		} catch (error) {
+			console.error('Error deleting comment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to delete comment' }
 			};
 		}
 	},

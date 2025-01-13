@@ -1,4 +1,4 @@
 // src/lib/stores/validatorStore.ts
 import { writable } from 'svelte/store';
 
-export const paymentsStore = writable([]);
+export const payments = writable([]);

@@ -13,7 +13,9 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 
-	let payments = writable(data.eventFromSupabase?.Payment || []);
+	import { payments } from '$lib/stores/payments';
+
+	payments.set(data.eventFromSupabase?.Payment || []);
 	let totalMoneyRaised = writable(data.totalMoneyRaised._sum.price);
 
 	const currentSlug = $page.params.slug;
@@ -88,7 +90,7 @@
 <Navbar />
 <div class="flex flex-col gap-4 mb-6 mt-4">
 	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
-	{#if $page.data.admin}
+	{#if $page.data.user.admin}
 		<Stat
 			totalMoneyRaised={$totalMoneyRaised}
 			ticketsSold={data.ticketsSold._sum.ticketAmount || 0}

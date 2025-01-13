@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Add icons to payment to identify wich one have comments in it
+- Delete comments
+
+### Fix 
+
+- Now comments appear with the correct payment
+
 ## [0.0.20] - 2025-01-11
 
 ### Fix
@@ -158,10 +167,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.19...HEAD
-[0.0.19]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.19...v0.0.20
-[0.0.18]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.18...v0.0.19
-[0.0.17]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.17...v0.0.18
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.20...HEAD
+[0.0.19]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.18...v0.0.19
+[0.0.18]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.17...v0.0.18
 [0.0.17]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.16...v0.0.17
 [0.0.16]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.14...v0.0.15

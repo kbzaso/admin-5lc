@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { TANDAS_NAMES } from '$lib/consts';
 	import DialogToAddPayments from '../SheetToAddPayments.svelte';
-	import { Ticket, CreditCard } from 'lucide-svelte';
+	import { Ticket, CreditCard, MessageSquare } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { page } from '$app/stores';
@@ -19,6 +19,12 @@
 	getContext('idUpdateDialogOpen');
 
 	type Payment = {
+		Comment: {
+			createdAt: string;
+			commentText: string;
+			username: string;
+			id: string;
+		}[];
 		id: string;
 		date: string;
 		customer_name: string;
@@ -71,10 +77,20 @@
 			payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			payment.rut?.toLowerCase().includes(searchTerm.toLowerCase());
 
-		const matchesSuccessFilter = $showRejected || payment.payment_status === 'success' || payment.payment_status === 'system' || payment.payment_status === 'refund' || payment.payment_status === 'change';
+		const matchesSuccessFilter =
+			$showRejected ||
+			payment.payment_status === 'success' ||
+			payment.payment_status === 'system' ||
+			payment.payment_status === 'refund' ||
+			payment.payment_status === 'change';
 
 		if ($showRejected) {
-			return (payment.payment_status === 'register' || payment.payment_status === 'rejected' || payment.payment_status === null) && matchesSearchTerm;
+			return (
+				(payment.payment_status === 'register' ||
+					payment.payment_status === 'rejected' ||
+					payment.payment_status === null) &&
+				matchesSearchTerm
+			);
 		}
 
 		return matchesSearchTerm && matchesSuccessFilter;
@@ -104,7 +120,12 @@
 <!-- HEADER -->
 <div class="flex flex-col md:flex-row items-center py-4 md:gap-4 justify-between">
 	<div class="flex flex-col md:flex-row md:items-center gap-4 items-left w-full">
-		<Input type="text" placeholder="Buscador..." class="w-full md:w-96 border-primary text-lg" bind:value={searchTerm} />
+		<Input
+			type="text"
+			placeholder="Buscador..."
+			class="w-full md:w-96 border-primary text-lg"
+			bind:value={searchTerm}
+		/>
 		<div class="flex items-center space-x-2">
 			<Switch id="rejected-payments" bind:checked={$showRejected} />
 			<Label for="rejected-payments">Ver pagos rechazados</Label>
@@ -120,11 +141,19 @@
 			<li>
 				<button
 					on:click={() => openDialog(payment.id)}
-					class={`p-6 w-full hover:bg-muted flex justify-between ${payment.ticketAmount === payment.ticketValidated ? 'bg-green-500/10' : ''}`}
+					class={`p-6 w-full hover:bg-muted flex justify-between ${
+						payment.ticketAmount === payment.ticketValidated ? 'bg-green-500/10' : ''
+					}`}
 				>
 					<div class="flex flex-col items-start">
-						<span class="text-xs text-primary uppercase text-left">
+						<span class="text-xs text-primary uppercase text-left flex gap-2 items-center">
 							{payment.client_id ? payment.client_id : ''}
+							{#if payment.Comment.length > 0}
+								<Badge variant="primary" class=""
+									><MessageSquare class="h-4" />
+									{payment.Comment ? payment.Comment.length : ''}</Badge
+								>
+							{/if}
 						</span>
 						<span class=" md:text-xl text-left">
 							{payment.customer_name}
@@ -143,9 +172,7 @@
 						</span>
 					</div>
 					<div class="flex flex-col items-end gap-4">
-						<Badge
-							class={getBadgeClass(payment.payment_status)}
-						>
+						<Badge class={getBadgeClass(payment.payment_status)}>
 							{traductions[payment.payment_status]}
 						</Badge>
 						{#if payment.ticketAmount === payment.ticketValidated}

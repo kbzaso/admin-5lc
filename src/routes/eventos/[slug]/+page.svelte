@@ -90,7 +90,7 @@
 <Navbar />
 <div class="flex flex-col gap-4 mb-6 mt-4">
 	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
-	{#if $page.data.admin}
+	{#if $page.data.user.admin}
 		<Stat
 			totalMoneyRaised={$totalMoneyRaised}
 			ticketsSold={data.ticketsSold._sum.ticketAmount || 0}

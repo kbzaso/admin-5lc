@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Add icons to payment to identify wich one have comments in it
+
 ### Fix
 
+- Now comments appear with the correct payment
 - Fix the focus of text area when adding comment to payments
 
 ### Add

@@ -8,7 +8,6 @@ const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
 const datasetName = import.meta.env.VITE_SANITY_DATASET;
 
 import { SANITY_WRITE_ADMIN as tokenWithWriteAccess } from '$env/static/private';
-import { add } from 'date-fns';
 
 // Get event from Sanity Studio
 const getEvent = async (slugEvent: string) => {
@@ -53,7 +52,7 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 
 	payments
 		.filter(
-			(payment) => payment.payment_status === 'success' || payment.payment_status === 'system'
+			(payment) => payment?.payment_status === 'success' || payment?.payment_status === 'system'
 		)
 		.forEach((payment) => {
 			const orderedKeys = ['firsts_tickets', 'seconds_tickets', 'thirds_tickets', 'system_payments'];
@@ -208,7 +207,7 @@ export const actions: Actions = {
 					id: crypto.randomUUID(),
 					paymentId: paymentId as string,
 					commentText: comment as string,
-					username: `${first_name} ${last_name}`
+					username: `${first_name} ${last_name}` as string,
 				},
 			});
 			return {

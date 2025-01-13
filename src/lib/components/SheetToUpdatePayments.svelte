@@ -363,7 +363,7 @@
 							<ScrollArea class="h-[200px] text-left rounded-md border bg-muted/20 p-4 mb-4">
 								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
 									<div class="flex flex-col gap-2 py-4 border-b border-muted" id={comment.id}>
-										<div class="flex items-center justify-between gap-2 w-full">
+										<div class="relative flex flex-col items-start justify-between w-full">
 											<span class="text-xs text-primary">{comment.username}</span>
 											<span class="text-xs">
 												{new Date(comment.createdAt).toLocaleString('es-CL', {
@@ -374,7 +374,7 @@
 													minute: 'numeric'
 												})}
 											</span>
-											<form id="deleteCommentForm" method="POST" action="?/deleteComment" use:enhance={() => deleteComment(comment.id)}>
+											<form class="absolute right-0" id="deleteCommentForm" method="POST" action="?/deleteComment" use:enhance={() => deleteComment(comment.id)}>
 												<input type="hidden" name="commentId" value={comment.id} />
 												<button
 													type="submit"

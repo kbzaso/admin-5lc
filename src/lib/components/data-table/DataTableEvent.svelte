@@ -110,7 +110,7 @@
 			case 'refund':
 				return 'bg-red-300 text-red-900 hover:bg-red-400';
 			case 'change':
-				return 'bg-yellow-300 text-yellow-900 hover:bg-yellow-400';
+				return 'bg-cyan-300 text-cyan-900 hover:bg-cyan-400';
 			default:
 				return 'bg-gray-400';
 		}

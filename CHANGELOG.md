@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- UI Fixes on mobile
+
 ## [0.0.21] - 2025-01-13
 
 ### Add
@@ -14,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add icons to payment to identify wich one have comments in it
 - Delete comments
 
-### Fix 
+### Fix
 
 - Now comments appear with the correct payment
 
@@ -103,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Filter success payments
 
 ### Fix
+
 - Format money raised on stat component
 
 ## [0.0.9] - 2024-10-28
@@ -133,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Add
 
 - Add discount code column on event data table
-  
+
 ## [0.0.5] - 2024-06-13
 
 ### Fix

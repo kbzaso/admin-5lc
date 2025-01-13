@@ -223,6 +223,28 @@ export const actions: Actions = {
 			};
 		}
 	},
+	deleteComment: async ({ request }) => {
+		const formData = await request.formData();
+		const commentId = formData.get('commentId');
+
+		try {
+			const comment = await client.comment.delete({
+				where: {
+					id: commentId as string
+				}
+			});
+			return {
+				status: 200,
+				body: { message: 'Comment deleted successfully', comment }
+			};
+		} catch (error) {
+			console.error('Error deleting comment:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to delete comment' }
+			};
+		}
+	},
 	validateTickets: async ({ request }) => {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');

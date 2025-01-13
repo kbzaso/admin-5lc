@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Add
 
 - Add icons to payment to identify wich one have comments in it
+- Delete comments
 
 ### Fix 
 

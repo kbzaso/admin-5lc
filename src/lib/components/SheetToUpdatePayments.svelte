@@ -6,7 +6,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { getContext, onMount, setContext } from 'svelte';
-	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert, Copy } from 'lucide-svelte';
+	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert, Copy, X } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
 	import * as Alert from '$lib/components/ui/alert';
@@ -27,9 +27,6 @@
 	let confirmationDialogOpen: boolean = false;
 
 	export let payment;
-
-	// let comments = writable(payment.Comment || []);
-
 
 	let validatedTickets = payment.ticketValidated;
 
@@ -92,6 +89,21 @@
 			});
 		});
 	}
+
+	function deleteComment(commentId: string) {
+		payments.update((currentPayments) => {
+			return currentPayments.map((p) => {
+				if (p.id === payment.id) {
+					return {
+						...p,
+						Comment: p.Comment.filter((comment) => comment.id !== commentId)
+					};
+				}
+				return p;
+			});
+		});
+		toast.success(`Comentario eliminado`, {});
+	}
 </script>
 
 <Sheet.Root bind:open={dialogOpen} onOpenChange={() => closeDialog()}>
@@ -134,7 +146,7 @@
 						{#if !$page.data.user.validator}
 							<Tabs.Content value="general">
 								<form
-									id="updateForm"
+									id="updatePaymentForm"
 									class="grid items-start gap-4"
 									method="POST"
 									action="?/updatePayment"
@@ -349,34 +361,42 @@
 						</Tabs.Content>
 						<Tabs.Content value="comments">
 							<ScrollArea class="h-[200px] text-left rounded-md border bg-muted/20 p-4 mb-4">
-								{#each payment.Comment
-									?.slice()
-									.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
+								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
 									<div class="flex flex-col gap-2 py-4 border-b border-muted" id={comment.id}>
-										<div class="flex items-center gap-2">
-										<span class="text-xs text-primary">{comment.username}</span>
-										<span class="text-xs">
-											{new Date(comment.createdAt).toLocaleString('es-CL', {
-												day: 'numeric',
-												month: 'short',
-												year: 'numeric',
-												hour: 'numeric',
-												minute: 'numeric'
-											})}
-										</span>
-									</div>
+										<div class="flex items-center justify-between gap-2 w-full">
+											<span class="text-xs text-primary">{comment.username}</span>
+											<span class="text-xs">
+												{new Date(comment.createdAt).toLocaleString('es-CL', {
+													day: 'numeric',
+													month: 'short',
+													year: 'numeric',
+													hour: 'numeric',
+													minute: 'numeric'
+												})}
+											</span>
+											<form id="deleteCommentForm" method="POST" action="?/deleteComment" use:enhance={() => deleteComment(comment.id)}>
+												<input type="hidden" name="commentId" value={comment.id} />
+												<button
+													type="submit"
+													class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+												>
+													<X />
+												</button>
+											</form>
+										</div>
 										<span class="text-sm">{comment?.commentText}</span>
 									</div>
 								{/each}
 							</ScrollArea>
 
 							<form
-								id="updateForm"
+								id="addCommentForm"
 								class="grid items-start gap-4"
 								method="POST"
 								action="?/addComment"
 								use:enhance={() => {
-									const commentText = document.querySelector('textarea[name="comment"]')?.value || '';
+									const commentText =
+										document.querySelector('textarea[name="comment"]')?.value || '';
 									addComment(commentText);
 									toast.success(`Se agrego un comentario`, {});
 								}}

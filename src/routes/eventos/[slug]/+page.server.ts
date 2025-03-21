@@ -294,6 +294,14 @@ export const actions: Actions = {
 		const paymentId = formData.get('paymentId');
 
 		try {
+			// Delete all comments associated with the payment
+			await client.comment.deleteMany({
+				where: {
+					paymentId: paymentId as string
+				}
+			});
+
+			// Delete the payment
 			const payment = await client.payment.delete({
 				where: {
 					id: paymentId as string
@@ -301,13 +309,13 @@ export const actions: Actions = {
 			});
 			return {
 				status: 200,
-				body: { message: 'Payment deleted successfully', payment }
+				body: { message: 'Payment and associated comments deleted successfully', payment }
 			};
 		} catch (error) {
-			console.error('Error deleting payment:', error);
+			console.error('Error deleting payment and associated comments:', error);
 			return {
 				status: 500,
-				body: { error: 'Failed to delete payment' }
+				body: { error: 'Failed to delete payment and associated comments' }
 			};
 		}
 	},

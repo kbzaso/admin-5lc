@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - display name in comments
 - adding new payments
+- delete all comments associated to payment when this is deleted
 - Leave not required some inputs to add new payments
 
 ## [0.0.22] - 2025-01-13

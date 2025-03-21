@@ -26,7 +26,7 @@
 	export let dialogOpen: boolean = false;
 	let confirmationDialogOpen: boolean = false;
 
-	export let payment;
+	export let payment: any;
 
 	let validatedTickets = payment.ticketValidated;
 
@@ -74,15 +74,16 @@
 			id: Math.random().toString(36).substring(7),
 			createdAt: new Date().toISOString(),
 			commentText: commentText,
-			username: `${$page.data.user.first_name} ${$page.data.user.last_name}`
+			userId: $page.data.userId,
+			name: `${$page.data.user.first_name} ${$page.data.user.last_name}`
 		};
 
-		payments.update((currentPayments) => {
-			return currentPayments.map((p) => {
+		payments.update((currentPayments: any) => {
+			return currentPayments.map((p: any) => {
 				if (p.id === payment.id) {
 					return {
 						...p,
-						Comment: [newComment, ...p.Comment]
+						Comment: [newComment, ...(p.Comment || [])]
 					};
 				}
 				return p;
@@ -135,7 +136,7 @@
 						<Alert.Description>{STATUS.rejected.description}</Alert.Description>
 					</Alert.Root>
 				{:else}
-					<Tabs.Root value={$page.data.user.validator ? 'validator' : 'general'} class="w-full">
+					<Tabs.Root class="w-full">
 						<Tabs.List class="w-full mb-4">
 							{#if !$page.data.user.validator}
 								<Tabs.Trigger class="w-full" value="general">General</Tabs.Trigger>
@@ -160,7 +161,6 @@
 												id="name"
 												name="name"
 												class="text-lg"
-												placeholder="Pablito"
 												required
 												disabled={$page.data.user.validator}
 												value={payment.customer_name}
@@ -173,8 +173,6 @@
 												id="rut"
 												name="rut"
 												class="text-lg"
-												placeholder="1111111-0"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.rut}
 											/>
@@ -188,8 +186,6 @@
 												id="email"
 												name="email"
 												class="text-lg"
-												placeholder="pablito@5lc.cl"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.customer_email}
 											/>
@@ -201,8 +197,6 @@
 												name="phone"
 												type="text"
 												class="text-lg"
-												placeholder="+56991291468"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.customer_phone}
 											/>
@@ -219,7 +213,6 @@
 												max="10"
 												class="text-lg"
 												id="ticketAmount"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.ticketAmount}
 											/>
@@ -364,7 +357,7 @@
 								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
 									<div class="flex flex-col gap-2 py-4 border-b border-muted" id={comment.id}>
 										<div class="relative flex flex-col items-start justify-between w-full">
-											<span class="text-xs text-primary">{comment.username}</span>
+											<span class="text-xs text-primary">{comment.name || comment.User.name}</span>
 											<span class="text-xs">
 												{new Date(comment.createdAt).toLocaleString('es-CL', {
 													day: 'numeric',
@@ -374,15 +367,21 @@
 													minute: 'numeric'
 												})}
 											</span>
-											<form class="absolute right-0" id="deleteCommentForm" method="POST" action="?/deleteComment" use:enhance={() => deleteComment(comment.id)}>
-												<input type="hidden" name="commentId" value={comment.id} />
-												<button
-													type="submit"
-													class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+												<form
+													class="absolute right-0"
+													id="deleteCommentForm"
+													method="POST"
+													action="?/deleteComment"
+													use:enhance={() => deleteComment(comment.id)}
 												>
-													<X />
-												</button>
-											</form>
+													<input type="hidden" name="commentId" value={comment.id} />
+													<button
+														type="submit"
+														class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+													>
+														<X />
+													</button>
+												</form>
 										</div>
 										<span class="text-sm">{comment?.commentText}</span>
 									</div>
@@ -409,18 +408,6 @@
 									on:focus={() => (dialogOpen = true)}
 								/>
 								<input type="hidden" id="paymentId" value={payment.id} name="paymentId" />
-								<input
-									type="hidden"
-									id="first_name"
-									value={$page.data.user.first_name}
-									name="first_name"
-								/>
-								<input
-									type="hidden"
-									id="last_name"
-									value={$page.data.user.last_name}
-									name="last_name"
-								/>
 								<Button class="w-full bg-primary hover:bg-primary-dark" type="submit"
 									>Agregar comentario</Button
 								>

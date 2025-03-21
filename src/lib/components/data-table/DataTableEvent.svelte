@@ -22,7 +22,7 @@
 		Comment: {
 			createdAt: string;
 			commentText: string;
-			username: string;
+			userId: string;
 			id: string;
 		}[];
 		id: string;
@@ -148,8 +148,8 @@
 					<div class="flex flex-col items-start">
 						<span class="text-xs text-primary uppercase text-left flex gap-2 items-center">
 							{payment.client_id ? payment.client_id : ''}
-							{#if payment.Comment.length > 0}
-								<Badge variant="primary" class=""
+							{#if payment.Comment?.length > 0}
+								<Badge variant="default" class=""
 									><MessageSquare class="h-4" />
 									{payment.Comment ? payment.Comment.length : ''}</Badge
 								>

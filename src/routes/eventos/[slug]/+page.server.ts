@@ -55,7 +55,12 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 			(payment) => payment?.payment_status === 'success' || payment?.payment_status === 'system'
 		)
 		.forEach((payment) => {
-			const orderedKeys = ['firsts_tickets', 'seconds_tickets', 'thirds_tickets', 'system_payments'];
+			const orderedKeys = [
+				'firsts_tickets',
+				'seconds_tickets',
+				'thirds_tickets',
+				'system_payments'
+			];
 			const sortedEntries = Object.entries(payment.buys).sort(
 				([a], [b]) => orderedKeys.indexOf(a) - orderedKeys.indexOf(b)
 			);
@@ -68,7 +73,7 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 			}
 
 			if (payment.payment_status === 'system') {
-				systemPaymentsSum += payment.ticketAmount
+				systemPaymentsSum += payment.ticketAmount;
 			}
 		});
 
@@ -93,8 +98,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 		studioTicketsAvailable = total;
 	} else {
-		const ticketTypes = eventFromSanityStudio?.ticket.batch
-			? eventFromSanityStudio?.ticket.batch
+		const ticketTypes = eventFromSanityStudio?.ticket?.batch
+			? eventFromSanityStudio?.ticket?.batch
 			: eventFromSanityStudio?.ticket;
 		let total = 0;
 		for (const key in ticketTypes) {
@@ -114,7 +119,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 						date: 'desc' // Use 'asc' for ascending order
 					},
 					include: {
-						Comment: true
+						Comment: {
+							select: {
+								id: true,
+								commentText: true,
+								createdAt: true,
+								userId: true,
+								User: {
+									select: {
+										id: true,
+										name: true
+									}
+								}
+							}
+						}
 					}
 				}
 			}
@@ -194,12 +212,11 @@ type Ticket = {
 };
 
 export const actions: Actions = {
-	addComment: async ({ request }) => {
+	addComment: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
 		const comment = formData.get('comment');
-		const first_name = formData.get('first_name');
-		const last_name = formData.get('last_name');
+		const userId = locals.session?.userId;
 
 		try {
 			const newComment = await client.comment.create({
@@ -207,8 +224,8 @@ export const actions: Actions = {
 					id: crypto.randomUUID(),
 					paymentId: paymentId as string,
 					commentText: comment as string,
-					username: `${first_name} ${last_name}` as string,
-				},
+					userId: userId as string
+				}
 			});
 			return {
 				status: 201,
@@ -225,6 +242,8 @@ export const actions: Actions = {
 	deleteComment: async ({ request }) => {
 		const formData = await request.formData();
 		const commentId = formData.get('commentId');
+
+		console.log(commentId, 'ID')
 
 		try {
 			const comment = await client.comment.delete({
@@ -275,6 +294,14 @@ export const actions: Actions = {
 		const paymentId = formData.get('paymentId');
 
 		try {
+			// Delete all comments associated with the payment
+			await client.comment.deleteMany({
+				where: {
+					paymentId: paymentId as string
+				}
+			});
+
+			// Delete the payment
 			const payment = await client.payment.delete({
 				where: {
 					id: paymentId as string
@@ -282,13 +309,13 @@ export const actions: Actions = {
 			});
 			return {
 				status: 200,
-				body: { message: 'Payment deleted successfully', payment }
+				body: { message: 'Payment and associated comments deleted successfully', payment }
 			};
 		} catch (error) {
-			console.error('Error deleting payment:', error);
+			console.error('Error deleting payment and associated comments:', error);
 			return {
 				status: 500,
-				body: { error: 'Failed to delete payment' }
+				body: { error: 'Failed to delete payment and associated comments' }
 			};
 		}
 	},
@@ -383,16 +410,17 @@ export const actions: Actions = {
 			ticketType?: 'general_tickets' | 'ringside_tickets'
 		): Ticket {
 			let ticketTypes: TicketBatch[] = [];
+			console.log(ticket?.batch);
 
-			if (sellType === 'batch' && ticket.batch) {
+			if (sellType === 'batch' && ticket?.batch) {
 				ticketTypes = [
-					ticket.batch.firsts_tickets,
-					ticket.batch.seconds_tickets,
-					ticket.batch.thirds_tickets
+					ticket?.batch?.firsts_tickets,
+					ticket?.batch?.seconds_tickets,
+					ticket?.batch?.thirds_tickets
 				];
-			} else if (sellType === 'ubication' && ticket.ubication) {
-				if (ticketType && ticket.ubication[ticketType]) {
-					ticketTypes = [ticket.ubication[ticketType]];
+			} else if (sellType === 'ubication' && ticket?.ubication) {
+				if (ticketType && ticket?.ubication[ticketType]) {
+					ticketTypes = [ticket?.ubication[ticketType]];
 				} else {
 					throw new Error(`Invalid ticket type: ${ticketType}`);
 				}
@@ -417,11 +445,11 @@ export const actions: Actions = {
 			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO
 			let mutations;
 			let newTicket;
-			if (eventFromSanityStudio.sell_type === 'ubication') {
+			if (eventFromSanityStudio?.sell_type === 'ubication') {
 				newTicket = decrementTicketAmount(
-					eventFromSanityStudio.ticket,
+					eventFromSanityStudio?.ticket,
 					ticketAmount,
-					eventFromSanityStudio.sell_type,
+					eventFromSanityStudio?.sell_type,
 					ticketType
 				).ubication;
 				mutations = [
@@ -438,9 +466,9 @@ export const actions: Actions = {
 				];
 			} else {
 				newTicket = decrementTicketAmount(
-					eventFromSanityStudio.ticket,
+					eventFromSanityStudio?.ticket,
 					ticketAmount,
-					eventFromSanityStudio.sell_type
+					eventFromSanityStudio?.sell_type
 				).batch;
 				mutations = [
 					{

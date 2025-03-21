@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- User table, save the userId of Clerk for each user
+
+### Fix
+
+- display name in comments
+
 ## [0.0.22] - 2025-01-13
 
 ### Fix

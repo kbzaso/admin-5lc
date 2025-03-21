@@ -5,14 +5,14 @@
 ### Add
 
 - [ ] Adapt beta.admin.5luchas.cl to development deploy
-- [ ] push changes to remote database
+- [x] push changes to remote database
 
 ## Payments
 
 ### Fix
 
 - [ ] Can't eliminate comments from other users
-- [ ] Adding new payments
+- [x] Adding new payments
 - [ ] Invitational payments need to be easy to add
 
 ### Add

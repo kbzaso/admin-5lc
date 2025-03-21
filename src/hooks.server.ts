@@ -2,7 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { handleClerk } from 'clerk-sveltekit/server';
 import { CLERK_SECRET_KEY } from '$env/static/private';
-
+import { client } from '$lib/server/prisma';
 
 export const handleUser: Handle = async ({ event, resolve }) => {
 	const { locals } = event;
@@ -18,6 +18,21 @@ export const handleUser: Handle = async ({ event, resolve }) => {
 			}
 		});
 		user = await (await userResource).json();
+
+		try {
+			await client.users.upsert({
+				where: { id: userId },
+				create: {
+					id: userId,
+					name: user.first_name + ' ' + user.last_name
+				},
+				update: {
+					name: user.first_name + ' ' + user.last_name
+				}
+			});
+		} catch (error) {
+			console.error('Error adding user:', error);
+		}
 	}
 
 	event.locals.session = {

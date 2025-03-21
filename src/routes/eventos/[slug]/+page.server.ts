@@ -93,8 +93,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 		studioTicketsAvailable = total;
 	} else {
-		const ticketTypes = eventFromSanityStudio?.ticket.batch
-			? eventFromSanityStudio?.ticket.batch
+		const ticketTypes = eventFromSanityStudio?.ticket?.batch
+			? eventFromSanityStudio?.ticket?.batch
 			: eventFromSanityStudio?.ticket;
 		let total = 0;
 		for (const key in ticketTypes) {
@@ -114,7 +114,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 						date: 'desc' // Use 'asc' for ascending order
 					},
 					include: {
-						Comment: true
+						Comment: {
+							select: {
+								id: true,
+								commentText: true,
+								createdAt: true,
+								userId: true,
+								User: {
+									select: {
+										id: true,
+										name: true,
+									}
+								}
+							},
+						}
 					}
 				}
 			}
@@ -194,12 +207,11 @@ type Ticket = {
 };
 
 export const actions: Actions = {
-	addComment: async ({ request }) => {
+	addComment: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
 		const comment = formData.get('comment');
-		const first_name = formData.get('first_name');
-		const last_name = formData.get('last_name');
+		const userId = locals.session?.userId;
 
 		try {
 			const newComment = await client.comment.create({
@@ -207,7 +219,7 @@ export const actions: Actions = {
 					id: crypto.randomUUID(),
 					paymentId: paymentId as string,
 					commentText: comment as string,
-					username: `${first_name} ${last_name}` as string,
+					userId: userId as string,
 				},
 			});
 			return {
@@ -383,16 +395,17 @@ export const actions: Actions = {
 			ticketType?: 'general_tickets' | 'ringside_tickets'
 		): Ticket {
 			let ticketTypes: TicketBatch[] = [];
+			console.log(ticket?.batch)
 
-			if (sellType === 'batch' && ticket.batch) {
+			if (sellType === 'batch' && ticket?.batch) {
 				ticketTypes = [
-					ticket.batch.firsts_tickets,
-					ticket.batch.seconds_tickets,
-					ticket.batch.thirds_tickets
+					ticket?.batch?.firsts_tickets,
+					ticket?.batch?.seconds_tickets,
+					ticket?.batch?.thirds_tickets
 				];
-			} else if (sellType === 'ubication' && ticket.ubication) {
-				if (ticketType && ticket.ubication[ticketType]) {
-					ticketTypes = [ticket.ubication[ticketType]];
+			} else if (sellType === 'ubication' && ticket?.ubication) {
+				if (ticketType && ticket?.ubication[ticketType]) {
+					ticketTypes = [ticket?.ubication[ticketType]];
 				} else {
 					throw new Error(`Invalid ticket type: ${ticketType}`);
 				}
@@ -417,11 +430,11 @@ export const actions: Actions = {
 			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO
 			let mutations;
 			let newTicket;
-			if (eventFromSanityStudio.sell_type === 'ubication') {
+			if (eventFromSanityStudio?.sell_type === 'ubication') {
 				newTicket = decrementTicketAmount(
-					eventFromSanityStudio.ticket,
+					eventFromSanityStudio?.ticket,
 					ticketAmount,
-					eventFromSanityStudio.sell_type,
+					eventFromSanityStudio?.sell_type,
 					ticketType
 				).ubication;
 				mutations = [
@@ -438,9 +451,9 @@ export const actions: Actions = {
 				];
 			} else {
 				newTicket = decrementTicketAmount(
-					eventFromSanityStudio.ticket,
+					eventFromSanityStudio?.ticket,
 					ticketAmount,
-					eventFromSanityStudio.sell_type
+					eventFromSanityStudio?.sell_type
 				).batch;
 				mutations = [
 					{

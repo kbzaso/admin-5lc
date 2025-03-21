@@ -8,7 +8,8 @@
 ## Payments
 
 ### Add
-  - [ ] Add comments to payments
+  - [x] Add comments to payments
+    - [ ] Add realtime comments
   - [ ] Add filter to see how many batches were on every payment
   - [x] Copy paste payment info
   - [x] Add statues to payment

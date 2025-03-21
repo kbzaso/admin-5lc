@@ -22,7 +22,7 @@
 		Comment: {
 			createdAt: string;
 			commentText: string;
-			username: string;
+			userId: string;
 			id: string;
 		}[];
 		id: string;

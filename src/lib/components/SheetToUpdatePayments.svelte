@@ -26,7 +26,7 @@
 	export let dialogOpen: boolean = false;
 	let confirmationDialogOpen: boolean = false;
 
-	export let payment;
+	export let payment: any;
 
 	let validatedTickets = payment.ticketValidated;
 
@@ -74,7 +74,8 @@
 			id: Math.random().toString(36).substring(7),
 			createdAt: new Date().toISOString(),
 			commentText: commentText,
-			username: `${$page.data.user.first_name} ${$page.data.user.last_name}`
+			userId: $page.data.userId,
+			name: `${$page.data.user.first_name} ${$page.data.user.last_name}`
 		};
 
 		payments.update((currentPayments) => {
@@ -135,7 +136,7 @@
 						<Alert.Description>{STATUS.rejected.description}</Alert.Description>
 					</Alert.Root>
 				{:else}
-					<Tabs.Root value={$page.data.user.validator ? 'validator' : 'general'} class="w-full">
+					<Tabs.Root class="w-full">
 						<Tabs.List class="w-full mb-4">
 							{#if !$page.data.user.validator}
 								<Tabs.Trigger class="w-full" value="general">General</Tabs.Trigger>
@@ -364,7 +365,7 @@
 								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
 									<div class="flex flex-col gap-2 py-4 border-b border-muted" id={comment.id}>
 										<div class="relative flex flex-col items-start justify-between w-full">
-											<span class="text-xs text-primary">{comment.username}</span>
+											<span class="text-xs text-primary">{comment.name || comment.User.name}</span>
 											<span class="text-xs">
 												{new Date(comment.createdAt).toLocaleString('es-CL', {
 													day: 'numeric',
@@ -374,7 +375,13 @@
 													minute: 'numeric'
 												})}
 											</span>
-											<form class="absolute right-0" id="deleteCommentForm" method="POST" action="?/deleteComment" use:enhance={() => deleteComment(comment.id)}>
+											<form
+												class="absolute right-0"
+												id="deleteCommentForm"
+												method="POST"
+												action="?/deleteComment"
+												use:enhance={() => deleteComment(comment.id)}
+											>
 												<input type="hidden" name="commentId" value={comment.id} />
 												<button
 													type="submit"
@@ -409,7 +416,7 @@
 									on:focus={() => (dialogOpen = true)}
 								/>
 								<input type="hidden" id="paymentId" value={payment.id} name="paymentId" />
-								<input
+								<!-- <input
 									type="hidden"
 									id="first_name"
 									value={$page.data.user.first_name}
@@ -420,7 +427,7 @@
 									id="last_name"
 									value={$page.data.user.last_name}
 									name="last_name"
-								/>
+								/> -->
 								<Button class="w-full bg-primary hover:bg-primary-dark" type="submit"
 									>Agregar comentario</Button
 								>

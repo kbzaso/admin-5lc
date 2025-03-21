@@ -20,28 +20,28 @@
 		<form class="grid items-start gap-4" method="POST" action="?/addPayment" use:enhance>
 			<div class="grid gap-2">
 				<Label for="name">Nombres</Label>
-				<Input type="text" id="name" name="name" placeholder="Pablito" required />
+				<Input type="text" id="name" name="name"/>
 			</div>
 			<div class="grid gap-2">
 				<Label for="rut">RUT</Label>
-				<Input type="text" id="rut" name="rut" placeholder="1111111-0" required />
+				<Input type="text" id="rut" name="rut"   />
 			</div>
 			<div class="grid gap-2">
 				<Label for="email">Email</Label>
-				<Input type="email" id="email" name="email" placeholder="pablito@5lc.cl" required />
+				<Input type="email" id="email" name="email"   />
 			</div>
 			<div class="grid gap-2">
 				<Label for="phone">Teléfono</Label>
-				<Input id="phone" name="phone" type="text" placeholder="+56991291468" required />
+				<Input id="phone" name="phone" type="text"  />
 			</div>
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">
 					<Label for="ticketAmount">Entradas</Label>
-					<Input type="number" name="ticketAmount" min="0" max="10" id="ticketAmount" required />
+					<Input type="number" name="ticketAmount" min="0" max="10" id="ticketAmount" required value="1" />
 				</div>
 				<div class="grid gap-2 w-full">
 					<Label for="price">Precio</Label>
-					<Input type="number" name="price" min="0" id="price" required />
+					<Input type="number" name="price" min="0" id="price" required value="0" />
 				</div>
 			</div>
 			{#if $page.data.eventFromSanityStudio?.sell_type === 'ubication'}

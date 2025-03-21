@@ -78,12 +78,12 @@
 			name: `${$page.data.user.first_name} ${$page.data.user.last_name}`
 		};
 
-		payments.update((currentPayments) => {
-			return currentPayments.map((p) => {
+		payments.update((currentPayments: any) => {
+			return currentPayments.map((p: any) => {
 				if (p.id === payment.id) {
 					return {
 						...p,
-						Comment: [newComment, ...p.Comment]
+						Comment: [newComment, ...(p.Comment || [])]
 					};
 				}
 				return p;
@@ -161,7 +161,6 @@
 												id="name"
 												name="name"
 												class="text-lg"
-												placeholder="Pablito"
 												required
 												disabled={$page.data.user.validator}
 												value={payment.customer_name}
@@ -174,8 +173,6 @@
 												id="rut"
 												name="rut"
 												class="text-lg"
-												placeholder="1111111-0"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.rut}
 											/>
@@ -189,8 +186,6 @@
 												id="email"
 												name="email"
 												class="text-lg"
-												placeholder="pablito@5lc.cl"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.customer_email}
 											/>
@@ -202,8 +197,6 @@
 												name="phone"
 												type="text"
 												class="text-lg"
-												placeholder="+56991291468"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.customer_phone}
 											/>
@@ -220,7 +213,6 @@
 												max="10"
 												class="text-lg"
 												id="ticketAmount"
-												required
 												disabled={$page.data.user.validator}
 												value={payment.ticketAmount}
 											/>

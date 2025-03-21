@@ -11,9 +11,10 @@
 
 ### Fix
 
-- [ ] Can't eliminate comments from other users
 - [x] Adding new payments
-- [ ] Invitational payments need to be easy to add
+- [x] Invitational payments need to be easy to add
+- [ ] system edited payments that were addes through web, need to has two bages, web and system
+- [ ] Can't eliminate comments from other users
 
 ### Add
 

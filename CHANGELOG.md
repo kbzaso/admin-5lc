@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.23] - 2025-03-21
+
 ### Add
 
 - User table, save the userId of Clerk for each user
@@ -189,7 +191,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.22...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.23...HEAD
+[0.0.23]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.22...v0.0.23
 [0.0.22]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.21...v0.0.22
 [0.0.21]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.20...v0.0.21
 [0.0.20]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.19...v0.0.20

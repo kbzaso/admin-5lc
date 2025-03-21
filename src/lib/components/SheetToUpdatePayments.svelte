@@ -28,8 +28,6 @@
 
 	export let payment: any;
 
-	console.log($page.data.user.id);
-
 	let validatedTickets = payment.ticketValidated;
 
 	const STATUS = {
@@ -377,7 +375,6 @@
 													minute: 'numeric'
 												})}
 											</span>
-											{#if $page.data.user.id === comment.User.id}
 												<form
 													class="absolute right-0"
 													id="deleteCommentForm"
@@ -393,7 +390,6 @@
 														<X />
 													</button>
 												</form>
-											{/if}
 										</div>
 										<span class="text-sm">{comment?.commentText}</span>
 									</div>
@@ -420,18 +416,6 @@
 									on:focus={() => (dialogOpen = true)}
 								/>
 								<input type="hidden" id="paymentId" value={payment.id} name="paymentId" />
-								<!-- <input
-									type="hidden"
-									id="first_name"
-									value={$page.data.user.first_name}
-									name="first_name"
-								/>
-								<input
-									type="hidden"
-									id="last_name"
-									value={$page.data.user.last_name}
-									name="last_name"
-								/> -->
 								<Button class="w-full bg-primary hover:bg-primary-dark" type="submit"
 									>Agregar comentario</Button
 								>

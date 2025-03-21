@@ -11,7 +11,7 @@
 
 ### Fix
 
-- [x] Can't eliminate comments from other users
+- [ ] Can't eliminate comments from other users
 - [ ] Adding new payments
 - [ ] Invitational payments need to be easy to add
 

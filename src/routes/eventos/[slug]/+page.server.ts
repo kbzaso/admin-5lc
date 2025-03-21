@@ -243,6 +243,8 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const commentId = formData.get('commentId');
 
+		console.log(commentId, 'ID')
+
 		try {
 			const comment = await client.comment.delete({
 				where: {

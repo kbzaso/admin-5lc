@@ -55,7 +55,12 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 			(payment) => payment?.payment_status === 'success' || payment?.payment_status === 'system'
 		)
 		.forEach((payment) => {
-			const orderedKeys = ['firsts_tickets', 'seconds_tickets', 'thirds_tickets', 'system_payments'];
+			const orderedKeys = [
+				'firsts_tickets',
+				'seconds_tickets',
+				'thirds_tickets',
+				'system_payments'
+			];
 			const sortedEntries = Object.entries(payment.buys).sort(
 				([a], [b]) => orderedKeys.indexOf(a) - orderedKeys.indexOf(b)
 			);
@@ -68,7 +73,7 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 			}
 
 			if (payment.payment_status === 'system') {
-				systemPaymentsSum += payment.ticketAmount
+				systemPaymentsSum += payment.ticketAmount;
 			}
 		});
 
@@ -123,10 +128,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 								User: {
 									select: {
 										id: true,
-										name: true,
+										name: true
 									}
 								}
-							},
+							}
 						}
 					}
 				}
@@ -219,8 +224,8 @@ export const actions: Actions = {
 					id: crypto.randomUUID(),
 					paymentId: paymentId as string,
 					commentText: comment as string,
-					userId: userId as string,
-				},
+					userId: userId as string
+				}
 			});
 			return {
 				status: 201,
@@ -395,7 +400,7 @@ export const actions: Actions = {
 			ticketType?: 'general_tickets' | 'ringside_tickets'
 		): Ticket {
 			let ticketTypes: TicketBatch[] = [];
-			console.log(ticket?.batch)
+			console.log(ticket?.batch);
 
 			if (sellType === 'batch' && ticket?.batch) {
 				ticketTypes = [

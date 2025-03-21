@@ -16,8 +16,6 @@
 		thirds_tickets: 'Últimas entradas',
 		system_payments: 'Sistema'
 	};
-
-	console.log($page.data);
 </script>
 
 <div class="flex md:flex-row flex-col justify-between">

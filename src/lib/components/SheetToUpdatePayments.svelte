@@ -28,6 +28,8 @@
 
 	export let payment: any;
 
+	console.log($page.data.user.id);
+
 	let validatedTickets = payment.ticketValidated;
 
 	const STATUS = {
@@ -375,21 +377,23 @@
 													minute: 'numeric'
 												})}
 											</span>
-											<form
-												class="absolute right-0"
-												id="deleteCommentForm"
-												method="POST"
-												action="?/deleteComment"
-												use:enhance={() => deleteComment(comment.id)}
-											>
-												<input type="hidden" name="commentId" value={comment.id} />
-												<button
-													type="submit"
-													class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+											{#if $page.data.user.id === comment.User.id}
+												<form
+													class="absolute right-0"
+													id="deleteCommentForm"
+													method="POST"
+													action="?/deleteComment"
+													use:enhance={() => deleteComment(comment.id)}
 												>
-													<X />
-												</button>
-											</form>
+													<input type="hidden" name="commentId" value={comment.id} />
+													<button
+														type="submit"
+														class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+													>
+														<X />
+													</button>
+												</form>
+											{/if}
 										</div>
 										<span class="text-sm">{comment?.commentText}</span>
 									</div>

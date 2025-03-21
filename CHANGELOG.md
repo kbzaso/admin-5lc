@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fix
 
 - display name in comments
+- Only eliminate user's commnets
 
 ## [0.0.22] - 2025-01-13
 

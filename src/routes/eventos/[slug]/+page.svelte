@@ -17,13 +17,13 @@
 
 	payments.set(data.eventFromSupabase?.Payment || []);
 
-	let totalMoneyRaised = writable(data.totalMoneyRaised?._sum.price);
+	let totalMoneyRaised = writable(data.totalMoneyRaised?._sum.price ?? 0);
 
 	const currentSlug = $page.params.slug;
 	onMount(() => {
 
 		// Create a function to handle inserts
-		const handleInserts = (payload) => {
+		const handleInserts = (payload: any) => {
 			if (payload.new.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => payload.new.price + $totalMoneyRaised);
@@ -103,7 +103,12 @@
 			totalMoneyRaised={$totalMoneyRaised}
 			ticketsSold={data.ticketsSold._sum.ticketAmount || 0}
 			studioTicketsAvailable={data.studioTicketsAvailable}
-			buysSumObject={data.eventFromSupabase.buysSumObject}
+			buysSumObject={{
+				firsts_tickets: data.eventFromSupabase.buysSumObject?.firsts_tickets || { amount: 0 },
+				seconds_tickets: data.eventFromSupabase.buysSumObject?.seconds_tickets || { amount: 0 },
+				thirds_tickets: data.eventFromSupabase.buysSumObject?.thirds_tickets || { amount: 0 },
+				system_payments: data.eventFromSupabase.buysSumObject?.system_payments || { amount: 0 }
+			}}
 		/>
 	{/if}
 	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio?.sell_type} />

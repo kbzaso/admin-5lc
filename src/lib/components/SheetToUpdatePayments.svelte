@@ -51,10 +51,8 @@
 		});
 	}
 
-	let copiedForm = '';
-
 	function copyFormData() {
-		const form = document.getElementById('updateForm');
+		const form = document.querySelector('form[data-form-id="updatePaymentForm"]');
 		if (form) {
 			const formData = new FormData(form as HTMLFormElement);
 			const data: { [key: string]: FormDataEntryValue } = {};
@@ -63,9 +61,21 @@
 					data[key] = value;
 				}
 			});
-			navigator.clipboard.writeText(JSON.stringify(data)).then(() => {
-				toast.info(`Se copio la información del comprador/a`, {});
-			});
+			const jsonData = JSON.stringify(data);
+
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(jsonData)
+					.then(() => {
+						toast.info(`Se copió la información del comprador/a`, {});
+					})
+					.catch((err) => {
+						console.error('Error copying to clipboard:', err);
+						toast.error('No se pudo copiar la información.');
+					});
+			} else {
+				console.warn('Clipboard API not supported');
+				toast.error('La funcionalidad de copiar no está soportada en este navegador.');
+			}
 		}
 	}
 
@@ -147,7 +157,7 @@
 						{#if !$page.data.user.validator}
 							<Tabs.Content value="general">
 								<form
-									id="updatePaymentForm"
+									data-form-id="updatePaymentForm"
 									class="grid items-start gap-4"
 									method="POST"
 									action="?/updatePayment"

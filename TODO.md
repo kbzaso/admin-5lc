@@ -1,5 +1,12 @@
 # Desarrollo continuo del panel de 5 Luchas Clandestino
 
+## Merch
+
+### Add
+
+  - [ ] Merch payment section
+  - [ ] State of the order
+
 ## Development
 
 ### Add
@@ -15,6 +22,7 @@
 - [x] Invitational payments need to be easy to add
 - [ ] system edited payments that were addes through web, need to has two bages, web and system
 - [ ] Can't eliminate comments from other users
+- [ ] Delete payment realtime
 
 ### Add
 

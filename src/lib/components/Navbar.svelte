@@ -3,6 +3,7 @@
 	import UserButton from 'clerk-sveltekit/client/UserButton.svelte'
 	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte'
 	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte'
+	import { Button } from '$lib/components/ui/button';
 
   function logout() {
 		fetch('/api/auth', {
@@ -27,6 +28,10 @@
 				alt="Logo 5LC"
 			/></a
 		>
+		<div class="flex gap-4">
+		<Button href="/eventos" variant="outline">Entradas</Button>
+		<Button href="/merch" variant="outline">Merch</Button>
+	
 		<SignedIn>
 			<UserButton afterSignOutUrl="/" />
 		</SignedIn>
@@ -34,5 +39,6 @@
 			<a href="/sign-in">Sign in</a> <span>|</span> <a href="/sign-up">Sign up</a>
 			<!-- You could also use <SignInButton mode="modal" /> and <SignUpButton mode="modal" /> here -->
 		</SignedOut>
+	</div>
 	</div>
 </div>

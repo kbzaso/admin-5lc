@@ -47,7 +47,7 @@ export const handleUser: Handle = async ({ event, resolve }) => {
 export const handle: Handle = sequence(
 	handleClerk(CLERK_SECRET_KEY, {
 		debug: true,
-		protectedPaths: ['/eventos'],
+		protectedPaths: ['/eventos/*', '/merch'],
 		signInUrl: '/login'
 	}),
 	handleUser

@@ -10,7 +10,10 @@ export const load: PageServerLoad = async ({}) => {
 						Merch: true
 					}
 				}
-			}
+			},
+			orderBy: {
+				createdAt: 'desc'
+			},
 		});
 
 		return { orders };

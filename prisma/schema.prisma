@@ -99,4 +99,6 @@ model Order {
   orderId        String?
   MerchPayment   MerchPayment[]
   Payment        Payment[]
+  delivered      Boolean       @default(false)
+  deliveryDate   DateTime?
 }

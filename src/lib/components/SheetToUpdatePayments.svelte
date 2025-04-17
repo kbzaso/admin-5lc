@@ -272,7 +272,7 @@
 												name="refund"
 												type="checkbox"
 												checked={payment.refund}
-												class="checkbox border-yellow-400 [--chkbg:theme(colors.yellow.400)] [--chkfg:black] checked:border-yellow-800"
+												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
 											/>
 											<span class="label-text text-white">Devolución</span>
 										</label>
@@ -281,7 +281,7 @@
 												name="change"
 												type="checkbox"
 												checked={payment.changeEvent}
-												class="checkbox border-yellow-400 [--chkbg:theme(colors.yellow.400)] [--chkfg:black] checked:border-yellow-800"
+												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
 											/>
 											<span class="label-text text-white">Cambio de evento</span>
 										</label>

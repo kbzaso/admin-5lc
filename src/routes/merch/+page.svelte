@@ -13,17 +13,30 @@
 
 	let searchTerm = '';
 
-	function filterOrders() {
-		filteredOrders = data.orders.filter(
-			(order) =>
-				order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				order.customerPhone.includes(searchTerm) ||
-				order.customerRut.toLowerCase().includes(searchTerm.toLowerCase())
-		);
+	let showRejected = false;
+
+	function toggleFilter() {
+		showRejected = !showRejected;
+		filterOrders();
 	}
 
+	function filterOrders() {
+		filteredOrders = data.orders.filter((order) => {
+			const matchesSearch =
+				order.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				order.customerPhone?.includes(searchTerm) ||
+				order.customerRut?.toLowerCase().includes(searchTerm.toLowerCase());
+
+			const matchesStatus = showRejected ? order.status !== 'success' : order.status === 'success';
+
+			return matchesSearch && matchesStatus;
+		});
+	}
+	
 	let filteredOrders = data.orders;
+	
 
 	async function updateDeliveryStatus(orderId: string) {
 		try {
@@ -51,24 +64,36 @@
 			// Update the local data to reflect the change
 			order.delivered = newDeliveredStatus;
 			console.log('Delivery status updated successfully');
-			toast.success(`Se marco la orden de ${order.customerName} como ${newDeliveredStatus ? 'entregada' : 'no entregada'}`, {});
+			toast.success(
+				`Se marco la orden de ${order.customerName} como ${
+					newDeliveredStatus ? 'entregada' : 'no entregada'
+				}`,
+				{}
+			);
 		} catch (error) {
 			console.error('Error updating delivery status:', error);
 		}
 	}
+	filterOrders();
 </script>
 
 <h1 class="text-2xl font-bold mb-2">Ordenes</h1>
-<label class="floating-label">
-	<span>Buscador</span>
-	<input
-		type="text"
-		placeholder="Buscador"
-		class="input input-md mb-4"
-		bind:value={searchTerm}
-		on:input={filterOrders}
-	/>
-</label>
+<div class="flex flex-col md:flex-row gap-2 md:gap-4 w-full">
+	<label class="floating-label">
+		<span>Buscador</span>
+		<input
+			type="text"
+			placeholder="Buscador"
+			class="input input-md w-full md:w-96 mb-4"
+			bind:value={searchTerm}
+			on:input={filterOrders}
+		/>
+	</label>
+	<div class="flex items-center gap-2 mb-4">
+		<input id="filter" type="checkbox" checked={showRejected}  on:change={toggleFilter} class="toggle" />
+		<p>Mostrar pagos rechazados</p>
+	</div>
+</div>
 
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
 	<table class="table">
@@ -76,6 +101,7 @@
 		<thead>
 			<tr>
 				<th>ID de orden</th>
+				<th>Fecha</th>
 				<th>Cliente</th>
 				<th>Entrega</th>
 				<th>Status</th>
@@ -87,6 +113,7 @@
 			{#each filteredOrders as order}
 				<tr class="hover:bg-base-300">
 					<th>{order.orderId}</th>
+					<th>{new Date(order.createdAt).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}</th>
 					<td class="flex flex-col">
 						<span>{order.customerName}</span>
 						<span>{order.customerEmail}</span>

@@ -36,7 +36,7 @@
 			<UserButton afterSignOutUrl="/" />
 		</SignedIn>
 		<SignedOut>
-			<!-- <a href="/sign-in">Sign in</a> <span>|</span> <a href="/sign-up">Sign up</a> -->
+			<a href="/login">Sign in</a> <span>|</span> <a href="/sign-up">Sign up</a>
 			 No estas logeado
 			<!-- You could also use <SignInButton mode="modal" /> and <SignUpButton mode="modal" /> here -->
 		</SignedOut>

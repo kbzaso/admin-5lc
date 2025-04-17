@@ -29,12 +29,12 @@
 
 <Sheet.Root bind:open>
 	<Sheet.Trigger asChild let:builder>
-		<Button class="w-full md:w-40 fixed left-0 bottom-0 md:relative" builders={[builder]}
+		<Button class="w-full md:w-40 mt-4" builders={[builder]}
 			>Agregar pago</Button
 		>
 	</Sheet.Trigger>
 	<Sheet.Content side={$isDesktop ? 'right' : 'bottom'}>
-		<Sheet.Header >
+		<Sheet.Header>
 			<Sheet.Title class="flex gap-4 items-center mb-2">
 				Agregar pago
 				{#if $page.data.user.admin}
@@ -58,7 +58,7 @@
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">
 					<Label for="name">Nombres</Label>
-					<Input class="text-lg" type="text" id="name" name="name"  required />
+					<Input class="text-lg" type="text" id="name" name="name" required />
 				</div>
 				<div class="grid gap-2 w-full">
 					<Label for="rut">RUT</Label>
@@ -68,17 +68,26 @@
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">
 					<Label for="email">Email</Label>
-					<Input class="text-lg"  type="email" id="email" name="email" />
+					<Input class="text-lg" type="email" id="email" name="email" />
 				</div>
 				<div class="grid gap-2 w-full">
 					<Label for="phone">Teléfono</Label>
-					<Input class="text-lg" id="phone" name="phone" type="text"  />
+					<Input class="text-lg" id="phone" name="phone" type="text" />
 				</div>
 			</div>
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">
 					<Label for="ticketAmount">Entradas</Label>
-					<Input class="text-lg" type="number" name="ticketAmount" min="0" max="10" id="ticketAmount" value="1" required />
+					<Input
+						class="text-lg"
+						type="number"
+						name="ticketAmount"
+						min="0"
+						max="10"
+						id="ticketAmount"
+						value="1"
+						required
+					/>
 				</div>
 				<div class="grid gap-2 w-full">
 					<Label for="price">Precio</Label>
@@ -86,32 +95,32 @@
 				</div>
 			</div>
 			{#if $page.data.eventFromSanityStudio?.sell_type === 'ubication'}
-			<fieldset>
-				<legend>Entrada:</legend>
-				<div class="flex gap-4">
-					<label class="label cursor-pointer flex flex-col">
-						<input
-							type="radio"
-							id="general_tickets"
-							name="ticketType"
-							class="radio checked:bg-primary text-lg"
-							checked="checked"
-							value="general_tickets"
-						/>
-						<span class="label-text mt-2">General</span>
-					</label>
-					<label class="label cursor-pointer flex flex-col">
-						<input
-							type="radio"
-							name="ticketType"
-							id="ringside_tickets"
-							class="radio checked:bg-primary text-lg"
-							value="ringside_tickets"
-						/>
-						<span class="label-text mt-2">Ringisde</span>
-					</label>
-				</div>
-			</fieldset>
+				<fieldset>
+					<legend>Entrada:</legend>
+					<div class="flex gap-4">
+						<label class="label cursor-pointer flex flex-col">
+							<input
+								type="radio"
+								id="general_tickets"
+								name="ticketType"
+								class="radio checked:bg-primary text-lg"
+								checked="checked"
+								value="general_tickets"
+							/>
+							<span class="label-text mt-2">General</span>
+						</label>
+						<label class="label cursor-pointer flex flex-col">
+							<input
+								type="radio"
+								name="ticketType"
+								id="ringside_tickets"
+								class="radio checked:bg-primary text-lg"
+								value="ringside_tickets"
+							/>
+							<span class="label-text mt-2">Ringisde</span>
+						</label>
+					</div>
+				</fieldset>
 			{/if}
 			<Button type="submit">Crear pago</Button>
 		</form>

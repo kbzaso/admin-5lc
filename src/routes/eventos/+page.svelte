@@ -7,5 +7,4 @@
 	$: ({ events } = data);
 </script>
 
-<Navbar />
-<DataTableEvents Events={events} />
+<DataTableEvents Events={events} />	

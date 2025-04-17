@@ -37,8 +37,10 @@ model Payment {
   discount_code      String?
   refund             Boolean   @default(false)
   changeEvent        Boolean   @default(false)
-  Product            Product   @relation(fields: [productId], references: [id])
+  orderId            String?
   Comment            Comment[]
+  Order              Order?    @relation(fields: [orderId], references: [id])
+  Product            Product   @relation(fields: [productId], references: [id])
 }
 
 model Comment {
@@ -46,8 +48,8 @@ model Comment {
   paymentId   String
   commentText String
   createdAt   DateTime @default(now())
-  Payment     Payment  @relation(fields: [paymentId], references: [id])
   userId      String
+  Payment     Payment  @relation(fields: [paymentId], references: [id])
   User        Users    @relation(fields: [userId], references: [id])
 }
 
@@ -55,4 +57,48 @@ model Users {
   id      String    @id
   name    String
   Comment Comment[]
+}
+
+model Merch {
+  id           String         @id
+  name         String
+  price        Float
+  dateAdded    DateTime       @default(now())
+  image        String
+  MerchPayment MerchPayment[]
+}
+
+model MerchPayment {
+  id                 String   @id
+  merchId            String
+  price              Float
+  quantity           Int
+  paymentStatus      String?
+  date               DateTime @default(now())
+  orderId            String?
+  variationId        String?
+  payment_id_service String?
+  variationLabel     String?
+  Merch              Merch    @relation(fields: [merchId], references: [id])
+  Order              Order?   @relation(fields: [orderId], references: [id])
+}
+
+model Order {
+  id             String         @id
+  totalAmount    Float
+  status         String
+  createdAt      DateTime       @default(now())
+  customerEmail  String
+  customerName   String
+  customerPhone  String?
+  customerRut    String?
+  address        String?
+  comuna         String?
+  region         String?
+  deliveryOption String?
+  orderId        String?
+  MerchPayment   MerchPayment[]
+  Payment        Payment[]
+  delivered      Boolean       @default(false)
+  deliveryDate   DateTime?
 }

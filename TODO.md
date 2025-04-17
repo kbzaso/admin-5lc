@@ -4,8 +4,11 @@
 
 ### Add
 
-  - [ ] Merch payment section
-  - [ ] State of the order
+  - [x] Merch payment section
+  - [x] State of the order
+  - [ ] Change colors of the table
+  - [ ] npx prisma db push to production DB
+  - [ ] Protect merch section
 
 ## Development
 

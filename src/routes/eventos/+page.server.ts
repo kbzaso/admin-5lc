@@ -4,7 +4,7 @@ import { redirect } from '@sveltejs/kit';
 
 export const config = {
 	isr: {
-	  expiration: 300,
+	  expiration: 10,
 	},
   };
 

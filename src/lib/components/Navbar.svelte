@@ -1,23 +1,10 @@
 <script lang="ts">
-	import { goto, invalidateAll } from "$app/navigation";
-	import UserButton from 'clerk-sveltekit/client/UserButton.svelte'
-	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte'
-	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte'
+	import { goto, invalidateAll } from '$app/navigation';
+	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
+	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
+	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
 	import { Button } from '$lib/components/ui/button';
-
-  function logout() {
-		fetch('/api/auth', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		}).then((res) => {
-			if (res.ok) {
-				invalidateAll();
-				goto('/');
-			}
-		});
-	}
+	import { page } from '$app/stores';
 </script>
 
 <div class="w-full">
@@ -29,17 +16,19 @@
 			/></a
 		>
 		<div class="flex gap-4">
-		<Button href="/eventos" variant="outline">Entradas</Button>
-		<Button href="/merch" variant="outline">Merch</Button>
-	
-		<SignedIn>
-			<UserButton afterSignOutUrl="/" />
-		</SignedIn>
-		<SignedOut>
-			<a href="/login">Sign in</a> <span>|</span> <a href="/sign-up">Sign up</a>
-			 No estas logeado
-			<!-- You could also use <SignInButton mode="modal" /> and <SignUpButton mode="modal" /> here -->
-		</SignedOut>
-	</div>
+			{#if $page.data.user.id}
+				<Button href="/eventos" variant="outline">Entradas</Button>
+				<Button href="/merch" variant="outline">Merch</Button>
+			{/if}
+
+			<SignedIn>
+				<UserButton afterSignOutUrl="/" />
+			</SignedIn>
+			<SignedOut>
+				<!-- <a href="/login">Sign in</a> <span>|</span> <a href="/sign-up">Sign up</a> -->
+				No estas logeado
+				<!-- You could also use <SignInButton mode="modal" /> and <SignUpButton mode="modal" /> here -->
+			</SignedOut>
+		</div>
 	</div>
 </div>

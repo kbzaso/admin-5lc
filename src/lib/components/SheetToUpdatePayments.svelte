@@ -363,9 +363,9 @@
 							</div>
 						</Tabs.Content>
 						<Tabs.Content value="comments">
-							<ScrollArea class="h-[200px] text-left rounded-md border bg-muted/20 p-4 mb-4">
+							<ScrollArea class="h-[200px] text-left rounded-md border border-base-content/20 bg-muted/20 p-4 mb-4">
 								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
-									<div class="flex flex-col gap-2 py-4 border-b border-muted" id={comment.id}>
+									<div class="flex flex-col gap-2 py-4 border-b border-base-content" id={comment.id}>
 										<div class="relative flex flex-col items-start justify-between w-full">
 											<span class="text-xs text-primary">{comment.name || comment.User.name}</span>
 											<span class="text-xs">

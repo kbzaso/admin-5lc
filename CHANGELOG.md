@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.25] - 2025-04-22
+
 ### Fix
 
 - Colors in light theme selection
@@ -205,7 +207,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.24...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.25...HEAD
+[0.0.25]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.24...v0.0.25
 [0.0.24]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.23...v0.0.24
 [0.0.23]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.22...v0.0.23
 [0.0.22]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.21...v0.0.22

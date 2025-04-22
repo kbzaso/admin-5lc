@@ -17,8 +17,8 @@
 		>
 		<div class="flex gap-4">
 			{#if $page.data.user.id}
-				<Button href="/eventos" variant="outline">Entradas</Button>
-				<Button href="/merch" variant="outline">Merch</Button>
+				<a href="/eventos" class="btn btn-soft">Entradas</a>
+				<a href="/merch" class="btn btn-soft">Merch</a>
 			{/if}
 
 			<SignedIn>

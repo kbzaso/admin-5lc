@@ -95,7 +95,7 @@
 	</div>
 </div>
 
-<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+<div class="overflow-x-auto rounded-box border border-base-content/10 bg-base-100">
 	<table class="table">
 		<!-- head -->
 		<thead>
@@ -122,7 +122,7 @@
 					</td>
 					<td>{order.deliveryOption}</td>
 					<td>
-						<div class="badge badge-soft badge-primary">{order.status}</div>
+						<div class={`badge ${order.status === 'success' ? 'badge-success' : 'badge-neutral'}`}>{order.status}</div>
 					</td>
 					<td
 						><button class="link" on:click={() => showModal(order.id)}
@@ -138,7 +138,7 @@
 							type="checkbox"
 							checked={order.delivered}
 							on:change={() => updateDeliveryStatus(order.id)}
-							class="checkbox checkbox-primary"
+							class="checkbox checkbox-success"
 						/>
 					</td>
 				</tr>

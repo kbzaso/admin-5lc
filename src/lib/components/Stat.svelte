@@ -10,7 +10,7 @@
 
 	export let buysSumObject: Record<keyof typeof traductions, { amount: number }>;
 
-	const traductions = {
+	const traductions: Record<string, string> = {
 		firsts_tickets: 'Preventa',
 		seconds_tickets: 'Regular',
 		thirds_tickets: 'Últimas entradas',

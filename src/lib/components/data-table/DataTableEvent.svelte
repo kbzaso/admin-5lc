@@ -120,28 +120,28 @@
 <!-- HEADER -->
 <div class="flex flex-col md:flex-row items-center py-4 md:gap-4 justify-between">
 	<div class="flex flex-col md:flex-row md:items-center gap-4 items-left w-full">
-		<Input
+		<input
 			type="text"
 			placeholder="Buscador..."
-			class="w-full md:w-96 border-primary text-lg"
+			class="w-full md:w-96  text-lg input"
 			bind:value={searchTerm}
 		/>
 		<div class="flex items-center space-x-2">
-			<Switch id="rejected-payments" bind:checked={$showRejected} />
-			<Label for="rejected-payments">Ver pagos rechazados</Label>
+			<input type="checkbox" id="rejected-payments" class="toggle" bind:checked={$showRejected} />
+			<label for="rejected-payments">Ver pagos rechazados</label>
 		</div>
 	</div>
 	<DialogToAddPayments />
 </div>
 
-<div class="rounded-md border">
-	<ul class="divide-y">
+<div class="rounded-md border border-base-content/20">
+	<ul class="divide-y divide-base-content/20">
 		{#each filteredPayments as payment, i}
 			<DialogToUpdatePayments dialogOpen={$idUpdateDialogOpen.id === payment.id} {payment} />
 			<li>
 				<button
 					on:click={() => openDialog(payment.id)}
-					class={`p-6 w-full hover:bg-muted flex justify-between ${
+					class={`p-6 w-full hover:bg-base-content/5 flex justify-between ${
 						payment.ticketAmount === payment.ticketValidated ? 'bg-green-500/10' : ''
 					}`}
 				>

@@ -16,7 +16,7 @@
 			/></a
 		>
 		<div class="flex gap-4">
-			{#if $page.data.user.id}
+			{#if $page.data.user.admin}
 				<a href="/eventos" class="btn btn-soft">Entradas</a>
 				<a href="/merch" class="btn btn-soft">Merch</a>
 			{/if}

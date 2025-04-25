@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### FIX
+
+- Navbar btns not show when is a validator user
+
 ## [0.0.25] - 2025-04-22
 
 ### Fix

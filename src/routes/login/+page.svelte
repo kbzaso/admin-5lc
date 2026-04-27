@@ -1,8 +1,7 @@
-<!-- routes/login/+page.svelte -->
 <script lang="ts">
-	import SignIn from 'clerk-sveltekit/client/SignIn.svelte'
+	import { SignIn } from 'svelte-clerk';
 </script>
 
 <div class="h-full grow grid place-items-center">
-	<SignIn redirectUrl="/eventos" />
+	<SignIn forceRedirectUrl="/eventos" />
 </div>

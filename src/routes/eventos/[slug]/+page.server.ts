@@ -83,7 +83,7 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 };
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	if (!locals.session) throw redirect(302, '/login');
+	if (!locals.session?.userId) throw redirect(302, '/login');
 
 	// Get the available tickets on the Studio
 	const eventFromSanityStudio = await getEvent(params.slug);

@@ -11,7 +11,7 @@
 	import { Progress } from './ui/progress';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import { mediaQuery } from 'svelte-legos';
+	import { mediaQuery } from '$lib/stores/mediaQuery';
 	import { toast } from 'svelte-sonner';
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
@@ -45,10 +45,7 @@
 	};
 
 	function closeDialog(paymentId?: string) {
-		idUpdateDialogOpen.set({
-			open: false,
-			id: ''
-		});
+		dialogOpen = false;
 	}
 
 	function copyFormData() {
@@ -117,7 +114,7 @@
 	}
 </script>
 
-<Sheet.Root bind:open={dialogOpen} onOpenChange={() => closeDialog()}>
+<Sheet.Root bind:open={dialogOpen}>
 	<Sheet.Content side={$isDesktop ? 'right' : 'bottom'}>
 		<Sheet.Header>
 			<Sheet.Title class="flex gap-4 items-center">

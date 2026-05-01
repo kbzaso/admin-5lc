@@ -6,7 +6,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import * as Sheet from '$lib/components/ui/sheet';
-	import { mediaQuery } from 'svelte-legos';
+	import { mediaQuery } from '$lib/stores/mediaQuery';
 	import { ClipboardPenLine } from 'lucide-svelte';
 	const isDesktop = mediaQuery('(min-width: 768px)');
 	let open = false;

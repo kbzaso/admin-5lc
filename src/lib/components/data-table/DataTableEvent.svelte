@@ -58,12 +58,17 @@
 
 	let searchTerm = '';
 
-	// Function to open the dialog for a specific payment
+	let dialogOpen = false;
+	let activePayment: Payment | undefined;
+
 	function openDialog(paymentId: string) {
-		idUpdateDialogOpen.set({
-			open: true,
-			id: paymentId
-		});
+		activePayment = Payments.find((p) => p.id === paymentId);
+		idUpdateDialogOpen.set({ open: true, id: paymentId });
+		dialogOpen = true;
+	}
+
+	$: if (!dialogOpen) {
+		idUpdateDialogOpen.set({ open: false, id: '' });
 	}
 
 	let showRejected = writable(false);
@@ -136,8 +141,7 @@
 
 <div class="rounded-md border border-base-content/20">
 	<ul class="divide-y divide-base-content/20">
-		{#each filteredPayments as payment, i}
-			<DialogToUpdatePayments dialogOpen={$idUpdateDialogOpen.id === payment.id} {payment} />
+		{#each filteredPayments as payment, i (payment.id)}
 			<li>
 				<button
 					on:click={() => openDialog(payment.id)}
@@ -195,3 +199,7 @@
 		{/each}
 	</ul>
 </div>
+
+{#if activePayment}
+	<DialogToUpdatePayments bind:dialogOpen payment={activePayment} />
+{/if}

@@ -1,10 +1,6 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
-	import UserButton from 'clerk-sveltekit/client/UserButton.svelte';
-	import SignedIn from 'clerk-sveltekit/client/SignedIn.svelte';
-	import SignedOut from 'clerk-sveltekit/client/SignedOut.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { page } from '$app/stores';
+	import { UserButton, Show } from 'svelte-clerk';
+	import { page } from '$app/state';
 </script>
 
 <div class="w-full">
@@ -16,19 +12,17 @@
 			/></a
 		>
 		<div class="flex gap-4">
-			{#if $page.data.user.admin}
+			{#if page.data.user?.admin}
 				<a href="/eventos" class="btn btn-soft">Entradas</a>
 				<a href="/merch" class="btn btn-soft">Merch</a>
 			{/if}
 
-			<SignedIn>
-				<UserButton afterSignOutUrl="/" />
-			</SignedIn>
-			<SignedOut>
-				<!-- <a href="/login">Sign in</a> <span>|</span> <a href="/sign-up">Sign up</a> -->
+			<Show when="signed-in">
+				<UserButton />
+			</Show>
+			<Show when="signed-out">
 				No estas logeado
-				<!-- You could also use <SignInButton mode="modal" /> and <SignUpButton mode="modal" /> here -->
-			</SignedOut>
+			</Show>
 		</div>
 	</div>
 </div>

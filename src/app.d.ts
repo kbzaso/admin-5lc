@@ -1,4 +1,4 @@
-import { UserResource } from '@clerk/types';
+import type { User } from '@clerk/backend';
 import { Optional } from './types/optional';
 
 declare global {
@@ -12,10 +12,11 @@ declare global {
 	}
 	namespace App {
 		interface Locals {
+			auth: () => import('@clerk/backend').AuthObject;
 			session: {
 				userId: string | undefined;
 				claims: any;
-				user: UserResource | undefined | null;
+				user: User | undefined | null;
 			};
 		}
 	}

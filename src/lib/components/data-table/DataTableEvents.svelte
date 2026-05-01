@@ -4,12 +4,11 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Input } from '$lib/components/ui/input';
 	import { addSortBy, addTableFilter } from 'svelte-headless-table/plugins';
-	import { ChevronsUpDown, ChevronDown } from 'lucide-svelte';
+	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
 	import ButtonHref from '../ButtonHref.svelte';
 	import { page } from '$app/stores';
-	import { mediaQuery } from 'svelte-legos';
-	import is from 'date-fns/locale/is';
+	import { mediaQuery } from '$lib/stores/mediaQuery';
 	const isDesktop = mediaQuery('(min-width: 768px)');
 
 	// type Payment = {
@@ -101,7 +100,12 @@
 </script>
 
 <div class="flex items-center py-4">
-	<Input class="max-w-sm border-primary" placeholder="Filtrar eventos..." type="text" bind:value={$filterValue} />
+	<Input
+		class="max-w-sm border-primary"
+		placeholder="Filtrar eventos..."
+		type="text"
+		bind:value={$filterValue}
+	/>
 </div>
 <div class="rounded-md border">
 	<Table.Root {...$tableAttrs}>

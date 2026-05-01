@@ -3,12 +3,14 @@
 	import Footer from '$lib/components/Footer.svelte';
 	import { Toaster } from "$lib/components/ui/sonner";
 	import Navbar from '$lib/components/Navbar.svelte';
+	import AuthSync from '$lib/components/AuthSync.svelte';
 	import { ClerkProvider } from 'svelte-clerk';
 	import { PUBLIC_CLERK_PUBLISHABLE_KEY } from '$env/static/public';
 
 </script>
 
 <ClerkProvider publishableKey={PUBLIC_CLERK_PUBLISHABLE_KEY}>
+	<AuthSync />
 	<div class="max-w-6xl px-4 mx-auto mb-4 flex flex-col min-h-screen">
 		<Navbar />
 		<Toaster position="top-right"/>

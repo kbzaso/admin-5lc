@@ -1,6 +1,6 @@
 {
 	"name": "admin-5luchas",
-	"version": "0.0.1",
+	"version": "0.0.27",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --host",

@@ -1,5 +1,13 @@
 <script lang="ts">
-	import { SignIn } from 'svelte-clerk';
+	import { SignIn, useClerkContext } from 'svelte-clerk';
+
+	const ctx = useClerkContext();
+
+	$effect(() => {
+		if (ctx.isLoaded && ctx.auth.userId) {
+			window.location.href = '/eventos';
+		}
+	});
 </script>
 
 <div class="h-full grow grid place-items-center">

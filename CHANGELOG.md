@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.27] - 2026-05-01
+
+### Chore
+
+- update to sveltekit 2 and svelte 5
+
 ## [0.0.26] - 2025-04-25
 
 ### FIX

@@ -9,9 +9,9 @@ export const config = {
   };
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.session) throw redirect(302, '/login');
+	if (!locals.session?.userId) throw redirect(302, '/login');
 
-	if (locals.session.user?.public_metadata.validator) {
+	if (locals.session.user?.publicMetadata?.validator) {
 		const nextEvent = await client.product.findFirst({
 			where: {
 				date: {

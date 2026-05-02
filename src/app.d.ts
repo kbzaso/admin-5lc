@@ -1,4 +1,3 @@
-import type { User } from '@clerk/backend';
 import { Optional } from './types/optional';
 
 declare global {
@@ -16,7 +15,7 @@ declare global {
 			session: {
 				userId: string | undefined;
 				claims: any;
-				user: User | undefined | null;
+				user: any;
 			};
 		}
 	}

@@ -27,9 +27,9 @@
 	// 	// status: 'pending' | 'processing' | 'success' | 'failed';
 	// };
 
-	export let Events;
+	export let Events: any[];
 
-	const table = createTable(readable(Events), {
+	const table = createTable(readable<any[]>(Events), {
 		sort: addSortBy(),
 		filter: addTableFilter({
 			fn: ({ filterValue, value }) => value.toLowerCase().includes(filterValue.toLowerCase())

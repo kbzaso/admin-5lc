@@ -142,31 +142,34 @@
 						/>
 					</td>
 				</tr>
-				<dialog id={order.id} class="modal modal-bottom sm:modal-middle">
-					<div class="modal-box">
-						<div class="flex flex-col gap-2">
-							<h3 class="text-lg font-bold">Productos que compro {order.customerName}</h3>
-							{#each order.MerchPayment as merch}
-								<div class="flex flex-row">
-									<div class="avatar">
-										<div class="w-24 rounded">
-											<img src={merch.Merch.image} alt={merch.Merch.name} />
-										</div>
-									</div>
-									<div class="flex flex-col ml-4">
-										<span>{merch.Merch.name}</span>
-										<span>{merch.quantity}</span>
-										<span>{merch.variationLabel}</span>
-									</div>
-								</div>
-							{/each}
-						</div>
-					</div>
-					<form method="dialog" class="modal-backdrop">
-						<button>close</button>
-					</form>
-				</dialog>
 			{/each}
 		</tbody>
 	</table>
 </div>
+
+{#each filteredOrders as order (order.id)}
+	<dialog id={order.id} class="modal modal-bottom sm:modal-middle">
+		<div class="modal-box">
+			<div class="flex flex-col gap-2">
+				<h3 class="text-lg font-bold">Productos que compro {order.customerName}</h3>
+				{#each order.MerchPayment as merch}
+					<div class="flex flex-row">
+						<div class="avatar">
+							<div class="w-24 rounded">
+								<img src={merch.Merch.image} alt={merch.Merch.name} />
+							</div>
+						</div>
+						<div class="flex flex-col ml-4">
+							<span>{merch.Merch.name}</span>
+							<span>{merch.quantity}</span>
+							<span>{merch.variationLabel}</span>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+		<form method="dialog" class="modal-backdrop">
+			<button>close</button>
+		</form>
+	</dialog>
+{/each}

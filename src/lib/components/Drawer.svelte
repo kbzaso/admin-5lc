@@ -52,7 +52,7 @@
 							type="radio"
 							name="ticketType"
 							class="radio checked:bg-primary"
-							checked="checked"
+							checked
 							value="general_tickets"
 						/>
 					</label>

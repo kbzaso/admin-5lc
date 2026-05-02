@@ -139,7 +139,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 
 		// Create the buys sum object
-		const buysSumObject = createBuysSumObject(product?.Payment);
+		const buysSumObject = createBuysSumObject((product?.Payment ?? []) as unknown as Payment[]);
 
 		return { ...product, buysSumObject };
 	};
@@ -348,12 +348,12 @@ export const actions: Actions = {
 				},
 				data: {
 					customer_name: name,
-					rut,
+					rut: rut as string | null,
 					customer_email: email as string,
 					customer_phone: phone as string,
 					price,
 					ticketAmount,
-					payment_status: changeStatus(refund, change),
+					payment_status: changeStatus(refund as string, change as string),
 					ticketsType: ticketType || 'Tandas',
 					refund: Boolean(refund),
 					changeEvent: Boolean(change)
@@ -492,7 +492,7 @@ export const actions: Actions = {
 				data: {
 					id: crypto.randomUUID(),
 					customer_name: name,
-					rut,
+					rut: rut as string | null,
 					customer_email: email as string,
 					customer_phone: phone as string,
 					price,

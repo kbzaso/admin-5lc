@@ -3,7 +3,6 @@
 	export let data: PageData;
 
 	import Stat from '$lib/components/Stat.svelte';
-	import Navbar from '$lib/components/Navbar.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 
 	import { writable } from 'svelte/store';
@@ -33,7 +32,8 @@
 		};
 
 		// Create a function to handle updates
-		const handleUpdates = (payload) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const handleUpdates = (payload: any) => {
 			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => current + payload.new.price - payload.old.price);
@@ -56,7 +56,8 @@
 		};
 
 		// Create a function to handle deletes
-		const handleDeletes = (payload) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const handleDeletes = (payload: any) => {
 			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price);
@@ -110,5 +111,5 @@
 			}}
 		/>
 	{/if}
-	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio?.sell_type} />
+	<DataTableEvent Payments={$payments} />
 </div>

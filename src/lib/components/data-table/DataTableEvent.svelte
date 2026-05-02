@@ -37,6 +37,8 @@
 		ticketsType: string;
 		payment_status: string;
 		client_id: string;
+		refund: boolean;
+		changeEvent: boolean;
 		buys: {
 			amount: number;
 			status: string;
@@ -53,6 +55,26 @@
 		refund: 'Reembolso',
 		change: 'Cambio'
 	};
+
+	// Refund / change are boolean flags layered on top of the origin status
+	// (success/system). Fall back to legacy payment_status values for rows
+	// written before that split.
+	const isRefund = (p: Payment) => p.refund || p.payment_status === 'refund';
+	const isChange = (p: Payment) => p.changeEvent || p.payment_status === 'change';
+	function originStatus(payment: Payment): string {
+		// Legacy rows where the origin was overwritten with 'refund'/'change'
+		// have already been backfilled to 'success', so this is safe.
+		if (payment.payment_status === 'refund' || payment.payment_status === 'change') {
+			return 'success';
+		}
+		return payment.payment_status;
+	}
+	// Combined value used for search/filter so users can still type 'refund' etc.
+	function effectiveStatus(payment: Payment): string {
+		if (isRefund(payment)) return 'refund';
+		if (isChange(payment)) return 'change';
+		return payment.payment_status;
+	}
 
 	export let Payments: Payment[];
 
@@ -75,26 +97,24 @@
 
 	// Reactive statement to filter payments based on search term and switch state
 	$: filteredPayments = Payments.filter((payment) => {
+		const status = effectiveStatus(payment);
 		const matchesSearchTerm =
 			payment.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			payment.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			payment.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			payment.payment_status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			payment.rut?.toLowerCase().includes(searchTerm.toLowerCase());
 
 		const matchesSuccessFilter =
 			$showRejected ||
-			payment.payment_status === 'success' ||
-			payment.payment_status === 'system' ||
-			payment.payment_status === 'refund' ||
-			payment.payment_status === 'change';
+			status === 'success' ||
+			status === 'system' ||
+			status === 'refund' ||
+			status === 'change';
 
 		if ($showRejected) {
 			return (
-				(payment.payment_status === 'register' ||
-					payment.payment_status === 'rejected' ||
-					payment.payment_status === null) &&
-				matchesSearchTerm
+				(status === 'register' || status === 'rejected' || status === null) && matchesSearchTerm
 			);
 		}
 
@@ -176,9 +196,17 @@
 						</span>
 					</div>
 					<div class="flex flex-col items-end gap-4">
-						<Badge class={getBadgeClass(payment.payment_status)}>
-							{traductions[payment.payment_status]}
-						</Badge>
+						<div class="flex flex-wrap gap-2 justify-end">
+							<Badge class={getBadgeClass(originStatus(payment))}>
+								{traductions[originStatus(payment)]}
+							</Badge>
+							{#if isRefund(payment)}
+								<Badge class={getBadgeClass('refund')}>{traductions.refund}</Badge>
+							{/if}
+							{#if isChange(payment)}
+								<Badge class={getBadgeClass('change')}>{traductions.change}</Badge>
+							{/if}
+						</div>
 						{#if payment.ticketAmount === payment.ticketValidated}
 							<Badge class="bg-green-400 hover:bg-green-500">Validado</Badge>
 						{/if}

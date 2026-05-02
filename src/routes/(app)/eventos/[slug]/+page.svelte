@@ -3,7 +3,6 @@
 	export let data: PageData;
 
 	import Stat from '$lib/components/Stat.svelte';
-	import Navbar from '$lib/components/Navbar.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 
 	import { writable } from 'svelte/store';
@@ -33,7 +32,8 @@
 		};
 
 		// Create a function to handle updates
-		const handleUpdates = (payload) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const handleUpdates = (payload: any) => {
 			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => current + payload.new.price - payload.old.price);
@@ -56,7 +56,8 @@
 		};
 
 		// Create a function to handle deletes
-		const handleDeletes = (payload) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const handleDeletes = (payload: any) => {
 			if (payload.old.productId !== currentSlug) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price);
@@ -106,9 +107,12 @@
 				firsts_tickets: data.eventFromSupabase.buysSumObject?.firsts_tickets || { amount: 0 },
 				seconds_tickets: data.eventFromSupabase.buysSumObject?.seconds_tickets || { amount: 0 },
 				thirds_tickets: data.eventFromSupabase.buysSumObject?.thirds_tickets || { amount: 0 },
-				system_payments: data.eventFromSupabase.buysSumObject?.system_payments || { amount: 0 }
+				system_payments: data.eventFromSupabase.buysSumObject?.system_payments || { amount: 0 },
+				refund_payments: data.eventFromSupabase.buysSumObject?.refund_payments || { amount: 0 },
+				change_payments: data.eventFromSupabase.buysSumObject?.change_payments || { amount: 0 }
 			}}
+			ubicationSumObject={data.eventFromSupabase.ubicationSumObject ?? {}}
 		/>
 	{/if}
-	<DataTableEvent Payments={$payments} sellType={data.eventFromSanityStudio?.sell_type} />
+	<DataTableEvent Payments={$payments} />
 </div>

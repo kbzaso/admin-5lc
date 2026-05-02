@@ -17,7 +17,7 @@
 			const form = document.getElementById('addPayment');
 			if (form) {
 				Object.keys(data).forEach((key) => {
-					const input = form.querySelector(`[name="${key}"]`);
+					const input = form.querySelector(`[name="${key}"]`) as HTMLInputElement | null;
 					if (input) {
 						input.value = data[key];
 					}
@@ -104,7 +104,7 @@
 								id="general_tickets"
 								name="ticketType"
 								class="radio checked:bg-primary text-lg"
-								checked="checked"
+								checked
 								value="general_tickets"
 							/>
 							<span class="label-text mt-2">General</span>

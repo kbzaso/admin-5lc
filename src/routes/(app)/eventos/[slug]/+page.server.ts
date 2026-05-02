@@ -40,44 +40,64 @@ interface Payment {
 	payment_status: string;
 	buys: Record<string, Buy>;
 	ticketAmount: number;
+	ticketsType?: string | null;
+	refund?: boolean;
+	changeEvent?: boolean;
 }
 
 interface BuysSum {
 	[key: string]: Buy;
 }
 
+// Refund / change are tracked as boolean flags. Fall back to legacy
+// payment_status values for rows written before that split.
+const isRefund = (p: Payment) => p.refund === true || p.payment_status === 'refund';
+const isChange = (p: Payment) => p.changeEvent === true || p.payment_status === 'change';
+const isCountable = (p: Payment) =>
+	p?.payment_status === 'success' ||
+	p?.payment_status === 'system' ||
+	isRefund(p) ||
+	isChange(p);
+
 const createBuysSumObject = (payments: Payment[]): BuysSum => {
 	const buysSum: BuysSum = {};
 	let systemPaymentsSum = 0;
+	let refundPaymentsSum = 0;
+	let changePaymentsSum = 0;
 
-	payments
-		.filter(
-			(payment) => payment?.payment_status === 'success' || payment?.payment_status === 'system'
-		)
-		.forEach((payment) => {
-			const orderedKeys = [
-				'firsts_tickets',
-				'seconds_tickets',
-				'thirds_tickets',
-				'system_payments'
-			];
-			const sortedEntries = Object.entries(payment.buys).sort(
-				([a], [b]) => orderedKeys.indexOf(a) - orderedKeys.indexOf(b)
-			);
+	payments.filter(isCountable).forEach((payment) => {
+		// Refund / change rows still need to be tallied for their own rows,
+		// but they don't contribute to the per-tier "attending" totals.
+		const refunded = isRefund(payment);
+		const changed = isChange(payment);
 
-			for (const [key, value] of sortedEntries) {
-				if (!buysSum[key]) {
-					buysSum[key] = { amount: 0 };
-				}
-				buysSum[key].amount += value.amount;
+		if (refunded) refundPaymentsSum += payment.ticketAmount;
+		if (changed) changePaymentsSum += payment.ticketAmount;
+		if (refunded || changed) return;
+
+		const orderedKeys = [
+			'firsts_tickets',
+			'seconds_tickets',
+			'thirds_tickets',
+			'system_payments'
+		];
+		const sortedEntries = Object.entries(payment.buys).sort(
+			([a], [b]) => orderedKeys.indexOf(a) - orderedKeys.indexOf(b)
+		);
+
+		for (const [key, value] of sortedEntries) {
+			if (!buysSum[key]) {
+				buysSum[key] = { amount: 0 };
 			}
+			buysSum[key].amount += value.amount;
+		}
 
-			if (payment.payment_status === 'system') {
-				systemPaymentsSum += payment.ticketAmount;
-			}
-		});
+		if (payment.payment_status === 'system') systemPaymentsSum += payment.ticketAmount;
+	});
 
 	buysSum['system_payments'] = { amount: systemPaymentsSum };
+	buysSum['refund_payments'] = { amount: refundPaymentsSum };
+	buysSum['change_payments'] = { amount: changePaymentsSum };
 
 	return buysSum;
 };
@@ -139,17 +159,49 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 
 		// Create the buys sum object
-		const buysSumObject = createBuysSumObject(product?.Payment);
+		const buysSumObject = createBuysSumObject((product?.Payment ?? []) as unknown as Payment[]);
 
-		return { ...product, buysSumObject };
+		// Sum tickets by ticketsType for ubication events ('General', 'Ringside', etc.)
+		// plus separate rows for Sistema, Reembolso and Cambio. Refund / change
+		// rows are tallied separately and excluded from the per-type "attending"
+		// totals.
+		const ubicationSumObject: Record<string, { amount: number }> = {};
+		let ubicationSystemSum = 0;
+		let ubicationRefundSum = 0;
+		let ubicationChangeSum = 0;
+		for (const payment of (product?.Payment ?? []) as unknown as Payment[]) {
+			if (!isCountable(payment)) continue;
+
+			const refunded = isRefund(payment);
+			const changed = isChange(payment);
+			if (refunded) ubicationRefundSum += payment.ticketAmount;
+			if (changed) ubicationChangeSum += payment.ticketAmount;
+			if (refunded || changed) continue;
+
+			const type = payment.ticketsType || 'Otros';
+			if (!ubicationSumObject[type]) ubicationSumObject[type] = { amount: 0 };
+			ubicationSumObject[type].amount += payment.ticketAmount;
+			if (payment.payment_status === 'system') ubicationSystemSum += payment.ticketAmount;
+		}
+		ubicationSumObject['Sistema'] = { amount: ubicationSystemSum };
+		ubicationSumObject['Reembolso'] = { amount: ubicationRefundSum };
+		ubicationSumObject['Cambio'] = { amount: ubicationChangeSum };
+
+		return { ...product, buysSumObject, ubicationSumObject };
 	};
+
+	// Refund / change tickets don't attend, so exclude them from all attendance
+	// and revenue totals. Legacy rows where payment_status === 'refund'/'change'
+	// have been backfilled to 'success' with the booleans set.
+	const excludeRefundChange = { refund: false, changeEvent: false } as const;
 
 	// Get the total money made from the event
 	const totalMoneyRaised = async () => {
 		return await client.payment.aggregate({
 			where: {
 				productId: params.slug,
-				payment_status: 'success'
+				payment_status: 'success',
+				...excludeRefundChange
 			},
 			_sum: {
 				price: true
@@ -163,7 +215,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				productId: params.slug,
 				payment_status: {
 					in: ['success', 'system']
-				}
+				},
+				...excludeRefundChange
 			},
 			_sum: {
 				ticketAmount: true
@@ -175,7 +228,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return await client.payment.aggregate({
 			where: {
 				productId: params.slug,
-				payment_status: 'success'
+				payment_status: 'success',
+				...excludeRefundChange
 			},
 			_sum: {
 				ticketValidated: true
@@ -332,14 +386,9 @@ export const actions: Actions = {
 		const refund = formData.get('refund');
 		const change = formData.get('change');
 
-		const changeStatus = (refund: string, change: string) => {
-			const refundMoney = Boolean(refund);
-			const changeEvent = Boolean(change);
-
-			if (refundMoney) return 'refund';
-			if (changeEvent) return 'change';
-			return 'system';
-		};
+		// Mutually exclusive: refund wins if both arrive (defensive — UI also enforces).
+		const refundMoney = Boolean(refund);
+		const changeEvent = !refundMoney && Boolean(change);
 
 		try {
 			const updatePayment = await client.payment.update({
@@ -348,15 +397,14 @@ export const actions: Actions = {
 				},
 				data: {
 					customer_name: name,
-					rut,
+					rut: rut as string | null,
 					customer_email: email as string,
 					customer_phone: phone as string,
 					price,
 					ticketAmount,
-					payment_status: changeStatus(refund, change),
 					ticketsType: ticketType || 'Tandas',
-					refund: Boolean(refund),
-					changeEvent: Boolean(change)
+					refund: refundMoney,
+					changeEvent: changeEvent
 				}
 			});
 			return {
@@ -492,7 +540,7 @@ export const actions: Actions = {
 				data: {
 					id: crypto.randomUUID(),
 					customer_name: name,
-					rut,
+					rut: rut as string | null,
 					customer_email: email as string,
 					customer_phone: phone as string,
 					price,

@@ -29,6 +29,8 @@
 	export let payment: any;
 
 	let validatedTickets = payment.ticketValidated;
+	let refundChecked: boolean = payment.refund;
+	let changeChecked: boolean = payment.changeEvent;
 
 	const STATUS = {
 		register: {
@@ -99,12 +101,12 @@
 	}
 
 	function deleteComment(commentId: string) {
-		payments.update((currentPayments) => {
-			return currentPayments.map((p) => {
+		payments.update((currentPayments: any) => {
+			return currentPayments.map((p: any) => {
 				if (p.id === payment.id) {
 					return {
 						...p,
-						Comment: p.Comment.filter((comment) => comment.id !== commentId)
+						Comment: p.Comment.filter((comment: any) => comment.id !== commentId)
 					};
 				}
 				return p;
@@ -245,7 +247,7 @@
 													type="radio"
 													name="ticketType"
 													class="radio checked:bg-primary"
-													checked={payment.ticketsType === 'General' ? 'checked' : ''}
+													checked={payment.ticketsType === 'General'}
 													value="General"
 												/>
 												<span class="label-text mt-2">General</span>
@@ -257,7 +259,7 @@
 													name="ticketType"
 													class="radio checked:bg-primary"
 													value="Ringside"
-													checked={payment.ticketsType === 'Ringside' ? 'checked' : ''}
+													checked={payment.ticketsType === 'Ringside'}
 												/>
 												<span class="label-text mt-2">Ringisde</span>
 											</label>
@@ -268,7 +270,10 @@
 											<input
 												name="refund"
 												type="checkbox"
-												checked={payment.refund}
+												bind:checked={refundChecked}
+												on:change={() => {
+													if (refundChecked) changeChecked = false;
+												}}
 												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
 											/>
 											<span class="label-text text-white">Devolución</span>
@@ -277,7 +282,10 @@
 											<input
 												name="change"
 												type="checkbox"
-												checked={payment.changeEvent}
+												bind:checked={changeChecked}
+												on:change={() => {
+													if (changeChecked) refundChecked = false;
+												}}
 												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
 											/>
 											<span class="label-text text-white">Cambio de evento</span>
@@ -361,7 +369,7 @@
 						</Tabs.Content>
 						<Tabs.Content value="comments">
 							<ScrollArea class="h-[200px] text-left rounded-md border border-base-content/20 bg-muted/20 p-4 mb-4">
-								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) ?? [] as comment (comment.id)}
+								{#each payment.Comment?.slice().sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) ?? [] as comment (comment.id)}
 									<div class="flex flex-col gap-2 py-4 border-b border-base-content" id={comment.id}>
 										<div class="relative flex flex-col items-start justify-between w-full">
 											<span class="text-xs text-primary">{comment.name || comment.User.name}</span>
@@ -402,7 +410,7 @@
 								action="?/addComment"
 								use:enhance={() => {
 									const commentText =
-										document.querySelector('textarea[name="comment"]')?.value || '';
+										(document.querySelector('textarea[name="comment"]') as HTMLTextAreaElement | null)?.value || '';
 									addComment(commentText);
 									toast.success(`Se agrego un comentario`, {});
 								}}

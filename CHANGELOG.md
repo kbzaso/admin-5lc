@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.28] - 2026-05-02
+
 ### Fix
 
 - Seperate refund and changeEvent badge from success(web)/admin
@@ -226,7 +228,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.26...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.28...HEAD
+[0.0.28]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.27...v0.0.28
+[0.0.27]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.26...v0.0.27
 [0.0.26]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.25...v0.0.26
 [0.0.25]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.24...v0.0.25
 [0.0.24]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.23...v0.0.24

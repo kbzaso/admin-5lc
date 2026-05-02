@@ -107,7 +107,9 @@
 				firsts_tickets: data.eventFromSupabase.buysSumObject?.firsts_tickets || { amount: 0 },
 				seconds_tickets: data.eventFromSupabase.buysSumObject?.seconds_tickets || { amount: 0 },
 				thirds_tickets: data.eventFromSupabase.buysSumObject?.thirds_tickets || { amount: 0 },
-				system_payments: data.eventFromSupabase.buysSumObject?.system_payments || { amount: 0 }
+				system_payments: data.eventFromSupabase.buysSumObject?.system_payments || { amount: 0 },
+				refund_payments: data.eventFromSupabase.buysSumObject?.refund_payments || { amount: 0 },
+				change_payments: data.eventFromSupabase.buysSumObject?.change_payments || { amount: 0 }
 			}}
 			ubicationSumObject={data.eventFromSupabase.ubicationSumObject ?? {}}
 		/>

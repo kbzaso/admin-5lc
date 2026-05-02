@@ -29,6 +29,8 @@
 	export let payment: any;
 
 	let validatedTickets = payment.ticketValidated;
+	let refundChecked: boolean = payment.refund;
+	let changeChecked: boolean = payment.changeEvent;
 
 	const STATUS = {
 		register: {
@@ -268,7 +270,10 @@
 											<input
 												name="refund"
 												type="checkbox"
-												checked={payment.refund}
+												bind:checked={refundChecked}
+												on:change={() => {
+													if (refundChecked) changeChecked = false;
+												}}
 												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
 											/>
 											<span class="label-text text-white">Devolución</span>
@@ -277,7 +282,10 @@
 											<input
 												name="change"
 												type="checkbox"
-												checked={payment.changeEvent}
+												bind:checked={changeChecked}
+												on:change={() => {
+													if (changeChecked) refundChecked = false;
+												}}
 												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
 											/>
 											<span class="label-text text-white">Cambio de evento</span>

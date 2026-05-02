@@ -15,7 +15,9 @@
 		firsts_tickets: 'Preventa',
 		seconds_tickets: 'Regular',
 		thirds_tickets: 'Últimas entradas',
-		system_payments: 'Sistema'
+		system_payments: 'Sistema',
+		refund_payments: 'Reembolso',
+		change_payments: 'Cambio'
 	};
 </script>
 

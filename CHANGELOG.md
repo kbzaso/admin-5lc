@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fix
 
+- Seperate refund and changeEvent badge from success(web)/admin
+- No system payment change after update
 - Stat of ubication sell_type
 - TS and HTML warnings
 

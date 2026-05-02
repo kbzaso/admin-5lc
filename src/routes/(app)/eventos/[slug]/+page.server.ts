@@ -141,7 +141,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		// Create the buys sum object
 		const buysSumObject = createBuysSumObject((product?.Payment ?? []) as unknown as Payment[]);
 
-		return { ...product, buysSumObject };
+		// Sum tickets by ticketsType for ubication events ('General', 'Ringside', etc.)
+		// plus a separate 'Sistema' row counting tickets added by system.
+		const ubicationSumObject: Record<string, { amount: number }> = {};
+		let ubicationSystemSum = 0;
+		for (const payment of product?.Payment ?? []) {
+			if (payment.payment_status !== 'success' && payment.payment_status !== 'system') continue;
+			const type = payment.ticketsType || 'Otros';
+			if (!ubicationSumObject[type]) ubicationSumObject[type] = { amount: 0 };
+			ubicationSumObject[type].amount += payment.ticketAmount;
+			if (payment.payment_status === 'system') {
+				ubicationSystemSum += payment.ticketAmount;
+			}
+		}
+		ubicationSumObject['Sistema'] = { amount: ubicationSystemSum };
+
+		return { ...product, buysSumObject, ubicationSumObject };
 	};
 
 	// Get the total money made from the event

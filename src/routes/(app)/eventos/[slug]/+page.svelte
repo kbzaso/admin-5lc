@@ -109,6 +109,7 @@
 				thirds_tickets: data.eventFromSupabase.buysSumObject?.thirds_tickets || { amount: 0 },
 				system_payments: data.eventFromSupabase.buysSumObject?.system_payments || { amount: 0 }
 			}}
+			ubicationSumObject={data.eventFromSupabase.ubicationSumObject ?? {}}
 		/>
 	{/if}
 	<DataTableEvent Payments={$payments} />

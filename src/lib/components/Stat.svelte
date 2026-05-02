@@ -9,6 +9,7 @@
 	import { SELL_TYPE } from '$lib/consts';
 
 	export let buysSumObject: Record<keyof typeof traductions, { amount: number }>;
+	export let ubicationSumObject: Record<string, { amount: number }> = {};
 
 	const traductions: Record<string, string> = {
 		firsts_tickets: 'Preventa',
@@ -71,6 +72,23 @@
 						{#each Object.entries(buysSumObject) as [key, value]}
 							<div class="flex justify-between">
 								<p class="text-sm">{traductions[key]}</p>
+								<div class="text-md font-bold">{value.amount}</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+		{:else}
+			<div class="card bg-base-300 grow border border-base-content/20">
+				<div class="card-body">
+					<div class="flex flex-row items-center justify-between space-y-0 pb-2">
+						<span class="card-title">Resumen de venta</span>
+						<TicketPercent class="h-4 w-4 ml-2" />
+					</div>
+					<div class="flex flex-col">
+						{#each Object.entries(ubicationSumObject) as [key, value]}
+							<div class="flex justify-between">
+								<p class="text-sm">{key}</p>
 								<div class="text-md font-bold">{value.amount}</div>
 							</div>
 						{/each}

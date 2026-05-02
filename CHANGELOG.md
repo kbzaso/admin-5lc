@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fix
 
+- Stat of ubication sell_type
 - TS and HTML warnings
 
 ## [0.0.27] - 2026-05-01

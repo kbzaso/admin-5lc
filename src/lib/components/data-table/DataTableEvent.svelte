@@ -148,12 +148,12 @@
 		<input
 			type="text"
 			placeholder="Buscador..."
-			class="w-full md:w-96  text-lg input"
+			class="w-full md:w-96 text-lg input"
 			bind:value={searchTerm}
 		/>
 		<div class="flex items-center space-x-2">
-			<input type="checkbox" id="rejected-payments" class="toggle" bind:checked={$showRejected} />
-			<label for="rejected-payments">Ver pagos rechazados</label>
+			<Switch id="rejected-payments" bind:checked={$showRejected} />
+			<Label for="rejected-payments">Ver pagos rechazados</Label>
 		</div>
 	</div>
 	<DialogToAddPayments />
@@ -162,7 +162,7 @@
 <div class="rounded-md border border-base-content/20">
 	<ul class="divide-y divide-base-content/20">
 		{#each filteredPayments as payment, i (payment.id)}
-			<li>
+			<li id={i.toString()}>
 				<button
 					on:click={() => openDialog(payment.id)}
 					class={`p-6 w-full hover:bg-base-content/5 flex justify-between ${

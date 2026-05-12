@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### fix
+
 - Fix accesibility on event page
+
+### add
+
 - add discount code badge
+- add IVA and payku discount per event
 
 ## [0.0.28] - 2026-05-02
 

@@ -195,7 +195,7 @@
 				>
 					<Table.Cell class="px-3 py-3 sm:p-4 align-top">
 						<div class="flex flex-col">
-							<span class="text-[10px] text-primary uppercase flex gap-1.5 items-center">
+							<span class="text-xs text-primary uppercase flex gap-1.5 items-center">
 								{payment.client_id ? payment.client_id : ''}
 								{#if payment.Comment?.length > 0}
 									<Badge variant="default"><MessageSquare class="h-3" aria-hidden="true" />{payment.Comment.length}</Badge>
@@ -218,7 +218,7 @@
 						</div>
 					</Table.Cell>
 					<Table.Cell class="hidden md:table-cell text-sm align-top">{payment.rut}</Table.Cell>
-					<Table.Cell class="hidden lg:table-cell text-xs uppercase text-zinc-400 align-top">
+					<Table.Cell class="hidden lg:table-cell text-xs uppercase text-zinc-400 align-top truncate">
 						{formatDateToChile(payment.date)}
 					</Table.Cell>
 					<Table.Cell class="px-3 py-3 sm:p-4 align-top">

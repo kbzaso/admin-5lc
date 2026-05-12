@@ -2,11 +2,11 @@ import type { PageServerLoad } from './$types';
 import { client } from '$lib/server/prisma';
 import { redirect } from '@sveltejs/kit';
 
-export const config = {
-	isr: {
-	  expiration: 10,
-	},
-  };
+// export const config = {
+// 	isr: {
+// 	  expiration: 10,
+// 	},
+//   };
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.session?.userId) throw redirect(302, '/login');

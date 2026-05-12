@@ -2,7 +2,6 @@
 	export let totalMoneyRaised: number;
 	export let ticketsSold: number;
 	export let studioTicketsAvailable: number;
-	import * as Card from '$lib/components/ui/card/index.js';
 	import { TicketPercent, DollarSign, TicketCheck } from 'lucide-svelte';
 	import { formatPriceToCLP } from '$lib';
 	import { page } from '$app/stores';
@@ -21,13 +20,13 @@
 	};
 </script>
 
-<section class="flex md:flex-row flex-col justify-between w-full">
-	<div class="flex flex-col md:flex-row md:w-fit gap-4">
-		<div class="card bg-base-300 grow border border-base-content/20">
+<section class="w-full">
+	<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+		<div class="card bg-base-300 border border-base-content/20">
 			<div class="card-body">
-				<div class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<div class="flex flex-row items-center justify-between pb-2">
 					<span class="card-title">Entradas vendidas</span>
-					<TicketPercent class="h-4 w-4 " />
+					<TicketPercent class="h-4 w-4" aria-hidden="true" />
 				</div>
 				<div>
 					<div class="text-2xl font-bold">{ticketsSold}</div>
@@ -37,11 +36,11 @@
 				</div>
 			</div>
 		</div>
-		<div class="card bg-base-300 grow border border-base-content/20">
+		<div class="card bg-base-300 border border-base-content/20">
 			<div class="card-body">
-				<div class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<div class="flex flex-row items-center justify-between pb-2">
 					<span class="card-title">Monto generado</span>
-					<DollarSign class="h-4 w-4 ml-2" />
+					<DollarSign class="h-4 w-4" aria-hidden="true" />
 				</div>
 				<div>
 					<div class="text-2xl font-bold">{formatPriceToCLP(totalMoneyRaised)}</div>
@@ -49,11 +48,11 @@
 				</div>
 			</div>
 		</div>
-		<div class="card bg-base-300 grow border border-base-content/20">
+		<div class="card bg-base-300 border border-base-content/20">
 			<div class="card-body">
-				<div class="flex flex-row items-center justify-between space-y-0 pb-2">
+				<div class="flex flex-row items-center justify-between pb-2">
 					<span class="card-title">Entradas validadas</span>
-					<TicketCheck class="h-4 w-4 ml-2" />
+					<TicketCheck class="h-4 w-4" aria-hidden="true" />
 				</div>
 				<div>
 					<div class="text-2xl font-bold">{$page.data.ticketValidated._sum.ticketValidated}</div>
@@ -64,34 +63,34 @@
 			</div>
 		</div>
 		{#if $page.data.sell_type !== 'ubication'}
-			<div class="card bg-base-300 grow border border-base-content/20">
+			<div class="card bg-base-300 border border-base-content/20">
 				<div class="card-body">
-					<div class="flex flex-row items-center justify-between space-y-0 pb-2">
+					<div class="flex flex-row items-center justify-between pb-2">
 						<span class="card-title">Resumen de venta</span>
-						<TicketPercent class="h-4 w-4 ml-2" />
+						<TicketPercent class="h-4 w-4" aria-hidden="true" />
 					</div>
 					<div class="flex flex-col">
 						{#each Object.entries(buysSumObject) as [key, value]}
 							<div class="flex justify-between">
 								<p class="text-sm">{traductions[key]}</p>
-								<div class="text-md font-bold">{value.amount}</div>
+								<div class="text-base font-bold">{value.amount}</div>
 							</div>
 						{/each}
 					</div>
 				</div>
 			</div>
 		{:else}
-			<div class="card bg-base-300 grow border border-base-content/20">
+			<div class="card bg-base-300 border border-base-content/20">
 				<div class="card-body">
-					<div class="flex flex-row items-center justify-between space-y-0 pb-2">
+					<div class="flex flex-row items-center justify-between pb-2">
 						<span class="card-title">Resumen de venta</span>
-						<TicketPercent class="h-4 w-4 ml-2" />
+						<TicketPercent class="h-4 w-4" aria-hidden="true" />
 					</div>
 					<div class="flex flex-col">
 						{#each Object.entries(ubicationSumObject) as [key, value]}
 							<div class="flex justify-between">
 								<p class="text-sm">{key}</p>
-								<div class="text-md font-bold">{value.amount}</div>
+								<div class="text-base font-bold">{value.amount}</div>
 							</div>
 						{/each}
 					</div>

@@ -78,3 +78,10 @@
       "calt" 1;
   }
 }
+
+/* Make every button rounded-xl, including daisyUI `.btn` elements */
+@layer components {
+  .btn {
+    @apply rounded-xl;
+  }
+}

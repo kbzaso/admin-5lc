@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { TANDAS_NAMES } from '$lib/consts';
 	import DialogToAddPayments from '../SheetToAddPayments.svelte';
-	import { Ticket, CreditCard, MessageSquare } from 'lucide-svelte';
+	import { Ticket, MessageSquare } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { page } from '$app/stores';
@@ -10,6 +10,7 @@
 	import { formatPriceToCLP } from '$lib';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';
+	import * as Table from '$lib/components/ui/table';
 	import { getContext, setContext } from 'svelte';
 
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
@@ -37,6 +38,7 @@
 		ticketsType: string;
 		payment_status: string;
 		client_id: string;
+		discount_code: string | null;
 		refund: boolean;
 		changeEvent: boolean;
 		buys: {
@@ -143,60 +145,84 @@
 </script>
 
 <!-- HEADER -->
-<div class="flex flex-col md:flex-row items-center py-4 md:gap-4 justify-between">
-	<div class="flex flex-col md:flex-row md:items-center gap-4 items-left w-full">
-		<input
+<div class="flex flex-col md:flex-row md:items-center py-4 gap-4 justify-between">
+	<div class="flex flex-col md:flex-row md:items-center gap-4 w-full">
+		<Input
 			type="text"
 			placeholder="Buscador..."
-			class="w-full md:w-96  text-lg input"
+			aria-label="Buscar pagos por nombre, email, teléfono, estado o RUT"
+			class="w-full md:w-96 h-11 text-base"
 			bind:value={searchTerm}
 		/>
 		<div class="flex items-center space-x-2">
-			<input type="checkbox" id="rejected-payments" class="toggle" bind:checked={$showRejected} />
-			<label for="rejected-payments">Ver pagos rechazados</label>
+			<Switch id="rejected-payments" bind:checked={$showRejected} />
+			<Label for="rejected-payments">Ver pagos rechazados</Label>
 		</div>
 	</div>
 	<DialogToAddPayments />
 </div>
 
-<div class="rounded-md border border-base-content/20">
-	<ul class="divide-y divide-base-content/20">
-		{#each filteredPayments as payment, i (payment.id)}
-			<li>
-				<button
+<div class="rounded-xl border border-base-content/20 overflow-hidden">
+	<Table.Root>
+		<Table.Header>
+			<Table.Row>
+				<Table.Head class="px-3 sm:px-4">Cliente</Table.Head>
+				<Table.Head class="hidden md:table-cell">RUT</Table.Head>
+				<Table.Head class="hidden lg:table-cell">Fecha</Table.Head>
+				<Table.Head class="px-3 sm:px-4">Estado</Table.Head>
+				<Table.Head class="hidden md:table-cell">Descuento</Table.Head>
+				<Table.Head class="px-3 sm:px-4 text-right">Tickets</Table.Head>
+				<Table.Head class="hidden sm:table-cell text-right">Precio</Table.Head>
+			</Table.Row>
+		</Table.Header>
+		<Table.Body>
+			{#each filteredPayments as payment, i (payment.id)}
+				<Table.Row
+					id={i.toString()}
+					role="button"
+					tabindex={0}
+					aria-label={`Ver pago de ${payment.customer_name}`}
 					on:click={() => openDialog(payment.id)}
-					class={`p-6 w-full hover:bg-base-content/5 flex justify-between ${
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							openDialog(payment.id);
+						}
+					}}
+					class={`cursor-pointer hover:bg-base-content/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
 						payment.ticketAmount === payment.ticketValidated ? 'bg-green-500/10' : ''
 					}`}
 				>
-					<div class="flex flex-col items-start">
-						<span class="text-xs text-primary uppercase text-left flex gap-2 items-center">
-							{payment.client_id ? payment.client_id : ''}
-							{#if payment.Comment?.length > 0}
-								<Badge variant="default" class=""
-									><MessageSquare class="h-4" />
-									{payment.Comment ? payment.Comment.length : ''}</Badge
-								>
+					<Table.Cell class="px-3 py-3 sm:p-4 align-top">
+						<div class="flex flex-col">
+							<span class="text-xs text-primary uppercase flex gap-1.5 items-center">
+								{payment.client_id ? payment.client_id : ''}
+								{#if payment.Comment?.length > 0}
+									<Badge variant="default"><MessageSquare class="h-3" aria-hidden="true" />{payment.Comment.length}</Badge>
+								{/if}
+							</span>
+							<span class="font-medium md:text-base">{payment.customer_name}</span>
+							<span class="text-xs text-zinc-400">{payment.customer_email}</span>
+							{#if payment.customer_phone}
+								<span class="text-xs text-zinc-400">{payment.customer_phone}</span>
 							{/if}
-						</span>
-						<span class=" md:text-xl text-left">
-							{payment.customer_name}
-						</span>
-						<span class="text-xs mb-2 text-zinc-400 uppercase">
-							{formatDateToChile(payment.date)}
-						</span>
-						<span class="text-sm">
-							{payment.rut}
-						</span>
-						<span class="text-sm">
-							{payment.customer_email}
-						</span>
-						<span class="text-sm">
-							{payment.customer_phone}
-						</span>
-					</div>
-					<div class="flex flex-col items-end gap-4">
-						<div class="flex flex-wrap gap-2 justify-end">
+							<span class="text-xs text-zinc-400 md:hidden">{payment.rut}</span>
+							<span class="text-xs text-zinc-400 uppercase lg:hidden">
+								{formatDateToChile(payment.date)}
+							</span>
+							{#if payment.discount_code}
+								<span class="md:hidden mt-1">
+									<Badge variant="outline">{payment.discount_code}</Badge>
+								</span>
+							{/if}
+						</div>
+					</Table.Cell>
+					<Table.Cell class="hidden md:table-cell text-sm align-top">{payment.rut}</Table.Cell>
+					<Table.Cell class="hidden lg:table-cell text-xs uppercase text-zinc-400 align-top truncate">
+						{formatDateToChile(payment.date)}
+					</Table.Cell>
+					<Table.Cell class="px-3 py-3 sm:p-4 align-top">
+						<div class="flex flex-wrap gap-1.5">
 							<Badge class={getBadgeClass(originStatus(payment))}>
 								{traductions[originStatus(payment)]}
 							</Badge>
@@ -206,26 +232,39 @@
 							{#if isChange(payment)}
 								<Badge class={getBadgeClass('change')}>{traductions.change}</Badge>
 							{/if}
+							{#if payment.ticketAmount === payment.ticketValidated}
+								<Badge class="bg-green-400 hover:bg-green-500">Validado</Badge>
+							{/if}
 						</div>
-						{#if payment.ticketAmount === payment.ticketValidated}
-							<Badge class="bg-green-400 hover:bg-green-500">Validado</Badge>
+					</Table.Cell>
+					<Table.Cell class="hidden md:table-cell align-top">
+						{#if payment.discount_code}
+							<Badge variant="outline">{payment.discount_code}</Badge>
+						{:else}
+							<span class="text-zinc-500">—</span>
 						{/if}
-						<div class="text-right text-xs md:text-base">
-							<span class="flex gap-2 items-center">
-								<Ticket class="h-4 md:h-10" />
-								{payment.ticketValidated}/{payment.ticketAmount}
+					</Table.Cell>
+					<Table.Cell class="px-3 py-3 sm:p-4 text-right align-top">
+						<span class="flex gap-1.5 items-center justify-end whitespace-nowrap">
+							<Ticket class="h-4" aria-hidden="true" />
+							{payment.ticketValidated}/{payment.ticketAmount}
+							<span class="hidden md:inline">
 								{$page.data.eventFromSanityStudio?.sell_type === 'batch' ? '' : payment.ticketsType}
 							</span>
-							<span class="flex gap-2 items-center">
-								<CreditCard class="h-4 md:h-10" />
-								{formatPriceToCLP(payment.price)}
-							</span>
-						</div>
-					</div>
-				</button>
-			</li>
-		{/each}
-	</ul>
+						</span>
+					</Table.Cell>
+					<Table.Cell class="hidden sm:table-cell text-right whitespace-nowrap align-top">
+						{formatPriceToCLP(payment.price)}
+					</Table.Cell>
+				</Table.Row>
+			{/each}
+			{#if filteredPayments.length === 0}
+				<Table.Row>
+					<Table.Cell colspan={7} class="text-center text-zinc-400 py-8">Sin resultados</Table.Cell>
+				</Table.Row>
+			{/if}
+		</Table.Body>
+	</Table.Root>
 </div>
 
 {#if activePayment}

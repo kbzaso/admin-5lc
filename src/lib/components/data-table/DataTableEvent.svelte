@@ -3,7 +3,6 @@
 	import DialogToAddPayments from '../SheetToAddPayments.svelte';
 	import { Ticket, MessageSquare } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Input } from '$lib/components/ui/input';
 	import { page } from '$app/stores';
 	import { formatDateToChile } from '$lib';
 	import DialogToUpdatePayments from '../SheetToUpdatePayments.svelte';
@@ -11,6 +10,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import * as Table from '$lib/components/ui/table';
+	import TableToolbar from '$lib/components/TableToolbar.svelte';
 	import { getContext, setContext } from 'svelte';
 
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
@@ -145,22 +145,17 @@
 </script>
 
 <!-- HEADER -->
-<div class="flex flex-col md:flex-row md:items-center py-4 gap-4 justify-between">
-	<div class="flex flex-col md:flex-row md:items-center gap-4 w-full">
-		<Input
-			type="text"
-			placeholder="Buscador..."
-			aria-label="Buscar pagos por nombre, email, teléfono, estado o RUT"
-			class="w-full md:w-96 h-11 text-base"
-			bind:value={searchTerm}
-		/>
-		<div class="flex items-center space-x-2">
-			<Switch id="rejected-payments" bind:checked={$showRejected} />
-			<Label for="rejected-payments">Ver pagos rechazados</Label>
-		</div>
+<TableToolbar
+	bind:searchValue={searchTerm}
+	placeholder="Buscador..."
+	ariaLabel="Buscar pagos por nombre, email, teléfono, estado o RUT"
+>
+	<div slot="filters" class="flex items-center space-x-2">
+		<Switch id="rejected-payments" bind:checked={$showRejected} />
+		<Label for="rejected-payments">Ver pagos rechazados</Label>
 	</div>
-	<DialogToAddPayments />
-</div>
+	<DialogToAddPayments slot="actions" />
+</TableToolbar>
 
 <div class="rounded-xl border border-base-content/20 overflow-hidden">
 	<Table.Root>

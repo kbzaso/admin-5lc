@@ -16,6 +16,7 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
+	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { writable } from 'svelte/store';
 	import { payments } from '$lib/stores/payments';
 
@@ -265,31 +266,31 @@
 											</label>
 										</div>
 									{/if}
-									<div class="form-control">
-										<label class="label cursor-pointer justify-start gap-4">
-											<input
+									<div class="flex flex-col gap-2">
+										<Label class="flex items-center gap-3 cursor-pointer">
+											<Checkbox
 												name="refund"
-												type="checkbox"
 												bind:checked={refundChecked}
-												on:change={() => {
+												onCheckedChange={(v) => {
+													refundChecked = v === true;
 													if (refundChecked) changeChecked = false;
 												}}
-												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
+												class="border-yellow-400 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-800"
 											/>
-											<span class="label-text text-white">Devolución</span>
-										</label>
-										<label class="label cursor-pointer justify-start gap-4">
-											<input
+											<span class="text-white">Devolución</span>
+										</Label>
+										<Label class="flex items-center gap-3 cursor-pointer">
+											<Checkbox
 												name="change"
-												type="checkbox"
 												bind:checked={changeChecked}
-												on:change={() => {
+												onCheckedChange={(v) => {
+													changeChecked = v === true;
 													if (changeChecked) refundChecked = false;
 												}}
-												class="checkbox border-yellow-400 [--chkbg:var(--color-yellow-400)] [--chkfg:black] checked:border-yellow-800"
+												class="border-yellow-400 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-800"
 											/>
-											<span class="label-text text-white">Cambio de evento</span>
-										</label>
+											<span class="text-white">Cambio de evento</span>
+										</Label>
 									</div>
 									<div class="w-full flex gap-4">
 										{#if !$page.data.user.validator}

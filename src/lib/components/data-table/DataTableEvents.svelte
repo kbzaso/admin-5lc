@@ -1,160 +1,155 @@
 <script lang="ts">
-	import { createTable, Render, Subscribe, createRender } from 'svelte-headless-table';
-	import { readable } from 'svelte/store';
 	import * as Table from '$lib/components/ui/table';
-	import { Input } from '$lib/components/ui/input';
-	import { addSortBy, addTableFilter } from 'svelte-headless-table/plugins';
-	import { ChevronsUpDown } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
-	import ButtonHref from '../ButtonHref.svelte';
+	import { Label } from '$lib/components/ui/label';
+	import TableToolbar from '$lib/components/TableToolbar.svelte';
 	import { page } from '$app/stores';
-	import { mediaQuery } from '$lib/stores/mediaQuery';
-	const isDesktop = mediaQuery('(min-width: 768px)');
-
-	// type Payment = {
-	// 	date: string;
-	// 	customer_name: string;
-	// 	rut: string;
-	// 	customer_email: string;
-	// 	customer_phone: string;
-	// 	price: number;
-	// 	ticketAmount: number;
-	// 	ticketsType: string;
-	// 	buys: {
-	// 		amount: number;
-	// 		status: string;
-	// 	}[];
-	// 	// status: 'pending' | 'processing' | 'success' | 'failed';
-	// };
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 
 	export let Events: any[];
 
-	const table = createTable(readable<any[]>(Events), {
-		sort: addSortBy(),
-		filter: addTableFilter({
-			fn: ({ filterValue, value }) => value.toLowerCase().includes(filterValue.toLowerCase())
-		})
+	let filterValue = '';
+	let selectedYear: string = String(new Date().getFullYear());
+	let pageSize: string = '12';
+
+	const PAGE_SIZES = ['12', '24', '36', 'all'] as const;
+
+	$: isValidator = $page.data.validator;
+
+	const dateFormatter = new Intl.DateTimeFormat('es-CL', {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric'
+	});
+	const priceFormatter = new Intl.NumberFormat('es-CL', {
+		style: 'currency',
+		currency: 'CLP'
 	});
 
-	let columns = table.createColumns([
-		...($isDesktop
-			? [
-					table.column({
-						accessor: 'date',
-						header: 'Fecha',
-						cell: ({ value }) => {
-							const date = new Date(value);
-							const formatter = new Intl.DateTimeFormat('es-CL', {
-								year: 'numeric',
-								month: 'long',
-								day: 'numeric'
-							});
-							return formatter.format(date);
-						}
-					})
-			  ]
-			: []),
-		table.column({
-			accessor: 'name',
-			header: 'Eventos'
-			// filter: {
-			// 	exclude: true
-			// }
-		}),
-		...($isDesktop && !$page.data.validator
-			? [
-					table.column({
-						accessor: 'totalTicketsSold',
-						header: 'Adhesiones'
-					}),
-					table.column({
-						accessor: 'totalPayment',
-						header: 'Total recaudado',
-						cell: ({ value }) => {
-							const formatter = new Intl.NumberFormat('es-CL', {
-								style: 'currency',
-								currency: 'CLP'
-							});
-							return formatter.format(value);
-						}
-					})
-			  ]
-			: []),
-		table.column({
-			header: '',
-			accessor: ({ id }) => id,
-			cell: (item) => {
-				return createRender(ButtonHref, { href: `/eventos/${item.value}` });
-			},
-			plugins: {
-				sort: {
-					disable: true
-				}
-			}
-		})
-	]);
+	function formatDate(value: string | Date | undefined) {
+		if (!value) return '';
+		return dateFormatter.format(new Date(value));
+	}
 
-	const { headerRows, pageRows, tableAttrs, tableBodyAttrs, pluginStates, flatColumns } =
-		table.createViewModel(columns);
-	const { filterValue } = pluginStates.filter;
+	function getYear(value: string | Date | undefined): number | null {
+		if (!value) return null;
+		const d = new Date(value);
+		return Number.isNaN(d.getTime()) ? null : d.getFullYear();
+	}
+
+	$: availableYears = Array.from(
+		new Set(Events.map((e) => getYear(e.date)).filter((y): y is number => y !== null))
+	).sort((a, b) => b - a);
+
+	$: filteredEvents = Events.filter((event) => {
+		const term = filterValue.toLowerCase();
+		const matchesSearch =
+			!term ||
+			event.name?.toLowerCase().includes(term) ||
+			formatDate(event.date).toLowerCase().includes(term);
+
+		const matchesYear = selectedYear === 'all' || getYear(event.date) === Number(selectedYear);
+
+		return matchesSearch && matchesYear;
+	});
+
+	$: visibleEvents =
+		pageSize === 'all' ? filteredEvents : filteredEvents.slice(0, Number(pageSize));
+
+	$: colspan = isValidator ? 3 : 5;
+
+	const selectClass =
+		'h-11 w-full rounded-md border border-base-content/20 bg-background pl-3 pr-9 text-base appearance-none cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
 </script>
 
-<div class="flex items-center py-4">
-	<Input
-		class="max-w-sm border-primary"
-		placeholder="Filtrar eventos..."
-		type="text"
-		bind:value={$filterValue}
-	/>
-</div>
-<div class="rounded-md border">
-	<Table.Root {...$tableAttrs}>
+<TableToolbar
+	bind:searchValue={filterValue}
+	placeholder="Filtrar eventos..."
+	ariaLabel="Filtrar eventos por nombre o fecha"
+>
+	<div slot="filters" class="flex flex-col sm:flex-row gap-3">
+		<div class="flex items-center gap-2">
+			<Label for="event-year" class="whitespace-nowrap">Año</Label>
+			<div class="relative">
+				<select id="event-year" bind:value={selectedYear} class={selectClass}>
+					<option value="all">Todos</option>
+					{#each availableYears as year}
+						<option value={String(year)}>{year}</option>
+					{/each}
+				</select>
+				<ChevronDown
+					class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60"
+					aria-hidden="true"
+				/>
+			</div>
+		</div>
+		<div class="flex items-center gap-2">
+			<Label for="event-page-size" class="whitespace-nowrap">Mostrar</Label>
+			<div class="relative">
+				<select id="event-page-size" bind:value={pageSize} class={selectClass}>
+					{#each PAGE_SIZES as size}
+						<option value={size}>{size === 'all' ? 'Todos' : size}</option>
+					{/each}
+				</select>
+				<ChevronDown
+					class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60"
+					aria-hidden="true"
+				/>
+			</div>
+		</div>
+	</div>
+</TableToolbar>
+
+<div class="rounded-xl border border-base-content/20 overflow-hidden">
+	<Table.Root>
 		<Table.Header>
-			{#each $headerRows as headerRow}
-				<Subscribe rowAttrs={headerRow.attrs()}>
-					<Table.Row>
-						{#each headerRow.cells as cell (cell.id)}
-							<Subscribe attrs={cell.attrs()} let:attrs props={cell.props()} let:props>
-								<Table.Head {...attrs}>
-									{#if cell.id === 'totalPayment'}
-										<div class="text-right">
-											<Render of={cell.render()} />
-										</div>
-									{:else if cell.id === 'name' || cell.id === 'date'}
-										<Button variant="ghost" on:click={props.sort.toggle}>
-											<Render of={cell.render()} />
-											<ChevronsUpDown class={'ml-2 h-4 w-4'} />
-										</Button>
-									{:else}
-										<Render of={cell.render()} />
-									{/if}
-								</Table.Head>
-							</Subscribe>
-						{/each}
-					</Table.Row>
-				</Subscribe>
-			{/each}
+			<Table.Row>
+				<Table.Head class="hidden md:table-cell">Fecha</Table.Head>
+				<Table.Head>Eventos</Table.Head>
+				{#if !isValidator}
+					<Table.Head class="hidden md:table-cell text-right">Adhesiones</Table.Head>
+					<Table.Head class="hidden md:table-cell text-right">Total recaudado</Table.Head>
+				{/if}
+				<Table.Head class="text-right"></Table.Head>
+			</Table.Row>
 		</Table.Header>
-		<Table.Body {...$tableBodyAttrs}>
-			{#each $pageRows as row (row.id)}
-				<Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-					<Table.Row {...rowAttrs}>
-						{#each row.cells as cell (cell.id)}
-							<Subscribe attrs={cell.attrs()} let:attrs>
-								<Table.Cell {...attrs}>
-									{#if cell.id === 'totalPayment' || cell.id === ''}
-										<div class="text-right font-medium">
-											<Render of={cell.render()} />
-										</div>
-									{:else}
-										<Render of={cell.render()} />
-									{/if}
-								</Table.Cell>
-							</Subscribe>
-						{/each}
-					</Table.Row>
-				</Subscribe>
+		<Table.Body>
+			{#each visibleEvents as event (event.id)}
+				<Table.Row>
+					<Table.Cell class="hidden md:table-cell whitespace-nowrap">
+						{formatDate(event.date)}
+					</Table.Cell>
+					<Table.Cell class="font-medium">
+						<div class="flex flex-col">
+							<span>{event.name}</span>
+							<span class="text-xs text-zinc-400 md:hidden">{formatDate(event.date)}</span>
+						</div>
+					</Table.Cell>
+					{#if !isValidator}
+						<Table.Cell class="hidden md:table-cell text-right">
+							{event.totalTicketsSold}
+						</Table.Cell>
+						<Table.Cell class="hidden md:table-cell text-right font-medium whitespace-nowrap">
+							{priceFormatter.format(event.totalPayment ?? 0)}
+						</Table.Cell>
+					{/if}
+					<Table.Cell class="text-right">
+						<Button href={`/eventos/${event.id}`}>Detalle</Button>
+					</Table.Cell>
+				</Table.Row>
 			{/each}
+			{#if visibleEvents.length === 0}
+				<Table.Row>
+					<Table.Cell {colspan} class="text-center text-zinc-400 py-8">
+						Sin resultados
+					</Table.Cell>
+				</Table.Row>
+			{/if}
 		</Table.Body>
 	</Table.Root>
 </div>
+
+<p class="text-xs text-muted-foreground mt-2">
+	Mostrando {visibleEvents.length} de {filteredEvents.length}
+	{filteredEvents.length === 1 ? 'evento' : 'eventos'}
+</p>

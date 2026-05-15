@@ -85,3 +85,102 @@
     @apply rounded-xl;
   }
 }
+
+/* Motion tokens */
+@layer base {
+  :root {
+    --motion-duration-micro: 140ms;
+    --motion-duration-fast: 180ms;
+    --motion-duration-base: 220ms;
+    --motion-duration-slow: 320ms;
+
+    --ease-linear-enter-soft: linear(0, 0.08 12%, 0.34 36%, 0.74 66%, 0.93 84%, 1);
+    --ease-linear-exit-crisp: linear(0, 0.3 18%, 0.72 58%, 0.9 78%, 1);
+    --ease-linear-settle-gentle: linear(0, 0.06 10%, 0.31 32%, 0.72 62%, 0.92 82%, 1);
+    --ease-linear-emphasis-pop: linear(0, 0.38 20%, 0.88 62%, 1);
+  }
+}
+
+/* View Transitions — route-level cross-fade */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--motion-duration-base);
+  animation-timing-function: var(--ease-linear-enter-soft);
+}
+
+::view-transition-old(root) {
+  animation-name: vt-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Navigation overlay enter/exit */
+.nav-overlay {
+  animation: nav-overlay-in var(--motion-duration-fast) var(--ease-linear-enter-soft) both;
+}
+
+.nav-overlay-card {
+  animation: nav-card-in var(--motion-duration-fast) var(--ease-linear-settle-gentle) both;
+}
+
+@keyframes nav-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nav-card-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+    scale: 0.98;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 1ms;
+  }
+
+  .nav-overlay,
+  .nav-overlay-card {
+    animation-duration: 80ms;
+    animation-timing-function: linear;
+  }
+
+  @keyframes nav-card-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

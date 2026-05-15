@@ -22,7 +22,6 @@
 		<div class="hidden md:flex gap-4 items-center">
 			{#if page.data.user?.admin}
 				<a href="/eventos" class="btn btn-soft">Entradas</a>
-				<a href="/merch" class="btn btn-soft">Merch</a>
 				<a href="/ordenes" class="btn btn-soft">Órdenes</a>
 			{/if}
 
@@ -63,7 +62,6 @@
 		<div id="mobile-menu" class="md:hidden flex flex-col gap-2 pb-4">
 			{#if page.data.user?.admin}
 				<a href="/eventos" class="btn btn-soft justify-start">Entradas</a>
-				<a href="/merch" class="btn btn-soft justify-start">Merch</a>
 				<a href="/ordenes" class="btn btn-soft justify-start">Órdenes</a>
 			{/if}
 			<Show when="signed-out">

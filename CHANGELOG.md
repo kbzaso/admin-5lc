@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- Remove merch route, only Ordenes
+
 ## [0.0.31] - 2026-05-14
 
 ### Add

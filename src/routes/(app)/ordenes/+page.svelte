@@ -5,6 +5,7 @@
 	import { Switch } from '$lib/components/ui/switch';
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from '$lib/components/ui/badge';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
 	import { PackageOpen } from 'lucide-svelte';
 	import supabaseClient from '$lib/supabaseClient';
@@ -241,133 +242,134 @@
 			<div class="flex-1 min-h-0 overflow-y-auto pb-2">
 				{#if selectedOrder.Payment.length > 0}
 					<h4 class="font-semibold mt-2 mb-2">Entradas</h4>
-					<div class="overflow-x-auto rounded-box border border-base-content/10 bg-base-100 mb-4">
-						<table class="table table-sm">
-							<thead>
-								<tr>
-									<th>ID</th>
-									<th>Código</th>
-									<th>Transbank ID</th>
-									<th>Evento</th>
-									<th>Tipo</th>
-									<th>Cantidad</th>
-									<th>Validados</th>
-									<th>Precio</th>
-									<th>Descuento</th>
-									<th>Fecha</th>
-									<th>Flags</th>
-									<th>Status</th>
-								</tr>
-							</thead>
-							<tbody>
+					<div class="rounded-xl border border-base-content/20 overflow-hidden mb-4">
+						<Table.Root>
+							<Table.Header>
+								<Table.Row>
+									<Table.Head>ID</Table.Head>
+									<Table.Head>Código</Table.Head>
+									<Table.Head>Transbank ID</Table.Head>
+									<Table.Head>Evento</Table.Head>
+									<Table.Head>Tipo</Table.Head>
+									<Table.Head>Cantidad</Table.Head>
+									<Table.Head>Validados</Table.Head>
+									<Table.Head>Precio</Table.Head>
+									<Table.Head>Descuento</Table.Head>
+									<Table.Head>Fecha</Table.Head>
+									<Table.Head>Flags</Table.Head>
+									<Table.Head>Estado</Table.Head>
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
 								{#each selectedOrder.Payment as payment}
-									<tr>
-										<td class="font-mono text-xs break-all">{payment.id}</td>
-										<td class="font-mono text-xs">{payment.client_id ?? '—'}</td>
-										<td class="font-mono text-xs break-all"
-											>{payment.payment_id_service ?? '—'}</td
-										>
-										<td>{payment.Product?.name ?? '—'}</td>
-										<td>{payment.ticketsType}</td>
-										<td>{payment.ticketAmount}</td>
-										<td>{payment.ticketValidated}/{payment.ticketAmount}</td>
-										<td class="whitespace-nowrap">${payment.price.toLocaleString('es-CL')}</td>
-										<td>{payment.discount_code ?? '—'}</td>
-										<td class="whitespace-nowrap">
+									<Table.Row>
+										<Table.Cell class="font-mono text-xs break-all">{payment.id}</Table.Cell>
+										<Table.Cell class="font-mono text-xs">{payment.client_id ?? '—'}</Table.Cell>
+										<Table.Cell class="font-mono text-xs break-all">
+											{payment.payment_id_service ?? '—'}
+										</Table.Cell>
+										<Table.Cell>{payment.Product?.name ?? '—'}</Table.Cell>
+										<Table.Cell>{payment.ticketsType}</Table.Cell>
+										<Table.Cell>{payment.ticketAmount}</Table.Cell>
+										<Table.Cell>{payment.ticketValidated}/{payment.ticketAmount}</Table.Cell>
+										<Table.Cell class="whitespace-nowrap">
+											${payment.price.toLocaleString('es-CL')}
+										</Table.Cell>
+										<Table.Cell>{payment.discount_code ?? '—'}</Table.Cell>
+										<Table.Cell class="whitespace-nowrap">
 											{new Date(payment.date).toLocaleString('es-CL', {
 												timeZone: 'America/Santiago'
 											})}
-										</td>
-										<td>
+										</Table.Cell>
+										<Table.Cell>
 											<div class="flex flex-wrap gap-1">
 												{#if payment.refund}
-													<div class="badge badge-warning badge-sm">Reembolso</div>
+													<Badge class="bg-yellow-300 text-yellow-900 hover:bg-yellow-400">
+														Reembolso
+													</Badge>
 												{/if}
 												{#if payment.changeEvent}
-													<div class="badge badge-info badge-sm">Cambio</div>
+													<Badge class="bg-cyan-300 text-cyan-900 hover:bg-cyan-400">Cambio</Badge>
 												{/if}
 												{#if !payment.refund && !payment.changeEvent}
 													<span class="opacity-50">—</span>
 												{/if}
 											</div>
-										</td>
-										<td>
-											<div
-												class={`badge ${
-													payment.payment_status === 'success'
-														? 'badge-success'
-														: 'badge-neutral'
-												}`}
+										</Table.Cell>
+										<Table.Cell>
+											<Badge
+												class={payment.payment_status === 'success'
+													? 'bg-orange-300 text-orange-900 hover:bg-orange-400'
+													: 'bg-zinc-500 text-zinc-100 hover:bg-zinc-600'}
 											>
 												{payment.payment_status}
-											</div>
-										</td>
-									</tr>
+											</Badge>
+										</Table.Cell>
+									</Table.Row>
 								{/each}
-							</tbody>
-						</table>
+							</Table.Body>
+						</Table.Root>
 					</div>
 				{/if}
 
 				{#if selectedOrder.MerchPayment.length > 0}
 					<h4 class="font-semibold mt-2 mb-2">Merch</h4>
-					<div class="overflow-x-auto rounded-box border border-base-content/10 bg-base-100 mb-4">
-						<table class="table table-sm">
-							<thead>
-								<tr>
-									<th></th>
-									<th>ID</th>
-									<th>Transbank ID</th>
-									<th>Producto</th>
-									<th>Variación</th>
-									<th>Cantidad</th>
-									<th>Precio</th>
-									<th>Fecha</th>
-									<th>Status</th>
-									<th>Entregado</th>
-								</tr>
-							</thead>
-							<tbody>
+					<div class="rounded-xl border border-base-content/20 overflow-hidden mb-4">
+						<Table.Root>
+							<Table.Header>
+								<Table.Row>
+									<Table.Head></Table.Head>
+									<Table.Head>ID</Table.Head>
+									<Table.Head>Transbank ID</Table.Head>
+									<Table.Head>Producto</Table.Head>
+									<Table.Head>Variación</Table.Head>
+									<Table.Head>Cantidad</Table.Head>
+									<Table.Head>Precio</Table.Head>
+									<Table.Head>Fecha</Table.Head>
+									<Table.Head>Estado</Table.Head>
+									<Table.Head>Entregado</Table.Head>
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
 								{#each selectedOrder.MerchPayment as merch}
-									<tr>
-										<td>
-											<div class="avatar">
-												<div class="w-12 rounded">
-													<img src={merch.Merch.image} alt={merch.Merch.name} />
-												</div>
-											</div>
-										</td>
-										<td class="font-mono text-xs break-all">{merch.id}</td>
-										<td class="font-mono text-xs break-all"
-											>{merch.payment_id_service ?? '—'}</td
-										>
-										<td>{merch.Merch.name}</td>
-										<td>{merch.variationLabel ?? '—'}</td>
-										<td>{merch.quantity}</td>
-										<td class="whitespace-nowrap">${merch.price.toLocaleString('es-CL')}</td>
-										<td class="whitespace-nowrap">
+									<Table.Row>
+										<Table.Cell>
+											<img
+												src={merch.Merch.image}
+												alt={merch.Merch.name}
+												class="w-12 h-12 rounded object-cover"
+											/>
+										</Table.Cell>
+										<Table.Cell class="font-mono text-xs break-all">{merch.id}</Table.Cell>
+										<Table.Cell class="font-mono text-xs break-all">
+											{merch.payment_id_service ?? '—'}
+										</Table.Cell>
+										<Table.Cell>{merch.Merch.name}</Table.Cell>
+										<Table.Cell>{merch.variationLabel ?? '—'}</Table.Cell>
+										<Table.Cell>{merch.quantity}</Table.Cell>
+										<Table.Cell class="whitespace-nowrap">
+											${merch.price.toLocaleString('es-CL')}
+										</Table.Cell>
+										<Table.Cell class="whitespace-nowrap">
 											{new Date(merch.date).toLocaleString('es-CL', {
 												timeZone: 'America/Santiago'
 											})}
-										</td>
-										<td>
-											<div
-												class={`badge ${
-													merch.paymentStatus === 'success'
-														? 'badge-success'
-														: 'badge-neutral'
-												}`}
+										</Table.Cell>
+										<Table.Cell>
+											<Badge
+												class={merch.paymentStatus === 'success'
+													? 'bg-orange-300 text-orange-900 hover:bg-orange-400'
+													: 'bg-zinc-500 text-zinc-100 hover:bg-zinc-600'}
 											>
 												{merch.paymentStatus ?? '—'}
-											</div>
-										</td>
-										<td>
-											<label class="flex flex-col gap-1">
-												<input
-													type="checkbox"
-													class="checkbox checkbox-success"
+											</Badge>
+										</Table.Cell>
+										<Table.Cell>
+											<div class="flex flex-col gap-1">
+												<Checkbox
 													checked={merch.delivered}
-													on:change={() => toggleMerchDelivered(merch)}
+													onCheckedChange={() => toggleMerchDelivered(merch)}
+													class="border-green-500 data-[state=checked]:bg-green-500 data-[state=checked]:text-white"
 												/>
 												{#if merch.delivered && merch.deliveryDate}
 													<span class="text-xs opacity-70 whitespace-nowrap">
@@ -376,12 +378,12 @@
 														})}
 													</span>
 												{/if}
-											</label>
-										</td>
-									</tr>
+											</div>
+										</Table.Cell>
+									</Table.Row>
 								{/each}
-							</tbody>
-						</table>
+							</Table.Body>
+						</Table.Root>
 					</div>
 				{/if}
 

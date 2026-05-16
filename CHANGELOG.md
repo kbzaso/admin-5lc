@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.33] - 2026-05-16
+
 ### Add
 
 - chart on events list page
@@ -266,7 +268,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.32...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.33...HEAD
+[0.0.33]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.32...v0.0.33
 [0.0.32]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.31...v0.0.32
 [0.0.31]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.30...v0.0.31
 [0.0.30]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.29...v0.0.30

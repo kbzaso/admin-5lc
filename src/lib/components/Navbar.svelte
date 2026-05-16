@@ -24,7 +24,7 @@
 
 		<div class="hidden md:flex gap-4 items-center">
 			{#if page.data.user?.admin}
-				<a href="/eventos" class={buttonVariants({ variant: 'secondary' })}>Entradas</a>
+				<a href="/eventos" class={buttonVariants({ variant: 'secondary' })}>Eventos</a>
 				<a href="/ordenes" class={buttonVariants({ variant: 'secondary' })}>Órdenes</a>
 			{/if}
 

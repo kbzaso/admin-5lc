@@ -18,7 +18,8 @@ export default defineConfig({
 			'formsnap',
 			'cmdk-sv',
 			'vaul-svelte',
-			'@clerk/clerk-js'
+			'@clerk/clerk-js',
+			'svelte-chartjs'
 		]
 	}
 });

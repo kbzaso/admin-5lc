@@ -1,16 +1,17 @@
 <script lang="ts">
 	import * as Table from '$lib/components/ui/table';
-	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
+	import EventsBarChart from '$lib/components/data-table/EventsBarChart.svelte';
 	import { page } from '$app/stores';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import { goto } from '$app/navigation';
 
 	export let Events: any[];
 
 	let filterValue = '';
 	let selectedYear: string = String(new Date().getFullYear());
 	let pageSize: string = '12';
+	let chartMetric: 'revenue' | 'tickets' = 'revenue';
 
 	const PAGE_SIZES = ['12', '24', '36', 'all'] as const;
 
@@ -56,10 +57,9 @@
 	$: visibleEvents =
 		pageSize === 'all' ? filteredEvents : filteredEvents.slice(0, Number(pageSize));
 
-	$: colspan = isValidator ? 3 : 5;
+	$: colspan = isValidator ? 2 : 4;
 
-	const selectClass =
-		'h-11 w-full rounded-md border border-base-content/20 bg-background pl-3 pr-9 text-base appearance-none cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
+	const selectClass = 'select select-bordered w-full';
 </script>
 
 <TableToolbar
@@ -70,35 +70,54 @@
 	<div slot="filters" class="flex flex-col sm:flex-row gap-3">
 		<div class="flex items-center gap-2">
 			<Label for="event-year" class="whitespace-nowrap">Año</Label>
-			<div class="relative">
-				<select id="event-year" bind:value={selectedYear} class={selectClass}>
-					<option value="all">Todos</option>
-					{#each availableYears as year}
-						<option value={String(year)}>{year}</option>
-					{/each}
-				</select>
-				<ChevronDown
-					class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60"
-					aria-hidden="true"
-				/>
-			</div>
+			<select id="event-year" bind:value={selectedYear} class={selectClass}>
+				<option value="all">Todos</option>
+				{#each availableYears as year}
+					<option value={String(year)}>{year}</option>
+				{/each}
+			</select>
 		</div>
 		<div class="flex items-center gap-2">
 			<Label for="event-page-size" class="whitespace-nowrap">Mostrar</Label>
-			<div class="relative">
-				<select id="event-page-size" bind:value={pageSize} class={selectClass}>
-					{#each PAGE_SIZES as size}
-						<option value={size}>{size === 'all' ? 'Todos' : size}</option>
-					{/each}
-				</select>
-				<ChevronDown
-					class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60"
-					aria-hidden="true"
-				/>
-			</div>
+			<select id="event-page-size" bind:value={pageSize} class={selectClass}>
+				{#each PAGE_SIZES as size}
+					<option value={size}>{size === 'all' ? 'Todos' : size}</option>
+				{/each}
+			</select>
 		</div>
 	</div>
 </TableToolbar>
+
+{#if !isValidator}
+	<div class="rounded-xl border border-base-content/20 p-4 mb-4">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+			<h2 class="text-sm font-medium text-base-content/80">
+				Comparativa de eventos{selectedYear === 'all' ? '' : ` · ${selectedYear}`}
+			</h2>
+			<div role="tablist" class="tabs tabs-boxed">
+				<button
+					type="button"
+					role="tab"
+					class="tab"
+					class:tab-active={chartMetric === 'revenue'}
+					on:click={() => (chartMetric = 'revenue')}
+				>
+					Recaudación
+				</button>
+				<button
+					type="button"
+					role="tab"
+					class="tab"
+					class:tab-active={chartMetric === 'tickets'}
+					on:click={() => (chartMetric = 'tickets')}
+				>
+					Entradas
+				</button>
+			</div>
+		</div>
+		<EventsBarChart events={visibleEvents} metric={chartMetric} />
+	</div>
+{/if}
 
 <div class="rounded-xl border border-base-content/20 overflow-hidden">
 	<Table.Root>
@@ -110,12 +129,23 @@
 					<Table.Head class="hidden md:table-cell text-right">Adhesiones</Table.Head>
 					<Table.Head class="hidden md:table-cell text-right">Total recaudado</Table.Head>
 				{/if}
-				<Table.Head class="text-right"></Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
 			{#each visibleEvents as event (event.id)}
-				<Table.Row>
+				<Table.Row
+					class="cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+					tabindex={0}
+					role="link"
+					aria-label={`Ver detalle de ${event.name}`}
+					on:click={() => goto(`/eventos/${event.id}`)}
+					on:keydown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							goto(`/eventos/${event.id}`);
+						}
+					}}
+				>
 					<Table.Cell class="hidden md:table-cell whitespace-nowrap">
 						{formatDate(event.date)}
 					</Table.Cell>
@@ -133,16 +163,11 @@
 							{priceFormatter.format(event.totalPayment ?? 0)}
 						</Table.Cell>
 					{/if}
-					<Table.Cell class="text-right">
-						<Button href={`/eventos/${event.id}`}>Detalle</Button>
-					</Table.Cell>
 				</Table.Row>
 			{/each}
 			{#if visibleEvents.length === 0}
 				<Table.Row>
-					<Table.Cell {colspan} class="text-center text-zinc-400 py-8">
-						Sin resultados
-					</Table.Cell>
+					<Table.Cell {colspan} class="text-center text-zinc-400 py-8">Sin resultados</Table.Cell>
 				</Table.Row>
 			{/if}
 		</Table.Body>

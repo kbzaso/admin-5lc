@@ -50,10 +50,12 @@
 		"@sanity/client": "^6.18.3",
 		"@sanity/image-url": "^1.0.2",
 		"@supabase/supabase-js": "^2.45.5",
+		"chart.js": "^4.5.1",
 		"clsx": "^2.1.1",
 		"date-fns": "^2.30.0",
 		"date-fns-tz": "^2.0.0",
 		"groq": "^3.43.0",
+		"svelte-chartjs": "^4.0.1",
 		"svelte-clerk": "^1.1.5",
 		"tailwind-merge": "^2.3.0",
 		"tailwind-variants": "^0.2.1"

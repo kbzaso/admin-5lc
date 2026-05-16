@@ -4,6 +4,7 @@
 
 	import Stat from '$lib/components/Stat.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
+	import EventDailyTicketsChart from '$lib/components/data-table/EventDailyTicketsChart.svelte';
 
 	import { writable } from 'svelte/store';
 	import supabaseClient from '$lib/supabaseClient';
@@ -113,6 +114,9 @@
 			}}
 			ubicationSumObject={data.eventFromSupabase.ubicationSumObject ?? {}}
 		/>
+	{/if}
+	{#if $page.data.user.admin}
+		<EventDailyTicketsChart payments={$payments} />
 	{/if}
 	<DataTableEvent Payments={$payments} />
 </div>

@@ -40,6 +40,7 @@
 			<Show when="signed-in">
 				<UserButton />
 			</Show>
+			{#if page.data.user?.admin}
 			<button
 				type="button"
 				class={buttonVariants({ variant: 'ghost', size: 'icon' })}
@@ -54,6 +55,7 @@
 					<Menu class="h-6 w-6" aria-hidden="true" />
 				{/if}
 			</button>
+			{/if}
 		</div>
 	</div>
 

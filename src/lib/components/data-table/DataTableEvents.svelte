@@ -5,6 +5,7 @@
 	import EventsBarChart from '$lib/components/data-table/EventsBarChart.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
 
 	export let Events: any[];
 
@@ -12,6 +13,37 @@
 	let selectedYear: string = String(new Date().getFullYear());
 	let pageSize: string = '12';
 	let chartMetric: 'revenue' | 'tickets' = 'revenue';
+
+	type SortKey = 'date' | 'name' | 'totalTicketsSold' | 'totalPayment';
+	let sortKey: SortKey = 'date';
+	let sortDir: 'asc' | 'desc' = 'desc';
+
+	function toggleSort(key: SortKey) {
+		if (sortKey === key) {
+			sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+		} else {
+			sortKey = key;
+			sortDir = key === 'name' ? 'asc' : 'desc';
+		}
+	}
+
+	function compareValues(a: unknown, b: unknown): number {
+		const aNull = a === null || a === undefined || a === '';
+		const bNull = b === null || b === undefined || b === '';
+		if (aNull && bNull) return 0;
+		if (aNull) return 1;
+		if (bNull) return -1;
+
+		if (typeof a === 'number' && typeof b === 'number') return a - b;
+		if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
+		return String(a).localeCompare(String(b), 'es', { sensitivity: 'base' });
+	}
+
+	function getSortValue(event: Record<string, unknown>, key: SortKey) {
+		if (key === 'date') return event.date ? new Date(event.date as string | Date) : null;
+		if (key === 'name') return (event.name as string) ?? '';
+		return (event[key] as number) ?? 0;
+	}
 
 	const PAGE_SIZES = ['12', '24', '36', 'all'] as const;
 
@@ -54,8 +86,13 @@
 		return matchesSearch && matchesYear;
 	});
 
+	$: sortedEvents = [...filteredEvents].sort((a, b) => {
+		const cmp = compareValues(getSortValue(a, sortKey), getSortValue(b, sortKey));
+		return sortDir === 'asc' ? cmp : -cmp;
+	});
+
 	$: visibleEvents =
-		pageSize === 'all' ? filteredEvents : filteredEvents.slice(0, Number(pageSize));
+		pageSize === 'all' ? sortedEvents : sortedEvents.slice(0, Number(pageSize));
 
 	$: colspan = isValidator ? 2 : 4;
 
@@ -123,11 +160,67 @@
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>
-				<Table.Head class="hidden md:table-cell">Fecha</Table.Head>
-				<Table.Head>Eventos</Table.Head>
+				<Table.Head class="hidden md:table-cell">
+					<button
+						type="button"
+						class="flex items-center gap-1 hover:text-base-content"
+						on:click={() => toggleSort('date')}
+						aria-label="Ordenar por fecha"
+					>
+						Fecha
+						{#if sortKey === 'date'}
+							<svelte:component this={sortDir === 'asc' ? ArrowUp : ArrowDown} class="h-3 w-3" />
+						{:else}
+							<ArrowUpDown class="h-3 w-3 opacity-40" />
+						{/if}
+					</button>
+				</Table.Head>
+				<Table.Head>
+					<button
+						type="button"
+						class="flex items-center gap-1 hover:text-base-content"
+						on:click={() => toggleSort('name')}
+						aria-label="Ordenar por nombre"
+					>
+						Eventos
+						{#if sortKey === 'name'}
+							<svelte:component this={sortDir === 'asc' ? ArrowUp : ArrowDown} class="h-3 w-3" />
+						{:else}
+							<ArrowUpDown class="h-3 w-3 opacity-40" />
+						{/if}
+					</button>
+				</Table.Head>
 				{#if !isValidator}
-					<Table.Head class="hidden md:table-cell text-right">Adhesiones</Table.Head>
-					<Table.Head class="hidden md:table-cell text-right">Total recaudado</Table.Head>
+					<Table.Head class="hidden md:table-cell text-right">
+						<button
+							type="button"
+							class="flex items-center gap-1 ml-auto hover:text-base-content"
+							on:click={() => toggleSort('totalTicketsSold')}
+							aria-label="Ordenar por adhesiones"
+						>
+							Adhesiones
+							{#if sortKey === 'totalTicketsSold'}
+								<svelte:component this={sortDir === 'asc' ? ArrowUp : ArrowDown} class="h-3 w-3" />
+							{:else}
+								<ArrowUpDown class="h-3 w-3 opacity-40" />
+							{/if}
+						</button>
+					</Table.Head>
+					<Table.Head class="hidden md:table-cell text-right">
+						<button
+							type="button"
+							class="flex items-center gap-1 ml-auto hover:text-base-content"
+							on:click={() => toggleSort('totalPayment')}
+							aria-label="Ordenar por total recaudado"
+						>
+							Total recaudado
+							{#if sortKey === 'totalPayment'}
+								<svelte:component this={sortDir === 'asc' ? ArrowUp : ArrowDown} class="h-3 w-3" />
+							{:else}
+								<ArrowUpDown class="h-3 w-3 opacity-40" />
+							{/if}
+						</button>
+					</Table.Head>
 				{/if}
 			</Table.Row>
 		</Table.Header>

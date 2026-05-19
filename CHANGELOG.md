@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### ADD
+
+- Sortale on table list events
+
+### Fix
+
+- remove menu for validators
+- Real income on list event
+
 ## [0.0.34] - 2026-05-16
 
 ### Add

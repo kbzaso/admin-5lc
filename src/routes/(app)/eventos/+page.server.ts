@@ -36,7 +36,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			include: {
 				Payment: {
 					where: {
-						payment_status: 'success'
+						payment_status: 'success',
+						refund: false,
+						changeEvent: false
 					}
 				}
 			}

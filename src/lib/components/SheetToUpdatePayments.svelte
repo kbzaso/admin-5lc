@@ -16,7 +16,6 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
 	import { writable } from 'svelte/store';
 	import { payments } from '$lib/stores/payments';
 
@@ -30,8 +29,13 @@
 	export let payment: any;
 
 	let validatedTickets = payment.ticketValidated;
-	let refundChecked: boolean = payment.refund;
-	let changeChecked: boolean = payment.changeEvent;
+	// Refund / change are mutually exclusive, plus the normal case → a single
+	// three-way choice rather than two booleans.
+	let refundStatus: 'none' | 'refund' | 'change' = payment.refund
+		? 'refund'
+		: payment.changeEvent
+			? 'change'
+			: 'none';
 
 	const STATUS = {
 		register: {
@@ -268,26 +272,32 @@
 									{/if}
 									<div class="flex flex-col gap-2">
 										<Label class="flex items-center gap-3 cursor-pointer">
-											<Checkbox
-												name="refund"
-												bind:checked={refundChecked}
-												onCheckedChange={(v) => {
-													refundChecked = v === true;
-													if (refundChecked) changeChecked = false;
-												}}
-												class="border-yellow-400 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-800"
+											<input
+												type="radio"
+												name="refundStatus"
+												value="none"
+												bind:group={refundStatus}
+												class="h-4 w-4 accent-yellow-400 cursor-pointer"
+											/>
+											<span class="text-white">Normal</span>
+										</Label>
+										<Label class="flex items-center gap-3 cursor-pointer">
+											<input
+												type="radio"
+												name="refundStatus"
+												value="refund"
+												bind:group={refundStatus}
+												class="h-4 w-4 accent-yellow-400 cursor-pointer"
 											/>
 											<span class="text-white">Devolución</span>
 										</Label>
 										<Label class="flex items-center gap-3 cursor-pointer">
-											<Checkbox
-												name="change"
-												bind:checked={changeChecked}
-												onCheckedChange={(v) => {
-													changeChecked = v === true;
-													if (changeChecked) refundChecked = false;
-												}}
-												class="border-yellow-400 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-800"
+											<input
+												type="radio"
+												name="refundStatus"
+												value="change"
+												bind:group={refundStatus}
+												class="h-4 w-4 accent-yellow-400 cursor-pointer"
 											/>
 											<span class="text-white">Cambio de evento</span>
 										</Label>

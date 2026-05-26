@@ -263,5 +263,10 @@
 </div>
 
 {#if activePayment}
-	<DialogToUpdatePayments bind:dialogOpen payment={activePayment} />
+	<!-- Key on the payment id so the sheet's local state (refundStatus,
+	     validatedTickets, …) is reinitialized from the freshly opened payment
+	     instead of carrying over from the previous one. -->
+	{#key activePayment.id}
+		<DialogToUpdatePayments bind:dialogOpen payment={activePayment} />
+	{/key}
 {/if}

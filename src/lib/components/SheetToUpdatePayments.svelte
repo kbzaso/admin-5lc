@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import { getContext, onMount, setContext } from 'svelte';
+	import { setContext } from 'svelte';
 	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert, Copy, X } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
@@ -16,7 +16,6 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import { writable } from 'svelte/store';
 	import { payments } from '$lib/stores/payments';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
@@ -88,7 +87,7 @@
 			id: Math.random().toString(36).substring(7),
 			createdAt: new Date().toISOString(),
 			commentText: commentText,
-			userId: $page.data.userId,
+			userId: $page.data.user.id,
 			name: `${$page.data.user.first_name} ${$page.data.user.last_name}`
 		};
 
@@ -393,21 +392,23 @@
 													minute: 'numeric'
 												})}
 											</span>
-												<form
-													class="absolute right-0"
-													id="deleteCommentForm"
-													method="POST"
-													action="?/deleteComment"
-													use:enhance={() => deleteComment(comment.id)}
-												>
-													<input type="hidden" name="commentId" value={comment.id} />
-													<button
-														type="submit"
-														class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+												{#if comment.userId === $page.data.user.id}
+													<form
+														class="absolute right-0"
+														id="deleteCommentForm"
+														method="POST"
+														action="?/deleteComment"
+														use:enhance={() => deleteComment(comment.id)}
 													>
-														<X />
-													</button>
-												</form>
+														<input type="hidden" name="commentId" value={comment.id} />
+														<button
+															type="submit"
+															class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+														>
+															<X />
+														</button>
+													</form>
+												{/if}
 										</div>
 										<span class="text-sm">{comment?.commentText}</span>
 									</div>

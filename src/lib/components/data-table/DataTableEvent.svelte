@@ -83,10 +83,16 @@
 	let searchTerm = '';
 
 	let dialogOpen = false;
-	let activePayment: Payment | undefined;
+	let activePaymentId: string | undefined;
+
+	// Derive the active payment from the live list so the open sheet (and its
+	// comment list) reflects store updates instead of a snapshot taken on open.
+	$: activePayment = activePaymentId
+		? Payments.find((p) => p.id === activePaymentId)
+		: undefined;
 
 	function openDialog(paymentId: string) {
-		activePayment = Payments.find((p) => p.id === paymentId);
+		activePaymentId = paymentId;
 		idUpdateDialogOpen.set({ open: true, id: paymentId });
 		dialogOpen = true;
 	}

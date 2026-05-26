@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import { getContext, onMount, setContext } from 'svelte';
+	import { setContext } from 'svelte';
 	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert, Copy, X } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
@@ -16,8 +16,6 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-	import { writable } from 'svelte/store';
 	import { payments } from '$lib/stores/payments';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
@@ -30,8 +28,13 @@
 	export let payment: any;
 
 	let validatedTickets = payment.ticketValidated;
-	let refundChecked: boolean = payment.refund;
-	let changeChecked: boolean = payment.changeEvent;
+	// Refund / change are mutually exclusive, plus the normal case → a single
+	// three-way choice rather than two booleans.
+	let refundStatus: 'none' | 'refund' | 'change' = payment.refund
+		? 'refund'
+		: payment.changeEvent
+			? 'change'
+			: 'none';
 
 	const STATUS = {
 		register: {
@@ -84,7 +87,7 @@
 			id: Math.random().toString(36).substring(7),
 			createdAt: new Date().toISOString(),
 			commentText: commentText,
-			userId: $page.data.userId,
+			userId: $page.data.user.id,
 			name: `${$page.data.user.first_name} ${$page.data.user.last_name}`
 		};
 
@@ -268,26 +271,32 @@
 									{/if}
 									<div class="flex flex-col gap-2">
 										<Label class="flex items-center gap-3 cursor-pointer">
-											<Checkbox
-												name="refund"
-												bind:checked={refundChecked}
-												onCheckedChange={(v) => {
-													refundChecked = v === true;
-													if (refundChecked) changeChecked = false;
-												}}
-												class="border-yellow-400 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-800"
+											<input
+												type="radio"
+												name="refundStatus"
+												value="none"
+												bind:group={refundStatus}
+												class="h-4 w-4 accent-yellow-400 cursor-pointer"
+											/>
+											<span class="text-white">Normal</span>
+										</Label>
+										<Label class="flex items-center gap-3 cursor-pointer">
+											<input
+												type="radio"
+												name="refundStatus"
+												value="refund"
+												bind:group={refundStatus}
+												class="h-4 w-4 accent-yellow-400 cursor-pointer"
 											/>
 											<span class="text-white">Devolución</span>
 										</Label>
 										<Label class="flex items-center gap-3 cursor-pointer">
-											<Checkbox
-												name="change"
-												bind:checked={changeChecked}
-												onCheckedChange={(v) => {
-													changeChecked = v === true;
-													if (changeChecked) refundChecked = false;
-												}}
-												class="border-yellow-400 data-[state=checked]:bg-yellow-400 data-[state=checked]:text-black data-[state=checked]:border-yellow-800"
+											<input
+												type="radio"
+												name="refundStatus"
+												value="change"
+												bind:group={refundStatus}
+												class="h-4 w-4 accent-yellow-400 cursor-pointer"
 											/>
 											<span class="text-white">Cambio de evento</span>
 										</Label>
@@ -383,21 +392,23 @@
 													minute: 'numeric'
 												})}
 											</span>
-												<form
-													class="absolute right-0"
-													id="deleteCommentForm"
-													method="POST"
-													action="?/deleteComment"
-													use:enhance={() => deleteComment(comment.id)}
-												>
-													<input type="hidden" name="commentId" value={comment.id} />
-													<button
-														type="submit"
-														class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+												{#if comment.userId === $page.data.user.id}
+													<form
+														class="absolute right-0"
+														id="deleteCommentForm"
+														method="POST"
+														action="?/deleteComment"
+														use:enhance={() => deleteComment(comment.id)}
 													>
-														<X />
-													</button>
-												</form>
+														<input type="hidden" name="commentId" value={comment.id} />
+														<button
+															type="submit"
+															class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
+														>
+															<X />
+														</button>
+													</form>
+												{/if}
 										</div>
 										<span class="text-sm">{comment?.commentText}</span>
 									</div>

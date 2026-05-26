@@ -293,21 +293,32 @@ export const actions: Actions = {
 			};
 		}
 	},
-	deleteComment: async ({ request }) => {
+	deleteComment: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const commentId = formData.get('commentId');
-
-		console.log(commentId, 'ID')
+		const userId = locals.session?.userId;
 
 		try {
-			const comment = await client.comment.delete({
+			// Only delete when the comment belongs to the requesting user. deleteMany
+			// scopes the delete by userId so a forged request can't remove someone
+			// else's comment; count === 0 means it wasn't theirs (or didn't exist).
+			const { count } = await client.comment.deleteMany({
 				where: {
-					id: commentId as string
+					id: commentId as string,
+					userId: userId as string
 				}
 			});
+
+			if (count === 0) {
+				return {
+					status: 403,
+					body: { error: 'You can only delete your own comments' }
+				};
+			}
+
 			return {
 				status: 200,
-				body: { message: 'Comment deleted successfully', comment }
+				body: { message: 'Comment deleted successfully' }
 			};
 		} catch (error) {
 			console.error('Error deleting comment:', error);
@@ -383,12 +394,11 @@ export const actions: Actions = {
 		const price = Number(formData.get('price')) || 0;
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
 		const paymentId = formData.get('paymentId');
-		const refund = formData.get('refund');
-		const change = formData.get('change');
+		const refundStatus = formData.get('refundStatus');
 
-		// Mutually exclusive: refund wins if both arrive (defensive — UI also enforces).
-		const refundMoney = Boolean(refund);
-		const changeEvent = !refundMoney && Boolean(change);
+		// Single mutually-exclusive choice: 'none' | 'refund' | 'change'.
+		const refundMoney = refundStatus === 'refund';
+		const changeEvent = refundStatus === 'change';
 
 		try {
 			const updatePayment = await client.payment.update({

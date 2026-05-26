@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- Delete user own messages only
+- change checkbox to radios on refund and change event's payments
+
 ## [0.0.35] - 2026-05-19
 
 ### ADD

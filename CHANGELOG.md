@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- run env runtime 
+## [0.0.38] - 2026-05-26
+
+- run env runtime
 
 ## [0.0.37] - 2026-05-26
 
@@ -300,7 +302,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.37...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.38...HEAD
+[0.0.38]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.37...v0.0.38
 [0.0.37]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.36...v0.0.37
 [0.0.36]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.35...v0.0.36
 [0.0.35]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.34...v0.0.35

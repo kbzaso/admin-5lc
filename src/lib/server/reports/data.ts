@@ -1,5 +1,5 @@
 import { client } from '$lib/server/prisma';
-import { UMAMI_API_KEY, UMAMI_WEBSITE_ID } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import type { Period } from './period';
 
 const UMAMI_BASE = 'https://api.umami.is/v1';
@@ -131,15 +131,15 @@ async function umami<T>(path: string, params: Record<string, string | number>): 
 	const qs = new URLSearchParams(
 		Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
 	);
-	const res = await fetch(`${UMAMI_BASE}/websites/${UMAMI_WEBSITE_ID}/${path}?${qs}`, {
-		headers: { 'x-umami-api-key': UMAMI_API_KEY }
+	const res = await fetch(`${UMAMI_BASE}/websites/${env.UMAMI_WEBSITE_ID}/${path}?${qs}`, {
+		headers: { 'x-umami-api-key': env.UMAMI_API_KEY ?? '' }
 	});
 	if (!res.ok) throw new Error(`Umami ${path} ${res.status}: ${await res.text()}`);
 	return res.json() as Promise<T>;
 }
 
 async function gatherWeb(period: Period): Promise<WebData | null> {
-	if (!UMAMI_API_KEY || !UMAMI_WEBSITE_ID) return null;
+	if (!env.UMAMI_API_KEY || !env.UMAMI_WEBSITE_ID) return null;
 
 	const startAt = period.start.getTime();
 	const endAt = period.end.getTime();

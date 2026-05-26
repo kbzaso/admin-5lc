@@ -31,6 +31,14 @@
 		).padStart(2, '0')}`;
 	}
 
+	// Build a Date at local midnight from a "YYYY-MM-DD" key. Passing the string
+	// straight into `new Date()` would parse it as UTC midnight, which then shifts
+	// to the previous day when formatted in Chile's timezone.
+	function dateFromKey(key: string): Date {
+		const [year, month, day] = key.split('-').map(Number);
+		return new Date(year, month - 1, day);
+	}
+
 	$: dailyTotals = (() => {
 		const byDay = new Map<string, number>();
 		for (const p of payments ?? []) {
@@ -41,7 +49,7 @@
 			byDay.set(key, (byDay.get(key) ?? 0) + (p.ticketAmount ?? 0));
 		}
 		return [...byDay.entries()]
-			.map(([key, tickets]) => ({ key, date: new Date(key), tickets }))
+			.map(([key, tickets]) => ({ key, date: dateFromKey(key), tickets }))
 			.sort((a, b) => a.date.getTime() - b.date.getTime());
 	})();
 

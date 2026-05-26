@@ -1,5 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import { CRON_SECRET } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { buildPeriod, duePeriods, type PeriodKind } from '$lib/server/reports/period';
 import { buildReportData } from '$lib/server/reports/data';
 import { sendReport } from '$lib/server/reports/notify';
@@ -14,7 +14,13 @@ const VALID: PeriodKind[] = ['daily', 'weekly', 'monthly'];
  * (still requires the secret) for testing.
  */
 export const GET: RequestHandler = async ({ request, url }) => {
-	if (!CRON_SECRET || request.headers.get('authorization') !== `Bearer ${CRON_SECRET}`) {
+	const authHeader = request.headers.get('authorization');
+	if (!env.CRON_SECRET || authHeader !== `Bearer ${env.CRON_SECRET}`) {
+		// Logged (without leaking the secret) so a failed cron run is diagnosable
+		// from Vercel's function logs.
+		console.warn(
+			`[reports] unauthorized: secretConfigured=${!!env.CRON_SECRET} authHeaderPresent=${!!authHeader}`
+		);
 		throw error(401, 'Unauthorized');
 	}
 
@@ -41,5 +47,6 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	}
 
 	const allOk = results.every((r) => r.ok);
+	console.log(`[reports] ran ${JSON.stringify(results)}`);
 	return json({ ran: results }, { status: allOk ? 200 : 207 });
 };

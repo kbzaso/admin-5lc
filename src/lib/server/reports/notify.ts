@@ -1,4 +1,4 @@
-import { REPORT_WEBHOOK_URL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import type { ReportData } from './data';
 
 const clp = new Intl.NumberFormat('es-CL', {
@@ -76,12 +76,13 @@ function payloadFor(url: string, body: string): string {
 }
 
 export async function sendReport(data: ReportData): Promise<void> {
-	if (!REPORT_WEBHOOK_URL) throw new Error('REPORT_WEBHOOK_URL is not set');
+	const webhookUrl = env.REPORT_WEBHOOK_URL;
+	if (!webhookUrl) throw new Error('REPORT_WEBHOOK_URL is not set');
 	const body = formatReport(data);
-	const res = await fetch(REPORT_WEBHOOK_URL, {
+	const res = await fetch(webhookUrl, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: payloadFor(REPORT_WEBHOOK_URL, body)
+		body: payloadFor(webhookUrl, body)
 	});
 	if (!res.ok) {
 		throw new Error(`Webhook delivery failed ${res.status}: ${await res.text()}`);

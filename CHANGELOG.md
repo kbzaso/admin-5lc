@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.37] - 2026-05-26
+
 ### add
 
 - scheduled-reports
@@ -296,7 +298,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.36...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.37...HEAD
+[0.0.37]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.36...v0.0.37
 [0.0.36]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.35...v0.0.36
 [0.0.35]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.34...v0.0.35
 [0.0.34]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.33...v0.0.34

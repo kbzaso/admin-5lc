@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- fix cron job
+
 ## [0.0.38] - 2026-05-26
 
 - run env runtime

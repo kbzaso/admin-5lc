@@ -19,19 +19,13 @@
 
 ## Payments
 
-### Fix
-
-- [ ] npx prisma db push to production DB
-- [ ] Can't eliminate comments from other users
-- [ ] Delete payment realtime
-
 ### Add
 
 - [x] Add comments to payments
-  - [ ] Add realtime comments
-- [ ] Add IVA money count
-- [ ] Add Payku money count
-
+- [x] Add IVA money count
+- [x] Add Payku money count
+- [ ] Discount or not from studio when System payment are added
+- [ ] Send email confirmation to buyer from System payments
 
 ## Validate Feature
 

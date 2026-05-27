@@ -14,20 +14,24 @@ const VALID: PeriodKind[] = ['daily', 'weekly', 'monthly'];
  * (still requires the secret) for testing.
  */
 export const GET: RequestHandler = async ({ request, url }) => {
-	// Vercel signs the scheduled cron's `Authorization: Bearer <CRON_SECRET>` header
-	// using the CRON_SECRET env var, but that name isn't readable at runtime in this
-	// project — so we verify against REPORT_CRON_SECRET, which must hold the same value.
+	// Auth accepts the shared secret (REPORT_CRON_SECRET) via three channels:
+	//  - `?key=`            → used by the Vercel cron (path in vercel.json), since
+	//                          Vercel can't sign an Authorization header here.
+	//  - `Authorization`    → Bearer token, for clients where it isn't stripped.
+	//  - `x-report-secret`  → for manual testing (Vercel strips Authorization on
+	//                          external requests, but not custom headers).
 	const secret = env.REPORT_CRON_SECRET;
 	const authHeader = request.headers.get('authorization');
-	// `x-report-secret` is an alternative for manual testing: Vercel's Deployment
-	// Protection strips `Authorization` on external requests, but not custom headers.
 	const customSecret = request.headers.get('x-report-secret');
-	const authorized = !!secret && (authHeader === `Bearer ${secret}` || customSecret === secret);
+	const queryKey = url.searchParams.get('key');
+	const authorized =
+		!!secret &&
+		(queryKey === secret || authHeader === `Bearer ${secret}` || customSecret === secret);
 	if (!authorized) {
 		// Logged (without leaking the secret) so a failed cron run is diagnosable.
 		console.warn(
 			`[reports] unauthorized: secretConfigured=${!!secret} authHeaderPresent=${!!authHeader}` +
-				` customHeaderPresent=${!!customSecret}`
+				` customHeaderPresent=${!!customSecret} queryKeyPresent=${!!queryKey}`
 		);
 		throw error(401, 'Unauthorized');
 	}

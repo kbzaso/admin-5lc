@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/reports",
+      "path": "/api/reports?key=319b1308387107ce95df82f40d491c1088a1bf33c5dcc60f",
       "schedule": "59 2 * * *"
     }
   ]

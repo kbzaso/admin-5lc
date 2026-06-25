@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { TANDAS_NAMES } from '$lib/consts';
 	import DialogToAddPayments from '../SheetToAddPayments.svelte';
-	import { Ticket, MessageSquare } from 'lucide-svelte';
+	import { Ticket, MessageSquare, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { page } from '$app/stores';
 	import { formatDateToChile } from '$lib';
@@ -137,6 +137,52 @@
 		return matchesSearchTerm && matchesCategory && matchesValidation;
 	});
 
+	// Column sorting. Clicking a sortable header cycles asc → desc → unsorted
+	// (which restores the server order: most recent first).
+	type SortKey = 'customer_name' | 'status' | 'ticketAmount' | 'price';
+	let sortKey: SortKey | null = null;
+	let sortDir: 'asc' | 'desc' = 'asc';
+
+	function toggleSort(key: SortKey) {
+		if (sortKey !== key) {
+			sortKey = key;
+			sortDir = 'asc';
+		} else if (sortDir === 'asc') {
+			sortDir = 'desc';
+		} else {
+			sortKey = null;
+			sortDir = 'asc';
+		}
+	}
+
+	function sortValue(payment: Payment, key: SortKey): string | number {
+		switch (key) {
+			case 'customer_name':
+				return payment.customer_name?.toLowerCase() ?? '';
+			case 'status':
+				return effectiveStatus(payment) ?? '';
+			case 'ticketAmount':
+				return payment.ticketAmount ?? 0;
+			case 'price':
+				return payment.price ?? 0;
+		}
+	}
+
+	$: sortedPayments = sortKey
+		? [...filteredPayments].sort((a, b) => {
+				const av = sortValue(a, sortKey as SortKey);
+				const bv = sortValue(b, sortKey as SortKey);
+				const cmp =
+					typeof av === 'number' && typeof bv === 'number'
+						? av - bv
+						: String(av).localeCompare(String(bv), 'es');
+				return sortDir === 'asc' ? cmp : -cmp;
+			})
+		: filteredPayments;
+
+	const sortIcon = (key: SortKey) =>
+		sortKey !== key ? ChevronsUpDown : sortDir === 'asc' ? ChevronUp : ChevronDown;
+
 	// Function to determine the badge class based on payment status
 	function getBadgeClass(paymentStatus: string): string {
 		switch (paymentStatus) {
@@ -175,17 +221,53 @@
 	<Table.Root>
 		<Table.Header>
 			<Table.Row>
-				<Table.Head class="px-3 sm:px-4">Cliente</Table.Head>
+				<Table.Head class="px-3 sm:px-4">
+					<button
+						type="button"
+						class="flex items-center gap-1 hover:text-base-content"
+						on:click={() => toggleSort('customer_name')}
+					>
+						Cliente
+						<svelte:component this={sortIcon('customer_name')} class="h-3.5 w-3.5" aria-hidden="true" />
+					</button>
+				</Table.Head>
 				<Table.Head class="hidden md:table-cell">RUT</Table.Head>
 				<Table.Head class="hidden lg:table-cell">Fecha</Table.Head>
-				<Table.Head class="px-3 sm:px-4">Estado</Table.Head>
+				<Table.Head class="px-3 sm:px-4">
+					<button
+						type="button"
+						class="flex items-center gap-1 hover:text-base-content"
+						on:click={() => toggleSort('status')}
+					>
+						Estado
+						<svelte:component this={sortIcon('status')} class="h-3.5 w-3.5" aria-hidden="true" />
+					</button>
+				</Table.Head>
 				<Table.Head class="hidden md:table-cell">Descuento</Table.Head>
-				<Table.Head class="px-3 sm:px-4 text-right">Tickets</Table.Head>
-				<Table.Head class="hidden sm:table-cell text-right">Precio</Table.Head>
+				<Table.Head class="px-3 sm:px-4 text-right">
+					<button
+						type="button"
+						class="ml-auto flex items-center gap-1 hover:text-base-content"
+						on:click={() => toggleSort('ticketAmount')}
+					>
+						Tickets
+						<svelte:component this={sortIcon('ticketAmount')} class="h-3.5 w-3.5" aria-hidden="true" />
+					</button>
+				</Table.Head>
+				<Table.Head class="hidden sm:table-cell text-right">
+					<button
+						type="button"
+						class="ml-auto flex items-center gap-1 hover:text-base-content"
+						on:click={() => toggleSort('price')}
+					>
+						Precio
+						<svelte:component this={sortIcon('price')} class="h-3.5 w-3.5" aria-hidden="true" />
+					</button>
+				</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
-			{#each filteredPayments as payment, i (payment.id)}
+			{#each sortedPayments as payment, i (payment.id)}
 				<Table.Row
 					id={i.toString()}
 					role="button"
@@ -267,7 +349,7 @@
 					</Table.Cell>
 				</Table.Row>
 			{/each}
-			{#if filteredPayments.length === 0}
+			{#if sortedPayments.length === 0}
 				<Table.Row>
 					<Table.Cell colspan={7} class="text-center text-zinc-400 py-8">Sin resultados</Table.Cell>
 				</Table.Row>

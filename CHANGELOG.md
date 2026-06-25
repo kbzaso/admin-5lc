@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.41] - 2026-06-25
+
+### Add
+
+- Filter chips
+- Order columns
+
 ## [0.0.40] - 2026-05-27
 
 ### Fix
@@ -314,7 +321,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.40...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.41...HEAD
+[0.0.41]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.40...v0.0.41
 [0.0.40]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.39...v0.0.40
 [0.0.39]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.38...v0.0.39
 [0.0.38]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.37...v0.0.38

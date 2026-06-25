@@ -14,7 +14,13 @@
 	import { getContext, setContext } from 'svelte';
 
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
-	import { writable } from 'svelte/store';
+	import {
+		categoriesFor,
+		selectedCategories,
+		onlyUnvalidated,
+		isNotFullyValidated,
+		showRejected
+	} from '$lib/stores/paymentFilter';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 	getContext('idUpdateDialogOpen');
@@ -101,9 +107,11 @@
 		idUpdateDialogOpen.set({ open: false, id: '' });
 	}
 
-	let showRejected = writable(false);
+	$: isUbication = $page.data.sell_type === 'ubication';
 
-	// Reactive statement to filter payments based on search term and switch state
+	// Reactive statement to filter payments based on search term, the rejected
+	// switch and the shared category chips (General/Ringside or batch tiers,
+	// plus Sistema/Reembolso/Cambio) — the same selection that drives the chart.
 	$: filteredPayments = Payments.filter((payment) => {
 		const status = effectiveStatus(payment);
 		const matchesSearchTerm =
@@ -113,20 +121,20 @@
 			status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 			payment.rut?.toLowerCase().includes(searchTerm.toLowerCase());
 
-		const matchesSuccessFilter =
-			$showRejected ||
-			status === 'success' ||
-			status === 'system' ||
-			status === 'refund' ||
-			status === 'change';
-
 		if ($showRejected) {
 			return (
 				(status === 'register' || status === 'rejected' || status === null) && matchesSearchTerm
 			);
 		}
 
-		return matchesSearchTerm && matchesSuccessFilter;
+		// Show the row if any category it belongs to is currently selected.
+		const matchesCategory = categoriesFor(payment, isUbication).some(
+			(c) => $selectedCategories[c]
+		);
+		// When active, keep only payments that weren't fully checked in.
+		const matchesValidation = !$onlyUnvalidated || isNotFullyValidated(payment);
+
+		return matchesSearchTerm && matchesCategory && matchesValidation;
 	});
 
 	// Function to determine the badge class based on payment status

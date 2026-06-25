@@ -5,6 +5,7 @@
 	import Stat from '$lib/components/Stat.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 	import EventDailyTicketsChart from '$lib/components/data-table/EventDailyTicketsChart.svelte';
+	import PaymentFilterChips from '$lib/components/data-table/PaymentFilterChips.svelte';
 
 	import { writable } from 'svelte/store';
 	import supabaseClient from '$lib/supabaseClient';
@@ -118,5 +119,6 @@
 	{#if $page.data.user.admin}
 		<EventDailyTicketsChart payments={$payments} />
 	{/if}
+	<PaymentFilterChips payments={$payments} />
 	<DataTableEvent Payments={$payments} />
 </div>

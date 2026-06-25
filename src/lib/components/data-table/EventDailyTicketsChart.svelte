@@ -9,10 +9,24 @@
 		CategoryScale,
 		LinearScale
 	} from 'chart.js';
+	import { page } from '$app/stores';
+	import {
+		slicesFor,
+		selectedCategories,
+		onlyUnvalidated,
+		isNotFullyValidated,
+		showRejected,
+		isRejectedBucket
+	} from '$lib/stores/paymentFilter';
 
 	ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 	export let payments: any[];
+
+	// 'batch' events sell tiers stored in `buys`; 'ubication' events sell zones
+	// stored in `ticketsType`. The selected categories are shared with the
+	// payments table via the paymentFilter store.
+	$: isUbication = $page.data.sell_type === 'ubication';
 
 	const dateFormatter = new Intl.DateTimeFormat('es-CL', {
 		day: '2-digit',
@@ -43,10 +57,21 @@
 		const byDay = new Map<string, number>();
 		for (const p of payments ?? []) {
 			if (!p?.date) continue;
-			if (p.refund || p.changeEvent) continue;
-			if (p.payment_status !== 'success' && p.payment_status !== 'system') continue;
+			let count = 0;
+			if ($showRejected) {
+				// Rejected view: plot the non-success payments, ignoring the
+				// category and validation chips (which don't apply to them).
+				if (!isRejectedBucket(p)) continue;
+				count = p.ticketAmount ?? 0;
+			} else {
+				if ($onlyUnvalidated && !isNotFullyValidated(p)) continue;
+				for (const s of slicesFor(p, isUbication)) {
+					if ($selectedCategories[s.category]) count += s.amount;
+				}
+			}
+			if (count === 0) continue;
 			const key = dayKey(p.date);
-			byDay.set(key, (byDay.get(key) ?? 0) + (p.ticketAmount ?? 0));
+			byDay.set(key, (byDay.get(key) ?? 0) + count);
 		}
 		return [...byDay.entries()]
 			.map(([key, tickets]) => ({ key, date: dateFromKey(key), tickets }))
@@ -54,6 +79,13 @@
 	})();
 
 	$: hasValues = dailyTotals.some((d) => d.tickets > 0);
+
+	$: chartTitle = $showRejected
+		? 'Entradas no exitosas por día'
+		: 'Entradas vendidas por día';
+	$: emptyMessage = $showRejected
+		? 'No hay pagos no exitosos registrados'
+		: 'Aún no hay ventas registradas';
 
 	$: chartData = {
 		labels: dailyTotals.map((d) => dateFormatter.format(d.date)),
@@ -98,14 +130,14 @@
 </script>
 
 <div class="rounded-xl border border-base-content/20 p-4">
-	<h2 class="text-sm font-medium text-base-content/80 mb-4">Entradas vendidas por día</h2>
+	<h2 class="text-sm font-medium text-base-content/80 mb-4">{chartTitle}</h2>
 	{#if hasValues}
 		<div class="h-72 w-full">
 			<Bar data={chartData} options={chartOptions} />
 		</div>
 	{:else}
 		<div class="flex h-72 w-full items-center justify-center text-sm text-base-content/60">
-			Aún no hay ventas registradas
+			{emptyMessage}
 		</div>
 	{/if}
 </div>

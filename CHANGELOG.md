@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Add
 
-- Release script
+- Release script with documantation
 - Show declined payments
 
 ## [0.0.41] - 2026-06-25

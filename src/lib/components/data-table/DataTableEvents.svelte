@@ -6,6 +6,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
+	import { chipClass } from '$lib';
 
 	export let Events: any[];
 
@@ -131,22 +132,18 @@
 			<h2 class="text-sm font-medium text-base-content/80">
 				Comparativa de eventos{selectedYear === 'all' ? '' : ` · ${selectedYear}`}
 			</h2>
-			<div role="tablist" class="tabs tabs-boxed">
+			<div class="flex items-center gap-2" role="group" aria-label="Métrica del gráfico">
 				<button
 					type="button"
-					role="tab"
-					class="tab"
-					class:tab-active={chartMetric === 'revenue'}
 					on:click={() => (chartMetric = 'revenue')}
+					class={chipClass(chartMetric === 'revenue')}
 				>
 					Recaudación
 				</button>
 				<button
 					type="button"
-					role="tab"
-					class="tab"
-					class:tab-active={chartMetric === 'tickets'}
 					on:click={() => (chartMetric = 'tickets')}
+					class={chipClass(chartMetric === 'tickets')}
 				>
 					Entradas
 				</button>

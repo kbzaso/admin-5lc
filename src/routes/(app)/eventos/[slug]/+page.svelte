@@ -15,8 +15,17 @@
 	import { page } from '$app/stores';
 
 	import { payments } from '$lib/stores/payments';
+	import { isRejectedBucket } from '$lib/stores/paymentFilter';
 
 	payments.set(data.eventFromSupabase?.Payment || []);
+
+	// Non-success buys, split between explicit gateway rejections and attempts
+	// that never completed (register / no status). Derived from the live
+	// payments store so realtime inserts keep the card current.
+	$: declinedBuys = $payments.filter((p) => p?.payment_status === 'rejected').length;
+	$: incompleteBuys = $payments.filter(
+		(p) => isRejectedBucket(p) && p?.payment_status !== 'rejected'
+	).length;
 
 	let totalMoneyRaised = writable(data.totalMoneyRaised?._sum.price ?? 0);
 
@@ -114,6 +123,8 @@
 				change_payments: data.eventFromSupabase.buysSumObject?.change_payments || { amount: 0 }
 			}}
 			ubicationSumObject={data.eventFromSupabase.ubicationSumObject ?? {}}
+			{declinedBuys}
+			{incompleteBuys}
 		/>
 	{/if}
 	{#if $page.data.user.admin}

@@ -3,13 +3,15 @@
 	export let ticketsSold: number;
 	export let studioTicketsAvailable: number;
 	import * as Card from '$lib/components/ui/card/index.js';
-	import { TicketPercent, DollarSign, TicketCheck } from 'lucide-svelte';
+	import { TicketPercent, DollarSign, TicketCheck, TicketX } from 'lucide-svelte';
 	import { formatPriceToCLP } from '$lib';
 	import { page } from '$app/stores';
 	import { IVA_RATE, PAYKU_RATE } from '$lib/consts';
 
 	export let buysSumObject: Record<keyof typeof traductions, { amount: number }>;
 	export let ubicationSumObject: Record<string, { amount: number }> = {};
+	export let declinedBuys: number = 0;
+	export let incompleteBuys: number = 0;
 
 	const traductions: Record<string, string> = {
 		firsts_tickets: 'Preventa',
@@ -62,6 +64,12 @@
 			icon: TicketCheck,
 			value: ticketsValidated,
 			helper: `No hicieron ingreso ${ticketsSold - ticketsValidated} unidades.`
+		},
+		{
+			label: 'Compras rechazadas',
+			icon: TicketX,
+			value: declinedBuys,
+			helper: `Además ${incompleteBuys} compras iniciadas sin completar.`
 		}
 	];
 

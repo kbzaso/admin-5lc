@@ -10,6 +10,7 @@
 		LinearScale
 	} from 'chart.js';
 	import { page } from '$app/stores';
+	import { chipClass } from '$lib';
 	import {
 		slicesFor,
 		selectedCategories,
@@ -27,6 +28,9 @@
 	// stored in `ticketsType`. The selected categories are shared with the
 	// payments table via the paymentFilter store.
 	$: isUbication = $page.data.sell_type === 'ubication';
+
+	// What each bar counts: individual tickets, or buys (one per payment).
+	let metric: 'tickets' | 'buys' = 'tickets';
 
 	const dateFormatter = new Intl.DateTimeFormat('es-CL', {
 		day: '2-digit',
@@ -62,37 +66,47 @@
 				// Rejected view: plot the non-success payments, ignoring the
 				// category and validation chips (which don't apply to them).
 				if (!isRejectedBucket(p)) continue;
-				count = p.ticketAmount ?? 0;
+				count = metric === 'buys' ? 1 : (p.ticketAmount ?? 0);
 			} else {
 				if ($onlyUnvalidated && !isNotFullyValidated(p)) continue;
+				let tickets = 0;
 				for (const s of slicesFor(p, isUbication)) {
-					if ($selectedCategories[s.category]) count += s.amount;
+					if ($selectedCategories[s.category]) tickets += s.amount;
 				}
+				// In buys mode a payment counts once when any of its tickets
+				// fall in a selected category.
+				count = metric === 'buys' ? (tickets > 0 ? 1 : 0) : tickets;
 			}
 			if (count === 0) continue;
 			const key = dayKey(p.date);
 			byDay.set(key, (byDay.get(key) ?? 0) + count);
 		}
 		return [...byDay.entries()]
-			.map(([key, tickets]) => ({ key, date: dateFromKey(key), tickets }))
+			.map(([key, count]) => ({ key, date: dateFromKey(key), count }))
 			.sort((a, b) => a.date.getTime() - b.date.getTime());
 	})();
 
-	$: hasValues = dailyTotals.some((d) => d.tickets > 0);
+	$: hasValues = dailyTotals.some((d) => d.count > 0);
 
 	$: chartTitle = $showRejected
-		? 'Entradas no exitosas por día'
-		: 'Entradas vendidas por día';
+		? metric === 'buys'
+			? 'Compras no exitosas por día'
+			: 'Entradas no exitosas por día'
+		: metric === 'buys'
+			? 'Compras por día'
+			: 'Entradas vendidas por día';
 	$: emptyMessage = $showRejected
 		? 'No hay pagos no exitosos registrados'
 		: 'Aún no hay ventas registradas';
+
+	$: metricLabel = metric === 'buys' ? 'compras' : 'entradas';
 
 	$: chartData = {
 		labels: dailyTotals.map((d) => dateFormatter.format(d.date)),
 		datasets: [
 			{
-				label: 'Entradas',
-				data: dailyTotals.map((d) => d.tickets),
+				label: metric === 'buys' ? 'Compras' : 'Entradas',
+				data: dailyTotals.map((d) => d.count),
 				backgroundColor: '#facc15',
 				borderRadius: 4,
 				borderSkipped: false
@@ -108,7 +122,7 @@
 			tooltip: {
 				callbacks: {
 					title: (items: any[]) => fullDateFormatter.format(dailyTotals[items[0].dataIndex].date),
-					label: (ctx: any) => `${ctx.parsed.y} entradas`
+					label: (ctx: any) => `${ctx.parsed.y} ${metricLabel}`
 				}
 			}
 		},
@@ -130,7 +144,25 @@
 </script>
 
 <div class="rounded-xl border border-base-content/20 p-4">
-	<h2 class="text-sm font-medium text-base-content/80 mb-4">{chartTitle}</h2>
+	<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+		<h2 class="text-sm font-medium text-base-content/80">{chartTitle}</h2>
+		<div class="flex items-center gap-2" role="group" aria-label="Métrica del gráfico">
+			<button
+				type="button"
+				on:click={() => (metric = 'tickets')}
+				class={chipClass(metric === 'tickets')}
+			>
+				Entradas
+			</button>
+			<button
+				type="button"
+				on:click={() => (metric = 'buys')}
+				class={chipClass(metric === 'buys')}
+			>
+				Compras
+			</button>
+		</div>
+	</div>
 	{#if hasValues}
 		<div class="h-72 w-full">
 			<Bar data={chartData} options={chartOptions} />

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { chipClass } from '$lib';
 	import {
 		slicesFor,
 		orderCategories,
@@ -35,13 +36,6 @@
 	function toggle(category: string) {
 		selectedCategories.update((s) => ({ ...s, [category]: !s[category] }));
 	}
-
-	const chipClass = (active: boolean) =>
-		`rounded-full border px-3 py-1 text-xs transition-colors disabled:cursor-not-allowed ${
-			active
-				? 'border-yellow-400 bg-yellow-400 text-black'
-				: 'border-base-content/25 text-base-content/50 hover:border-base-content/40 hover:text-base-content/80'
-		}`;
 </script>
 
 {#if categories.length > 0}

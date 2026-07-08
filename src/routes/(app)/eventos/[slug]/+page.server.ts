@@ -237,6 +237,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 	};
 
+	// Future events a payment can be moved to when it's marked as
+	// "Cambio de evento".
+	const futureEvents = async () => {
+		return await client.product.findMany({
+			where: {
+				date: { gt: new Date() },
+				id: { not: params.slug }
+			},
+			orderBy: { date: 'asc' },
+			select: { id: true, name: true, date: true }
+		});
+	};
+
 	return {
 		sell_type: eventFromSanityStudio?.sell_type,
 		eventFromSupabase: await eventFromSupabase(),
@@ -244,7 +257,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		ticketsSold: await ticketsSold(),
 		studioTicketsAvailable,
 		eventFromSanityStudio,
-		ticketValidated: await ticketValidated()
+		ticketValidated: await ticketValidated(),
+		futureEvents: await futureEvents()
 	};
 };
 
@@ -384,7 +398,7 @@ export const actions: Actions = {
 			};
 		}
 	},
-	updatePayment: async ({ request }) => {
+	updatePayment: async ({ request, params, locals }) => {
 		const formData = await request.formData();
 		const name = (formData.get('name') as string) || '';
 		const email = formData.get('email');
@@ -395,28 +409,89 @@ export const actions: Actions = {
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
 		const paymentId = formData.get('paymentId');
 		const refundStatus = formData.get('refundStatus');
+		const targetEventId = (formData.get('targetEventId') as string) || '';
 
 		// Single mutually-exclusive choice: 'none' | 'refund' | 'change'.
 		const refundMoney = refundStatus === 'refund';
 		const changeEvent = refundStatus === 'change';
 
+		// Moving the payment to another event only applies when it's marked as
+		// "Cambio de evento" and a different event was selected.
+		const moveToEvent = changeEvent && targetEventId !== '' && targetEventId !== params.slug;
+
+		const paymentData = {
+			customer_name: name,
+			rut: rut as string | null,
+			customer_email: email as string,
+			customer_phone: phone as string,
+			price,
+			ticketAmount,
+			ticketsType: ticketType || 'Tandas',
+			refund: refundMoney,
+			changeEvent: changeEvent
+		};
+
 		try {
-			const updatePayment = await client.payment.update({
-				where: {
-					id: paymentId as string
-				},
-				data: {
-					customer_name: name,
-					rut: rut as string | null,
-					customer_email: email as string,
-					customer_phone: phone as string,
-					price,
-					ticketAmount,
-					ticketsType: ticketType || 'Tandas',
-					refund: refundMoney,
-					changeEvent: changeEvent
+			let updatePayment;
+
+			if (moveToEvent) {
+				const [origin, target] = await Promise.all([
+					client.product.findUnique({
+						where: { id: params.slug },
+						select: { name: true, date: true }
+					}),
+					client.product.findUnique({
+						where: { id: targetEventId },
+						select: { id: true }
+					})
+				]);
+
+				if (!target) {
+					return {
+						status: 400,
+						body: { error: 'Target event not found' }
+					};
 				}
-			});
+
+				const originDate = origin?.date
+					? new Intl.DateTimeFormat('es-CL', {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric'
+						}).format(origin.date)
+					: '';
+				const commentText = `Cambio de evento: este pago proviene de «${origin?.name ?? params.slug}»${originDate ? ` (${originDate})` : ''}.`;
+
+				// Move the payment and leave an audit comment in one transaction so
+				// a moved payment always carries its origin.
+				[updatePayment] = await client.$transaction([
+					client.payment.update({
+						where: {
+							id: paymentId as string
+						},
+						data: {
+							...paymentData,
+							productId: targetEventId
+						}
+					}),
+					client.comment.create({
+						data: {
+							id: crypto.randomUUID(),
+							paymentId: paymentId as string,
+							commentText,
+							userId: locals.session?.userId as string
+						}
+					})
+				]);
+			} else {
+				updatePayment = await client.payment.update({
+					where: {
+						id: paymentId as string
+					},
+					data: paymentData
+				});
+			}
+
 			return {
 				status: 200,
 				body: { message: 'Payment updated successfully', payment: updatePayment }
@@ -438,6 +513,9 @@ export const actions: Actions = {
 		const ticketAmount = Number(formData.get('ticketAmount'));
 		const price = Number(formData.get('price')) || 0;
 		const ticketType = formData.get('ticketType') as 'general_tickets' | 'ringside_tickets';
+		// Unchecked checkboxes are absent from FormData, so null means "don't
+		// touch the Studio stock".
+		const discountStock = formData.get('discountStock') !== null;
 
 		const traductions: { [key: string]: string } = {
 			ringside_tickets: 'Ringside',
@@ -500,46 +578,49 @@ export const actions: Actions = {
 			// Get the available tickets on the Studio
 			const eventFromSanityStudio = await getEvent(params.slug);
 
-			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO
+			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO. Solo se construye si
+			// el usuario pidió descontar las entradas del stock.
 			let mutations;
 			let newTicket;
-			if (eventFromSanityStudio?.sell_type === 'ubication') {
-				newTicket = decrementTicketAmount(
-					eventFromSanityStudio?.ticket,
-					ticketAmount,
-					eventFromSanityStudio?.sell_type,
-					ticketType
-				).ubication;
-				mutations = [
-					{
-						patch: {
-							id: params.slug, // replace with your document ID
-							set: {
-								ticket: {
-									ubication: newTicket
+			if (discountStock) {
+				if (eventFromSanityStudio?.sell_type === 'ubication') {
+					newTicket = decrementTicketAmount(
+						eventFromSanityStudio?.ticket,
+						ticketAmount,
+						eventFromSanityStudio?.sell_type,
+						ticketType
+					).ubication;
+					mutations = [
+						{
+							patch: {
+								id: params.slug, // replace with your document ID
+								set: {
+									ticket: {
+										ubication: newTicket
+									}
 								}
 							}
 						}
-					}
-				];
-			} else {
-				newTicket = decrementTicketAmount(
-					eventFromSanityStudio?.ticket,
-					ticketAmount,
-					eventFromSanityStudio?.sell_type
-				).batch;
-				mutations = [
-					{
-						patch: {
-							id: params.slug, // replace with your document ID
-							set: {
-								ticket: {
-									batch: newTicket
+					];
+				} else {
+					newTicket = decrementTicketAmount(
+						eventFromSanityStudio?.ticket,
+						ticketAmount,
+						eventFromSanityStudio?.sell_type
+					).batch;
+					mutations = [
+						{
+							patch: {
+								id: params.slug, // replace with your document ID
+								set: {
+									ticket: {
+										batch: newTicket
+									}
 								}
 							}
 						}
-					}
-				];
+					];
+				}
 			}
 
 			// Generate a payment code
@@ -567,26 +648,28 @@ export const actions: Actions = {
 				}
 			});
 
-			// Actualizamos el stock en sanity
-			await fetch(`https://${projectId}.api.sanity.io/v2022-08-08/data/mutate/${datasetName}`, {
-				method: 'POST',
-				headers: {
-					'Content-type': 'application/json',
-					Authorization: `Bearer ${tokenWithWriteAccess}`,
-					'Access-Control-Allow-Origin': '*',
-					'Access-Control-Allow-Methods': 'POST',
-					'Access-Control-Allow-Headers': 'Content-Type'
-				},
-				body: JSON.stringify({ mutations })
-			})
-				.then((response) => {
-					if (!response.ok) {
-						throw new Error(`HTTP error! status: ${response.status}`);
-					}
-					return response.json();
+			// Actualizamos el stock en sanity (solo si se pidió descontar)
+			if (discountStock && mutations) {
+				await fetch(`https://${projectId}.api.sanity.io/v2022-08-08/data/mutate/${datasetName}`, {
+					method: 'POST',
+					headers: {
+						'Content-type': 'application/json',
+						Authorization: `Bearer ${tokenWithWriteAccess}`,
+						'Access-Control-Allow-Origin': '*',
+						'Access-Control-Allow-Methods': 'POST',
+						'Access-Control-Allow-Headers': 'Content-Type'
+					},
+					body: JSON.stringify({ mutations })
 				})
-				.then((result) => console.log(result))
-				.catch((error) => console.error(error));
+					.then((response) => {
+						if (!response.ok) {
+							throw new Error(`HTTP error! status: ${response.status}`);
+						}
+						return response.json();
+					})
+					.then((result) => console.log(result))
+					.catch((error) => console.error(error));
+			}
 
 			// Return a success response
 			return {

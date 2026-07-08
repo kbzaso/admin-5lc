@@ -13,6 +13,7 @@
 
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 
 	import { payments } from '$lib/stores/payments';
 	import { isRejectedBucket } from '$lib/stores/paymentFilter';
@@ -27,7 +28,11 @@
 		(p) => isRejectedBucket(p) && p?.payment_status !== 'rejected'
 	).length;
 
-	let totalMoneyRaised = writable(data.totalMoneyRaised?._sum.price ?? 0);
+	const totalMoneyRaised = writable(data.totalMoneyRaised?._sum.price ?? 0);
+	// Re-sincroniza el total con el valor del servidor cada vez que se invalida
+	// la data (p. ej. tras eliminar o actualizar un pago con un form action).
+	// Entre invalidaciones, los handlers de realtime lo ajustan de forma local.
+	$: totalMoneyRaised.set(data.totalMoneyRaised?._sum.price ?? 0);
 
 	const currentSlug = $page.params.slug;
 	onMount(() => {
@@ -45,7 +50,56 @@
 		// Create a function to handle updates
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const handleUpdates = (payload: any) => {
-			if (payload.old.productId !== currentSlug) return;
+			// payload.old solo trae todas las columnas con REPLICA IDENTITY FULL;
+			// si falta productId, asumimos que el pago no cambió de evento.
+			const oldProductId = payload.old.productId ?? payload.new.productId;
+			const wasHere = oldProductId === currentSlug;
+			const isHere = payload.new.productId === currentSlug;
+			if (!wasHere && !isHere) return;
+
+			// El pago se movió a otro evento (cambio de evento): sale de esta lista.
+			if (wasHere && !isHere) {
+				totalMoneyRaised.update((current) => current - payload.old.price);
+				payments.update((current) => current.filter((payment) => payment?.id !== payload.new.id));
+				const targetId = payload.new.productId;
+				// Los destinos de un cambio siempre son eventos futuros, así que el
+				// nombre suele estar en futureEvents; si no, mostramos el texto genérico.
+				const targetName = data.futureEvents?.find((e) => e.id === targetId)?.name;
+				toast.info(
+					targetName
+						? `El pago de ${payload.new.customer_name} se movió a «${targetName}»`
+						: `El pago de ${payload.new.customer_name} se movió a otro evento`,
+					{
+						duration: 8000,
+						action: {
+							label: 'Ver evento',
+							onClick: () => goto(`/eventos/${targetId}`)
+						}
+					}
+				);
+				return;
+			}
+
+			// El pago llegó desde otro evento (cambio de evento): entra a esta lista.
+			// Los pagos movidos llevan changeEvent=true, así que no suman al total.
+			if (!wasHere && isHere) {
+				payments.update((current) => [
+					payload.new,
+					...current.filter((payment) => payment?.id !== payload.new.id)
+				]);
+				// Esta rama solo se alcanza cuando payload.old trae productId (ver
+				// arriba), así que el origen siempre está disponible.
+				const originId = payload.old.productId;
+				toast.info(`Llegó el pago de ${payload.new.customer_name} desde otro evento`, {
+					duration: 8000,
+					action: {
+						label: 'Ver origen',
+						onClick: () => goto(`/eventos/${originId}`)
+					}
+				});
+				return;
+			}
+
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => current + payload.new.price - payload.old.price);
 
@@ -69,11 +123,19 @@
 		// Create a function to handle deletes
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const handleDeletes = (payload: any) => {
-			if (payload.old.productId !== currentSlug) return;
+			// En DELETE, payload.old solo trae el id (salvo REPLICA IDENTITY FULL),
+			// así que ubicamos el pago en la lista en vez de leer payload.old.productId.
+			// Si no está, es de otro evento o ya se quitó de forma optimista al
+			// eliminarlo desde esta misma pestaña.
+			const existing = $payments.find((payment) => payment?.id === payload.old.id);
+			if (!existing) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
-			totalMoneyRaised.update((current) => $totalMoneyRaised - payload.old.price);
+			totalMoneyRaised.update((current) => current - (payload.old.price ?? existing.price ?? 0));
 			payments.update((current) => current.filter((payment) => payment?.id !== payload.old.id));
-			toast.warning(`Se ha eliminado el pago de ${payload.old.customer_name}`, {});
+			toast.warning(
+				`Se ha eliminado el pago de ${payload.old.customer_name ?? existing.customer_name}`,
+				{}
+			);
 		};
 
 		// Listen to inserts, updates, and deletes

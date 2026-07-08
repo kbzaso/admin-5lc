@@ -10,6 +10,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import * as Table from '$lib/components/ui/table';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
 	import { getContext, setContext } from 'svelte';
 
@@ -31,6 +32,9 @@
 			commentText: string;
 			userId: string;
 			id: string;
+			// Server rows carry User; comments added optimistically carry name.
+			name?: string;
+			User?: { id: string; name: string };
 		}[];
 		id: string;
 		date: string;
@@ -183,6 +187,19 @@
 	const sortIcon = (key: SortKey) =>
 		sortKey !== key ? ChevronsUpDown : sortDir === 'asc' ? ChevronUp : ChevronDown;
 
+	// Newest-first preview for the comment badge tooltip; the full list lives in
+	// the payment sheet's comments tab.
+	const MAX_TOOLTIP_COMMENTS = 3;
+	function recentComments(payment: Payment) {
+		return [...(payment.Comment ?? [])]
+			.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+			.slice(0, MAX_TOOLTIP_COMMENTS);
+	}
+	const commentAuthor = (comment: Payment['Comment'][number]) =>
+		comment.name ?? comment.User?.name ?? '';
+	const commentDate = (comment: Payment['Comment'][number]) =>
+		new Date(comment.createdAt).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+
 	// Function to determine the badge class based on payment status
 	function getBadgeClass(paymentStatus: string): string {
 		switch (paymentStatus) {
@@ -289,7 +306,28 @@
 							<span class="text-xs text-primary uppercase flex gap-1.5 items-center">
 								{payment.client_id ? payment.client_id : ''}
 								{#if payment.Comment?.length > 0}
-									<Badge variant="default"><MessageSquare class="h-3" aria-hidden="true" />{payment.Comment.length}</Badge>
+									<Tooltip.Root openDelay={200}>
+										<Tooltip.Trigger class="cursor-pointer">
+											<Badge variant="default"><MessageSquare class="h-3" aria-hidden="true" />{payment.Comment.length}</Badge>
+										</Tooltip.Trigger>
+										<Tooltip.Content side="right" class="max-w-xs text-left normal-case">
+											<ul class="flex flex-col gap-2">
+												{#each recentComments(payment) as comment (comment.id)}
+													<li class="flex flex-col">
+														<span class="text-xs text-primary">
+															{commentAuthor(comment)} · {commentDate(comment)}
+														</span>
+														<span class="break-words">{comment.commentText}</span>
+													</li>
+												{/each}
+											</ul>
+											{#if payment.Comment.length > MAX_TOOLTIP_COMMENTS}
+												<p class="mt-2 text-xs text-muted-foreground">
+													+{payment.Comment.length - MAX_TOOLTIP_COMMENTS} más — abre el pago para verlos
+												</p>
+											{/if}
+										</Tooltip.Content>
+									</Tooltip.Root>
 								{/if}
 							</span>
 							<span class="font-medium md:text-base">{payment.customer_name}</span>

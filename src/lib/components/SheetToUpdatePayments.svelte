@@ -17,6 +17,7 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
 	import { payments } from '$lib/stores/payments';
+	import { formatDateToChile } from '$lib';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 
@@ -35,6 +36,14 @@
 		: payment.changeEvent
 			? 'change'
 			: 'none';
+
+	// Target event when the payment is moved on a "Cambio de evento". Empty
+	// string keeps the payment in the current event (flag only). The select is
+	// removed from the DOM when refundStatus !== 'change', so a stale value is
+	// never submitted.
+	let targetEventId = '';
+	$: futureEvents = $page.data.futureEvents ?? [];
+	$: selectedFutureEvent = futureEvents.find((e: any) => e.id === targetEventId);
 
 	const STATUS = {
 		register: {
@@ -301,6 +310,34 @@
 											<span class="text-white">Cambio de evento</span>
 										</Label>
 									</div>
+									{#if refundStatus === 'change'}
+										<div class="grid gap-2 w-full">
+											<Label for="targetEventId" class="text-left">Mover al evento</Label>
+											<select
+												id="targetEventId"
+												name="targetEventId"
+												class="select select-bordered w-full"
+												bind:value={targetEventId}
+											>
+												<option value="">Mantener en este evento</option>
+												{#each futureEvents as event (event.id)}
+													<option value={event.id}>
+														{event.name} — {formatDateToChile(event.date)}
+													</option>
+												{/each}
+											</select>
+											{#if futureEvents.length === 0}
+												<p class="text-xs text-zinc-400">
+													No hay eventos futuros disponibles; el pago solo quedará marcado como cambio.
+												</p>
+											{:else if selectedFutureEvent}
+												<p class="text-xs text-zinc-400">
+													El pago se moverá a «{selectedFutureEvent.name}» con la etiqueta «Cambio» y un
+													comentario indicando desde qué evento proviene.
+												</p>
+											{/if}
+										</div>
+									{/if}
 									<div class="w-full flex gap-4">
 										{#if !$page.data.user.validator}
 											<Button
@@ -456,9 +493,23 @@
 		<form
 			method="POST"
 			action="?/deletePayment"
-			use:enhance
 			class="w-full"
-			on:submit={() => (confirmationDialogOpen = false)}
+			use:enhance={() => {
+				confirmationDialogOpen = false;
+				return async ({ result, update }) => {
+					// La action devuelve status 200/500 dentro de un result 'success'.
+					const ok = result.type === 'success' && result.data?.status === 200;
+					if (ok) {
+						// Quita el pago de la lista sin esperar el evento realtime;
+						// handleDeletes detecta que ya no está y no lo duplica.
+						payments.update((current) => current.filter((p: any) => p?.id !== payment.id));
+						toast.warning(`Se eliminó el pago de ${payment.customer_name}`, {});
+					} else {
+						toast.error(`No se pudo eliminar el pago de ${payment.customer_name}`);
+					}
+					await update();
+				};
+			}}
 		>
 			<input type="text" hidden value={payment.id} name="paymentId" />
 			<Button class="w-full bg-error hover:bg-red-500" type="submit">Eliminar pago</Button>

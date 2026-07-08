@@ -122,6 +122,20 @@
 					</div>
 				</fieldset>
 			{/if}
+			<div class="grid gap-1">
+				<Label class="flex items-center gap-3 cursor-pointer">
+					<input
+						type="checkbox"
+						name="discountStock"
+						checked
+						class="h-4 w-4 accent-yellow-400 cursor-pointer"
+					/>
+					<span>Descontar entradas del stock del Studio</span>
+				</Label>
+				<p class="text-xs text-zinc-400">
+					Si lo desmarcas, el pago se crea sin restar entradas disponibles en Sanity Studio.
+				</p>
+			</div>
 			<Button type="submit">Crear pago</Button>
 		</form>
 		<!-- <Sheet.Footer>

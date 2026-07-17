@@ -5,26 +5,17 @@
 
 ### Add
 
-  - [x] Merch payment section
-  - [x] State of the order
-  - [x] npx prisma db push to production DB
-  - [x] Protect merch section
 
 ## Development
 
 ### Add
 
 - [ ] Adapt beta.admin.5luchas.cl to development deploy (need a supabase instance deployed)
-- [x] push changes to remote database
 
 ## Payments
 
 ### Add
 
-- [x] Add comments to payments
-- [x] Add IVA money count
-- [x] Add Payku money count
-- [ ] Discount or not from studio when System payment are added
 - [ ] Send email confirmation to buyer from System payments
 
 ## Validate Feature
@@ -44,3 +35,14 @@
   - [ ] Bar incomes
   - [ ] Merch incomes
   - [ ] Add code of the payment for every payment
+
+
+## Done
+  - [x] Merch payment section
+  - [x] State of the order
+  - [x] npx prisma db push to production DB
+  - [x] Protect merch section
+  - [x] Add comments to payments
+  - [x] Add IVA money count
+  - [x] Add Payku money count
+  - [x] Discount or not from studio when System payment are added

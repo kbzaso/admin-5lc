@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Connect to mail API
+
 ## [0.0.43] - 2026-07-08
 
 ### Add

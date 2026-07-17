@@ -9,6 +9,7 @@
 	import { CreditCard, Mail, Phone, User, Plus, Minus, CircleAlert, Copy, X } from 'lucide-svelte';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import { Progress } from './ui/progress';
+	import { Badge } from '$lib/components/ui/badge';
 	import * as Alert from '$lib/components/ui/alert';
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { mediaQuery } from '$lib/stores/mediaQuery';
@@ -29,13 +30,25 @@
 	export let payment: any;
 
 	let validatedTickets = payment.ticketValidated;
+	// A payment that's part of a cart order (tickets + merch) never gets its
+	// own EmailLog row — the confirmation was sent (and logged) against the
+	// Order instead. Fall back to that so the drawer isn't empty for it.
+	let emailHistory: {
+		id: string;
+		status: string;
+		error?: string | null;
+		providerId?: string | null;
+		createdAt: string | Date;
+	}[] = payment.EmailLog?.length ? payment.EmailLog : payment.Order?.EmailLog ?? [];
+	const isOrderPayment = !payment.EmailLog?.length && !!payment.Order;
+	$: lastEmailLog = emailHistory[0] ?? null;
 	// Refund / change are mutually exclusive, plus the normal case → a single
 	// three-way choice rather than two booleans.
 	let refundStatus: 'none' | 'refund' | 'change' = payment.refund
 		? 'refund'
 		: payment.changeEvent
-			? 'change'
-			: 'none';
+		? 'change'
+		: 'none';
 
 	// Target event when the payment is moved on a "Cambio de evento". Empty
 	// string keeps the payment in the current event (flag only). The select is
@@ -76,7 +89,8 @@
 			const jsonData = JSON.stringify(data);
 
 			if (navigator.clipboard && navigator.clipboard.writeText) {
-				navigator.clipboard.writeText(jsonData)
+				navigator.clipboard
+					.writeText(jsonData)
 					.then(() => {
 						toast.info(`Se copió la información del comprador/a`, {});
 					})
@@ -144,6 +158,91 @@
 					</Button>
 				{/if}
 			</Sheet.Title>
+			{#if payment.payment_status === 'success' || payment.payment_status === 'system'}
+				<div class="gap-2 pt-1">
+					<div class="flex items-center gap-2">
+						{#if lastEmailLog}
+							<Badge
+								class={lastEmailLog.status === 'sent'
+									? 'bg-green-300 text-green-900 hover:bg-green-400'
+									: 'bg-red-800 text-red-300 hover:bg-red-900'}
+								title={lastEmailLog.status === 'failed'
+									? lastEmailLog.error ?? undefined
+									: undefined}
+							>
+								{lastEmailLog.status === 'sent' ? '✓ Correo enviado' : '⚠ Error al enviar correo'}
+							</Badge>
+							{#if isOrderPayment}
+								<span class="text-xs text-zinc-400"
+									>(vía orden {payment.Order?.orderId ?? payment.Order?.id})</span
+								>
+							{/if}
+						{/if}
+					</div>
+					<form
+						method="POST"
+						action="?/resendTicketConfirmation"
+						class="mt-4"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								const ok = result.type === 'success' && result.data?.status === 200;
+								if (ok) {
+									toast.success('Correo de confirmación reenviado');
+								} else {
+									toast.error('No se pudo reenviar el correo de confirmación');
+								}
+								if (result.type === 'success') {
+									const body = result.data?.body as
+										| { emailLog?: { status: string; error?: string | null } }
+										| undefined;
+									if (body?.emailLog) {
+										emailHistory = [
+											{
+												id: crypto.randomUUID(),
+												status: body.emailLog.status,
+												error: body.emailLog.error,
+												createdAt: new Date()
+											},
+											...emailHistory
+										];
+									}
+								}
+								await update();
+							};
+						}}
+					>
+						<input type="hidden" name="paymentId" value={payment.id} />
+						<Button type="submit" variant="outline" size="sm" class="gap-1">
+							<Mail class="h-4 w-4" />
+							{payment.orderId ? 'Reenviar confirmación de orden' : 'Reenviar confirmación'}
+						</Button>
+					</form>
+				</div>
+				{#if emailHistory.length > 1}
+					<div class="flex flex-col gap-1 pt-2 text-xs text-zinc-400">
+						<span class="font-semibold text-zinc-300">Historial de correos:</span>
+						{#each emailHistory as log (log.id)}
+							<div class="flex items-center gap-2">
+								<span class="whitespace-nowrap">
+									{new Date(log.createdAt).toLocaleString('es-CL', {
+										timeZone: 'America/Santiago'
+									})}
+								</span>
+								<Badge
+									class={log.status === 'sent'
+										? 'bg-green-300 text-green-900 hover:bg-green-400'
+										: 'bg-red-800 text-red-300 hover:bg-red-900'}
+								>
+									{log.status === 'sent' ? '✓' : '⚠'}
+								</Badge>
+								{#if log.status === 'failed' && log.error}
+									<span class="wrap-break-word">{log.error}</span>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
+			{/if}
 			<Sheet.Description>
 				{#if payment.payment_status === 'register'}
 					<Alert.Root variant="destructive">
@@ -328,12 +427,13 @@
 											</select>
 											{#if futureEvents.length === 0}
 												<p class="text-xs text-zinc-400">
-													No hay eventos futuros disponibles; el pago solo quedará marcado como cambio.
+													No hay eventos futuros disponibles; el pago solo quedará marcado como
+													cambio.
 												</p>
 											{:else if selectedFutureEvent}
 												<p class="text-xs text-zinc-400">
-													El pago se moverá a «{selectedFutureEvent.name}» con la etiqueta «Cambio» y un
-													comentario indicando desde qué evento proviene.
+													El pago se moverá a «{selectedFutureEvent.name}» con la etiqueta «Cambio»
+													y un comentario indicando desde qué evento proviene.
 												</p>
 											{/if}
 										</div>
@@ -415,9 +515,14 @@
 							</div>
 						</Tabs.Content>
 						<Tabs.Content value="comments">
-							<ScrollArea class="h-[200px] text-left rounded-md border border-base-content/20 bg-muted/20 p-4 mb-4">
+							<ScrollArea
+								class="h-[200px] text-left rounded-md border border-base-content/20 bg-muted/20 p-4 mb-4"
+							>
 								{#each payment.Comment?.slice().sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) ?? [] as comment (comment.id)}
-									<div class="flex flex-col gap-2 py-4 border-b border-base-content" id={comment.id}>
+									<div
+										class="flex flex-col gap-2 py-4 border-b border-base-content"
+										id={comment.id}
+									>
 										<div class="relative flex flex-col items-start justify-between w-full">
 											<span class="text-xs text-primary">{comment.name || comment.User.name}</span>
 											<span class="text-xs">
@@ -429,23 +534,23 @@
 													minute: 'numeric'
 												})}
 											</span>
-												{#if comment.userId === $page.data.user.id}
-													<form
-														class="absolute right-0"
-														id="deleteCommentForm"
-														method="POST"
-														action="?/deleteComment"
-														use:enhance={() => deleteComment(comment.id)}
+											{#if comment.userId === $page.data.user.id}
+												<form
+													class="absolute right-0"
+													id="deleteCommentForm"
+													method="POST"
+													action="?/deleteComment"
+													use:enhance={() => deleteComment(comment.id)}
+												>
+													<input type="hidden" name="commentId" value={comment.id} />
+													<button
+														type="submit"
+														class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
 													>
-														<input type="hidden" name="commentId" value={comment.id} />
-														<button
-															type="submit"
-															class="text-xs text-primary rounded-full p-2 bg-zinc-900 self-end justify-self-end"
-														>
-															<X />
-														</button>
-													</form>
-												{/if}
+														<X />
+													</button>
+												</form>
+											{/if}
 										</div>
 										<span class="text-sm">{comment?.commentText}</span>
 									</div>

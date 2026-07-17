@@ -42,6 +42,7 @@ model Payment {
   Comment            Comment[]
   Order              Order?    @relation(fields: [orderId], references: [id])
   Product            Product   @relation(fields: [productId], references: [id])
+  EmailLog           EmailLog[]
 
   @@index([orderId, payment_status, paidAt])
 }
@@ -105,6 +106,27 @@ model Order {
   paidAt         DateTime?
   MerchPayment   MerchPayment[]
   Payment        Payment[]
+  EmailLog       EmailLog[]
 
   @@index([status, paidAt])
+}
+
+/// One row per confirmation-email send attempt against 5lc-mail-api. Append-only
+/// so a failed send followed by a manual resend keeps both attempts on record.
+/// Table is owned/migrated from 5lc-sveltkit-sanity/prisma; keep this model in
+/// sync with that schema by hand since this repo has no migrations of its own.
+model EmailLog {
+  id         String   @id @default(uuid())
+  emailType  String // "order_confirmation" | "ticket_confirmation"
+  status     String // "sent" | "failed"
+  providerId String? // Resend message id, set when status = "sent"
+  error      String? // error message, set when status = "failed"
+  orderId    String?
+  paymentId  String?
+  createdAt  DateTime @default(now())
+  Order      Order?   @relation(fields: [orderId], references: [id])
+  Payment    Payment? @relation(fields: [paymentId], references: [id])
+
+  @@index([orderId])
+  @@index([paymentId])
 }

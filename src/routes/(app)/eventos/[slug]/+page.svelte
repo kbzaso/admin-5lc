@@ -40,6 +40,9 @@
 		// Create a function to handle inserts
 		const handleInserts = (payload: any) => {
 			if (payload.new.productId !== currentSlug) return;
+			// Already added optimistically (e.g. by the "Agregar pago" form) —
+			// avoid double-counting the total and duplicating the row.
+			if ($payments.some((p) => p?.id === payload.new.id)) return;
 			// ACTUALIZA EL MONTO TOTAL RECAUDADO
 			totalMoneyRaised.update((current) => payload.new.price + $totalMoneyRaised);
 

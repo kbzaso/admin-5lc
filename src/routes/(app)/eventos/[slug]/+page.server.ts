@@ -2,7 +2,15 @@ import type { Actions, PageServerLoad } from './$types';
 import { client } from '$lib/server/prisma';
 import { redirect } from '@sveltejs/kit';
 import { sanity } from '$lib/sanity';
+import { sendOrderConfirmationEmail, sendTicketConfirmationEmail } from '$lib/server/mailApi';
 import groq from 'groq';
+
+// Fallback venue info, mirrors 5lc-sveltkit-sanity's $lib/const VENUE — used
+// when a Sanity event doesn't carry its own venue override.
+const VENUE = {
+	NAME: 'Bóveda Secreta',
+	ADDRESS: 'San Antonio 705, Santiago. Región Metropolitana'
+};
 
 const projectId = import.meta.env.VITE_SANITY_PROJECT_ID;
 const datasetName = import.meta.env.VITE_SANITY_DATASET;
@@ -152,6 +160,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 									}
 								}
 							}
+						},
+						EmailLog: {
+							orderBy: { createdAt: 'desc' }
+						},
+						// When this payment is a line item of a cart order (tickets + merch),
+						// its confirmation email was logged against the Order, not this
+						// Payment — surface that history here too so the payment drawer
+						// isn't empty for order-flow tickets.
+						Order: {
+							select: {
+								id: true,
+								orderId: true,
+								EmailLog: { orderBy: { createdAt: 'desc' } }
+							}
 						}
 					}
 				}
@@ -280,6 +302,129 @@ type Ticket = {
 };
 
 export const actions: Actions = {
+	resendTicketConfirmation: async ({ request, params }) => {
+		const formData = await request.formData();
+		const paymentId = formData.get('paymentId') as string;
+
+		const payment = await client.payment.findUnique({
+			where: { id: paymentId },
+			include: { Product: true }
+		});
+
+		if (!payment) {
+			return { status: 404, body: { error: 'Pago no encontrado' } };
+		}
+
+		// A payment that belongs to a cart order (tickets + merch) was confirmed
+		// via the order-confirmation email, not a standalone ticket email —
+		// resend that instead, or the buyer gets the wrong template and loses
+		// their merch details.
+		if (payment.orderId) {
+			const order = await client.order.findUnique({
+				where: { id: payment.orderId },
+				include: {
+					Payment: { include: { Product: true } },
+					MerchPayment: { include: { Merch: true } }
+				}
+			});
+
+			if (!order) {
+				return { status: 404, body: { error: 'Orden no encontrada' } };
+			}
+
+			const result = await sendOrderConfirmationEmail({
+				orderId: order.orderId ?? order.id,
+				to: order.customerEmail,
+				customerName: order.customerName,
+				customerRut: order.customerRut,
+				totalAmount: order.totalAmount,
+				deliveryOption: order.deliveryOption,
+				address: order.address,
+				comuna: order.comuna,
+				region: order.region,
+				tickets: order.Payment.map((p) => ({
+					productName: p.Product?.name ?? 'Evento',
+					ticketsType: p.ticketsType,
+					date: p.Product?.date ? new Date(p.Product.date).toISOString() : null,
+					quantity: p.ticketAmount,
+					unitPrice: p.price
+				})),
+				merch: order.MerchPayment.map((item) => ({
+					name: item.Merch.name,
+					variationLabel: item.variationLabel,
+					quantity: item.quantity,
+					unitPrice: item.price
+				}))
+			});
+
+			if (!result.ok) console.error('Error resending order confirmation email:', result.error);
+
+			const emailLog = {
+				status: result.ok ? 'sent' : 'failed',
+				error: result.ok ? null : result.error
+			};
+			try {
+				await client.emailLog.create({
+					data: {
+						emailType: 'order_confirmation',
+						orderId: order.id,
+						status: emailLog.status,
+						providerId: result.ok ? result.id : undefined,
+						error: emailLog.error ?? undefined
+					}
+				});
+			} catch (error) {
+				console.error('Error recording EmailLog:', error);
+			}
+
+			if (!result.ok) {
+				return {
+					status: 502,
+					body: { error: 'No se pudo reenviar el correo', detail: result.error, emailLog }
+				};
+			}
+			return { status: 200, body: { message: 'Correo de confirmación reenviado', emailLog } };
+		}
+
+		const eventFromSanityStudio = await getEvent(params.slug);
+
+		const result = await sendTicketConfirmationEmail({
+			orderId: payment.client_id ?? payment.id,
+			to: payment.customer_email,
+			customerName: payment.customer_name,
+			productName: payment.Product.name,
+			eventDate: payment.Product?.date ? new Date(payment.Product.date).toISOString() : null,
+			venueName: eventFromSanityStudio?.venue?.venueName || VENUE.NAME,
+			venueAddress: eventFromSanityStudio?.venue?.venueAdress || VENUE.ADDRESS,
+			ticketAmount: payment.ticketAmount,
+			unitPrice: payment.price
+		});
+
+		if (!result.ok) console.error('Error resending ticket confirmation email:', result.error);
+
+		const emailLog = { status: result.ok ? 'sent' : 'failed', error: result.ok ? null : result.error };
+		try {
+			await client.emailLog.create({
+				data: {
+					emailType: 'ticket_confirmation',
+					paymentId: payment.id,
+					status: emailLog.status,
+					providerId: result.ok ? result.id : undefined,
+					error: emailLog.error ?? undefined
+				}
+			});
+		} catch (error) {
+			console.error('Error recording EmailLog:', error);
+		}
+
+		if (!result.ok) {
+			return {
+				status: 502,
+				body: { error: 'No se pudo reenviar el correo', detail: result.error, emailLog }
+			};
+		}
+		return { status: 200, body: { message: 'Correo de confirmación reenviado', emailLog } };
+	},
 	addComment: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const paymentId = formData.get('paymentId');
@@ -577,6 +722,14 @@ export const actions: Actions = {
 		try {
 			// Get the available tickets on the Studio
 			const eventFromSanityStudio = await getEvent(params.slug);
+			// Postgres fallback for name/date — the confirmation email (and the
+			// payment-code generator below) shouldn't hard-fail just because this
+			// event doc isn't in the currently configured Sanity dataset.
+			const productFromDb = await client.product.findUnique({
+				where: { id: params.slug },
+				select: { name: true, date: true }
+			});
+			const eventTitle = eventFromSanityStudio?.title ?? productFromDb?.name ?? 'Evento';
 
 			// MUTATION PARA ACTUALIZAR EL STOCK DEL STUDIO. Solo se construye si
 			// el usuario pidió descontar las entradas del stock.
@@ -624,7 +777,7 @@ export const actions: Actions = {
 			}
 
 			// Generate a payment code
-			const paymentCode = await generatePaymentCode(eventFromSanityStudio.title, params.slug);
+			const paymentCode = await generatePaymentCode(eventTitle, params.slug);
 
 			// Create a new payment record
 			const newPayment = await client.payment.create({
@@ -647,6 +800,40 @@ export const actions: Actions = {
 					}
 				}
 			});
+
+			// Send the same confirmation email a buyer gets automatically — this is
+			// a real registered attendance (e.g. paid in person), not a draft, so
+			// it shouldn't go unconfirmed just because staff entered it manually.
+			let createdEmailLog: Awaited<ReturnType<typeof client.emailLog.create>> | null = null;
+			try {
+				const emailResult = await sendTicketConfirmationEmail({
+					orderId: newPayment.client_id ?? newPayment.id,
+					to: newPayment.customer_email,
+					customerName: newPayment.customer_name,
+					productName: eventTitle,
+					eventDate: productFromDb?.date ? new Date(productFromDb.date).toISOString() : null,
+					venueName: eventFromSanityStudio?.venue?.venueName || VENUE.NAME,
+					venueAddress: eventFromSanityStudio?.venue?.venueAdress || VENUE.ADDRESS,
+					ticketAmount: newPayment.ticketAmount,
+					unitPrice: newPayment.price
+				});
+
+				if (!emailResult.ok) {
+					console.error('Error sending confirmation email for new payment:', emailResult.error);
+				}
+
+				createdEmailLog = await client.emailLog.create({
+					data: {
+						emailType: 'ticket_confirmation',
+						paymentId: newPayment.id,
+						status: emailResult.ok ? 'sent' : 'failed',
+						providerId: emailResult.ok ? emailResult.id : undefined,
+						error: emailResult.ok ? undefined : emailResult.error
+					}
+				});
+			} catch (error) {
+				console.error('Error sending confirmation email / recording EmailLog:', error);
+			}
 
 			// Actualizamos el stock en sanity (solo si se pidió descontar)
 			if (discountStock && mutations) {
@@ -671,10 +858,20 @@ export const actions: Actions = {
 					.catch((error) => console.error(error));
 			}
 
-			// Return a success response
+			// Return a success response. Shape `payment.EmailLog` the same way
+			// `load()` would (array, most recent first) so a client-side optimistic
+			// update — e.g. pushing this straight into the payments list — has
+			// everything SheetToUpdatePayments.svelte expects, without needing a
+			// full page reload to see the email status.
 			return {
 				status: 201,
-				body: { message: 'Payment added successfully', payment: newPayment }
+				body: {
+					message: 'Payment added successfully',
+					payment: { ...newPayment, EmailLog: createdEmailLog ? [createdEmailLog] : [] },
+					emailLog: createdEmailLog
+						? { status: createdEmailLog.status, error: createdEmailLog.error }
+						: null
+				}
 			};
 		} catch (error) {
 			console.error('Error adding payment:', error);

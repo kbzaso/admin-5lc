@@ -8,6 +8,8 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import { mediaQuery } from '$lib/stores/mediaQuery';
 	import { ClipboardPenLine } from 'lucide-svelte';
+	import { toast } from 'svelte-sonner';
+	import { payments } from '$lib/stores/payments';
 	const isDesktop = mediaQuery('(min-width: 768px)');
 	let open = false;
 
@@ -52,8 +54,38 @@
 			class="grid items-start gap-4"
 			method="POST"
 			action="?/addPayment"
-			use:enhance
-			on:submit={() => (open = false)}
+			use:enhance={() => {
+				open = false;
+				return async ({ result, update }) => {
+					if (result.type === 'success') {
+						const body = result.data?.body as
+							| { payment?: { id: string }; emailLog?: { status: string; error?: string | null } | null }
+							| undefined;
+
+						// Don't rely solely on the Supabase Realtime subscription to add
+						// this row to the list — push it in directly so the payment shows
+						// up immediately even if Realtime isn't wired up for this project.
+						// Dedup by id in case Realtime *does* also fire for it.
+						if (body?.payment) {
+							const newPayment = body.payment;
+							payments.update((current) =>
+								current.some((p) => p?.id === newPayment.id) ? current : [newPayment, ...current]
+							);
+						}
+
+						if (body?.emailLog?.status === 'sent') {
+							toast.success('Pago agregado y correo de confirmación enviado');
+						} else if (body?.emailLog?.status === 'failed') {
+							toast.warning('Pago agregado, pero no se pudo enviar el correo de confirmación');
+						} else {
+							toast.success('Pago agregado');
+						}
+					} else {
+						toast.error('No se pudo agregar el pago');
+					}
+					await update();
+				};
+			}}
 		>
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">

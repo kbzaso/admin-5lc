@@ -26,6 +26,7 @@
 			{#if page.data.user?.admin}
 				<a href="/eventos" class={buttonVariants({ variant: 'secondary' })}>Eventos</a>
 				<a href="/ordenes" class={buttonVariants({ variant: 'secondary' })}>Órdenes</a>
+				<a href="/correos" class={buttonVariants({ variant: 'secondary' })}>Correos</a>
 			{/if}
 
 			<Show when="signed-in">
@@ -73,6 +74,12 @@
 					class={`${buttonVariants({ variant: 'secondary' })} justify-start`}
 				>
 					Órdenes
+				</a>
+				<a
+					href="/correos"
+					class={`${buttonVariants({ variant: 'secondary' })} justify-start`}
+				>
+					Correos
 				</a>
 			{/if}
 			<Show when="signed-out">

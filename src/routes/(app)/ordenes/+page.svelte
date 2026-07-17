@@ -2,14 +2,16 @@
 	import * as Sheet from '$lib/components/ui/sheet';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
+	import { Button } from '$lib/components/ui/button';
 	import { Switch } from '$lib/components/ui/switch';
 	import { Label } from '$lib/components/ui/label';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
-	import { PackageOpen } from 'lucide-svelte';
+	import { PackageOpen, Mail } from 'lucide-svelte';
 	import supabaseClient from '$lib/supabaseClient';
 	import { toast } from 'svelte-sonner';
+	import { enhance } from '$app/forms';
 
 	export let data;
 
@@ -82,6 +84,10 @@
 
 	function hasPendingMerch(order: (typeof data.orders)[number]) {
 		return order.status === 'success' && order.MerchPayment.some((m) => !m.delivered);
+	}
+
+	function latestEmailLog(order: (typeof data.orders)[number]) {
+		return order.EmailLog[0] ?? null;
 	}
 
 	$: pendingTotals = data.orders
@@ -231,12 +237,52 @@
 	<Sheet.Content side="bottom" class="max-h-[90vh] flex flex-col overflow-hidden">
 		{#if selectedOrder}
 			<Sheet.Header>
-				<Sheet.Title>Detalle de la orden de {selectedOrder.customerName}</Sheet.Title>
-				<Sheet.Description>
-					{selectedOrder.orderId ?? selectedOrder.id} · {new Date(
-						selectedOrder.createdAt
-					).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}
-				</Sheet.Description>
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<Sheet.Title>Detalle de la orden de {selectedOrder.customerName}</Sheet.Title>
+						<Sheet.Description>
+							{selectedOrder.orderId ?? selectedOrder.id} · {new Date(
+								selectedOrder.createdAt
+							).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}
+						</Sheet.Description>
+					</div>
+					<div class="flex flex-col items-end gap-2">
+						{#if latestEmailLog(selectedOrder)}
+							{@const log = latestEmailLog(selectedOrder)}
+							<Badge
+								class={log?.status === 'sent'
+									? 'bg-green-300 text-green-900 hover:bg-green-400'
+									: 'bg-red-800 text-red-300 hover:bg-red-900'}
+								title={log?.status === 'failed' ? (log?.error ?? undefined) : undefined}
+							>
+								{log?.status === 'sent' ? '✓ Correo enviado' : '⚠ Error al enviar correo'}
+							</Badge>
+						{/if}
+						<form
+							method="POST"
+							action="?/resendConfirmation"
+							use:enhance={() => {
+								return async ({ result, update }) => {
+									const ok = result.type === 'success' && result.data?.status === 200;
+									if (ok) {
+										toast.success('Correo de confirmación reenviado');
+									} else {
+										toast.error('No se pudo reenviar el correo de confirmación');
+									}
+									await update();
+									selectedOrder =
+										data.orders.find((o) => o.id === selectedOrder?.id) ?? selectedOrder;
+								};
+							}}
+						>
+							<input type="hidden" name="orderId" value={selectedOrder.id} />
+							<Button type="submit" variant="outline" size="sm" class="gap-1">
+								<Mail class="h-4 w-4" />
+								Reenviar confirmación
+							</Button>
+						</form>
+					</div>
+				</div>
 			</Sheet.Header>
 
 			<div class="flex-1 min-h-0 overflow-y-auto pb-2">
@@ -397,6 +443,44 @@
 									: ''}{selectedOrder.region ? `, ${selectedOrder.region}` : ''}
 							</p>
 						{/if}
+					</div>
+				{/if}
+
+				{#if selectedOrder.EmailLog.length > 0}
+					<h4 class="font-semibold mt-4 mb-2">Historial de correos</h4>
+					<div class="rounded-xl border border-base-content/20 overflow-hidden mb-4">
+						<Table.Root>
+							<Table.Header>
+								<Table.Row>
+									<Table.Head>Fecha</Table.Head>
+									<Table.Head>Estado</Table.Head>
+									<Table.Head>Detalle</Table.Head>
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
+								{#each selectedOrder.EmailLog as log (log.id)}
+									<Table.Row>
+										<Table.Cell class="whitespace-nowrap text-xs text-zinc-400 align-top">
+											{new Date(log.createdAt).toLocaleString('es-CL', {
+												timeZone: 'America/Santiago'
+											})}
+										</Table.Cell>
+										<Table.Cell class="align-top">
+											<Badge
+												class={log.status === 'sent'
+													? 'bg-green-300 text-green-900 hover:bg-green-400'
+													: 'bg-red-800 text-red-300 hover:bg-red-900'}
+											>
+												{log.status === 'sent' ? '✓ Enviado' : '⚠ Error'}
+											</Badge>
+										</Table.Cell>
+										<Table.Cell class="align-top text-xs text-zinc-400 wrap-break-word max-w-xs">
+											{log.status === 'sent' ? (log.providerId ?? '—') : (log.error ?? '—')}
+										</Table.Cell>
+									</Table.Row>
+								{/each}
+							</Table.Body>
+						</Table.Root>
 					</div>
 				{/if}
 			</div>

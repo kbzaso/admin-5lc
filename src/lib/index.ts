@@ -1,4 +1,4 @@
-export function formatDateToChile(date: string) {
+export function formatDateToChile(date: string | Date) {
 	const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
 	return new Intl.DateTimeFormat('es-CL', options).format(new Date(date));
 }

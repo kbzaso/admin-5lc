@@ -4,8 +4,10 @@
 
 	import Stat from '$lib/components/Stat.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
+	import DataTablePaymentChangeLog from '$lib/components/data-table/DataTablePaymentChangeLog.svelte';
 	import EventDailyTicketsChart from '$lib/components/data-table/EventDailyTicketsChart.svelte';
 	import PaymentFilterChips from '$lib/components/data-table/PaymentFilterChips.svelte';
+	import * as Tabs from '$lib/components/ui/tabs';
 
 	import { writable } from 'svelte/store';
 	import supabaseClient from '$lib/supabaseClient';
@@ -192,9 +194,20 @@
 			{incompleteBuys}
 		/>
 	{/if}
-	{#if $page.data.user.admin}
-		<EventDailyTicketsChart payments={$payments} />
-	{/if}
-	<PaymentFilterChips payments={$payments} />
-	<DataTableEvent Payments={$payments} />
+	<Tabs.Root value="entradas" class="w-full">
+		<Tabs.List>
+			<Tabs.Trigger value="entradas">Entradas</Tabs.Trigger>
+			<Tabs.Trigger value="historial">Historial de cambios</Tabs.Trigger>
+		</Tabs.List>
+		<Tabs.Content value="entradas" class="flex flex-col gap-4">
+			{#if $page.data.user.admin}
+				<EventDailyTicketsChart payments={$payments} />
+			{/if}
+			<PaymentFilterChips payments={$payments} />
+			<DataTableEvent Payments={$payments} />
+		</Tabs.Content>
+		<Tabs.Content value="historial">
+			<DataTablePaymentChangeLog changeLog={data.paymentChangeLog} />
+		</Tabs.Content>
+	</Tabs.Root>
 </div>

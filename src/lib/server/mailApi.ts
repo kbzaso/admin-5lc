@@ -41,6 +41,20 @@ export interface TicketConfirmationEmailInput {
 	unitPrice: number;
 }
 
+export interface TicketTransferEmailInput {
+	orderId: string;
+	to: string;
+	customerName: string;
+	fromProductName: string;
+	fromEventDate?: string | null;
+	toProductName: string;
+	toEventDate?: string | null;
+	venueName?: string | null;
+	venueAddress?: string | null;
+	ticketAmount: number;
+	unitPrice: number;
+}
+
 export type SendEmailResult = { ok: true; id?: string } | { ok: false; error: string };
 
 async function postEmail(path: string, payload: unknown): Promise<SendEmailResult> {
@@ -80,4 +94,10 @@ export async function sendTicketConfirmationEmail(
 	payload: TicketConfirmationEmailInput
 ): Promise<SendEmailResult> {
 	return postEmail('/v1/emails/ticket-confirmation', payload);
+}
+
+export async function sendTicketTransferEmail(
+	payload: TicketTransferEmailInput
+): Promise<SendEmailResult> {
+	return postEmail('/v1/emails/ticket-transfer', payload);
 }

@@ -43,6 +43,7 @@ model Payment {
   Order              Order?    @relation(fields: [orderId], references: [id])
   Product            Product   @relation(fields: [productId], references: [id])
   EmailLog           EmailLog[]
+  PaymentChangeLog   PaymentChangeLog[]
 
   @@index([orderId, payment_status, paidAt])
 }
@@ -58,9 +59,10 @@ model Comment {
 }
 
 model Users {
-  id      String    @id
-  name    String
-  Comment Comment[]
+  id               String             @id
+  name             String
+  Comment          Comment[]
+  PaymentChangeLog PaymentChangeLog[]
 }
 
 model Merch {
@@ -128,5 +130,32 @@ model EmailLog {
   Payment    Payment? @relation(fields: [paymentId], references: [id])
 
   @@index([orderId])
+  @@index([paymentId])
+}
+
+/// One row per "Actualizar pago" submission in eventos/[slug] — both plain
+/// edits and event transfers. Append-only so history survives further edits
+/// or a hard Payment delete (paymentId/userId are SET NULL, and from/to
+/// ProductName are snapshotted so the row stays readable even if the Product
+/// is renamed later).
+/// Table is owned/migrated from 5lc-sveltkit-sanity/prisma; keep this model in
+/// sync with that schema by hand since this repo has no migrations of its own.
+model PaymentChangeLog {
+  id              String   @id @default(uuid())
+  paymentId       String?
+  changeType      String // "edit" | "transfer"
+  fromProductId   String?
+  fromProductName String?
+  toProductId     String?
+  toProductName   String?
+  before          Json // snapshot of key Payment fields prior to this update
+  after           Json // snapshot of the same fields after this update
+  userId          String?
+  createdAt       DateTime @default(now())
+  Payment         Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  Users           Users?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([fromProductId, createdAt])
+  @@index([toProductId, createdAt])
   @@index([paymentId])
 }

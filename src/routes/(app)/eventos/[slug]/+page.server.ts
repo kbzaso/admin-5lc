@@ -2,7 +2,11 @@ import type { Actions, PageServerLoad } from './$types';
 import { client } from '$lib/server/prisma';
 import { redirect } from '@sveltejs/kit';
 import { sanity } from '$lib/sanity';
-import { sendOrderConfirmationEmail, sendTicketConfirmationEmail } from '$lib/server/mailApi';
+import {
+	sendOrderConfirmationEmail,
+	sendTicketConfirmationEmail,
+	sendTicketTransferEmail
+} from '$lib/server/mailApi';
 import groq from 'groq';
 
 // Fallback venue info, mirrors 5lc-sveltkit-sanity's $lib/const VENUE — used
@@ -272,6 +276,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 	};
 
+	// History for the "Historial de cambios" tab: every edit made while a
+	// payment belonged to this event, plus transfers in/out of it — matched
+	// by from/toProductId rather than the payment's current productId so
+	// entries stay correct after later edits or a hard delete.
+	const paymentChangeLog = async () => {
+		return await client.paymentChangeLog.findMany({
+			where: {
+				OR: [{ fromProductId: params.slug }, { toProductId: params.slug }]
+			},
+			orderBy: { createdAt: 'desc' },
+			include: {
+				Payment: {
+					select: { id: true, customer_name: true, customer_email: true, client_id: true }
+				},
+				Users: { select: { id: true, name: true } }
+			}
+		});
+	};
+
 	return {
 		sell_type: eventFromSanityStudio?.sell_type,
 		eventFromSupabase: await eventFromSupabase(),
@@ -280,7 +303,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		studioTicketsAvailable,
 		eventFromSanityStudio,
 		ticketValidated: await ticketValidated(),
-		futureEvents: await futureEvents()
+		futureEvents: await futureEvents(),
+		paymentChangeLog: await paymentChangeLog()
 	};
 };
 
@@ -577,48 +601,82 @@ export const actions: Actions = {
 		};
 
 		try {
-			let updatePayment;
+			// Read-only lookups before the transaction: DATABASE_URL goes through
+			// Supabase's pooled PgBouncer connection (transaction mode), which
+			// doesn't support Prisma's interactive $transaction(async (tx) => ...)
+			// — it needs one connection held across multiple round trips, and the
+			// pooler can hand later statements a different connection, producing
+			// "Transaction not found" (P2028). So this stays as a batched
+			// $transaction([...]) of independent operations, same as before.
+			const [before, target] = await Promise.all([
+				client.payment.findUniqueOrThrow({
+					where: { id: paymentId as string },
+					include: { Product: { select: { name: true, date: true } } }
+				}),
+				moveToEvent
+					? client.product.findUnique({
+							where: { id: targetEventId },
+							select: { id: true, name: true, date: true }
+						})
+					: Promise.resolve(null)
+			]);
+
+			if (moveToEvent && !target) {
+				return {
+					status: 400,
+					body: { error: 'Target event not found' }
+				};
+			}
+
+			const changeLogData = {
+				paymentId: paymentId as string,
+				changeType: moveToEvent ? 'transfer' : 'edit',
+				fromProductId: before.productId,
+				fromProductName: before.Product?.name ?? null,
+				toProductId: moveToEvent ? targetEventId : before.productId,
+				toProductName: moveToEvent ? (target?.name ?? null) : (before.Product?.name ?? null),
+				before: {
+					customer_name: before.customer_name,
+					rut: before.rut,
+					customer_email: before.customer_email,
+					customer_phone: before.customer_phone,
+					price: before.price,
+					ticketAmount: before.ticketAmount,
+					ticketsType: before.ticketsType,
+					refund: before.refund,
+					changeEvent: before.changeEvent,
+					productId: before.productId
+				},
+				after: {
+					...paymentData,
+					productId: moveToEvent ? targetEventId : before.productId
+				},
+				userId: locals.session?.userId ?? null
+			};
+
+			const paymentUpdate = client.payment.update({
+				where: { id: paymentId as string },
+				data: {
+					...paymentData,
+					...(moveToEvent ? { productId: targetEventId } : {})
+				}
+			});
+			const changeLogCreate = client.paymentChangeLog.create({ data: changeLogData });
+
+			let updatedPayment;
 
 			if (moveToEvent) {
-				const [origin, target] = await Promise.all([
-					client.product.findUnique({
-						where: { id: params.slug },
-						select: { name: true, date: true }
-					}),
-					client.product.findUnique({
-						where: { id: targetEventId },
-						select: { id: true }
-					})
-				]);
-
-				if (!target) {
-					return {
-						status: 400,
-						body: { error: 'Target event not found' }
-					};
-				}
-
-				const originDate = origin?.date
+				const originDate = before.Product?.date
 					? new Intl.DateTimeFormat('es-CL', {
 							year: 'numeric',
 							month: 'short',
 							day: 'numeric'
-						}).format(origin.date)
+						}).format(before.Product.date)
 					: '';
-				const commentText = `Cambio de evento: este pago proviene de «${origin?.name ?? params.slug}»${originDate ? ` (${originDate})` : ''}.`;
+				const commentText = `Cambio de evento: este pago proviene de «${before.Product?.name ?? params.slug}»${originDate ? ` (${originDate})` : ''}.`;
 
-				// Move the payment and leave an audit comment in one transaction so
-				// a moved payment always carries its origin.
-				[updatePayment] = await client.$transaction([
-					client.payment.update({
-						where: {
-							id: paymentId as string
-						},
-						data: {
-							...paymentData,
-							productId: targetEventId
-						}
-					}),
+				[updatedPayment] = await client.$transaction([
+					paymentUpdate,
 					client.comment.create({
 						data: {
 							id: crypto.randomUUID(),
@@ -626,20 +684,55 @@ export const actions: Actions = {
 							commentText,
 							userId: locals.session?.userId as string
 						}
-					})
+					}),
+					changeLogCreate
 				]);
 			} else {
-				updatePayment = await client.payment.update({
-					where: {
-						id: paymentId as string
-					},
-					data: paymentData
-				});
+				[updatedPayment] = await client.$transaction([paymentUpdate, changeLogCreate]);
+			}
+
+			// Let the buyer know their ticket moved, with both the origin and
+			// destination event — best-effort, mirroring the other confirmation
+			// email flows: a failed send is logged but doesn't fail the request,
+			// since the payment/log rows are already committed above.
+			if (moveToEvent) {
+				try {
+					const targetEventFromSanity = await getEvent(targetEventId);
+					const emailResult = await sendTicketTransferEmail({
+						orderId: before.client_id ?? (paymentId as string),
+						to: paymentData.customer_email,
+						customerName: paymentData.customer_name,
+						fromProductName: before.Product?.name ?? params.slug,
+						fromEventDate: before.Product?.date ? before.Product.date.toISOString() : null,
+						toProductName: target?.name ?? targetEventId,
+						toEventDate: target?.date ? target.date.toISOString() : null,
+						venueName: targetEventFromSanity?.venue?.venueName || VENUE.NAME,
+						venueAddress: targetEventFromSanity?.venue?.venueAdress || VENUE.ADDRESS,
+						ticketAmount: paymentData.ticketAmount,
+						unitPrice: paymentData.price
+					});
+
+					if (!emailResult.ok) {
+						console.error('Error sending ticket transfer email:', emailResult.error);
+					}
+
+					await client.emailLog.create({
+						data: {
+							emailType: 'ticket_transfer',
+							paymentId: paymentId as string,
+							status: emailResult.ok ? 'sent' : 'failed',
+							providerId: emailResult.ok ? emailResult.id : undefined,
+							error: emailResult.ok ? undefined : emailResult.error
+						}
+					});
+				} catch (error) {
+					console.error('Error sending ticket transfer email / recording EmailLog:', error);
+				}
 			}
 
 			return {
 				status: 200,
-				body: { message: 'Payment updated successfully', payment: updatePayment }
+				body: { message: 'Payment updated successfully', payment: updatedPayment }
 			};
 		} catch (error) {
 			console.error('Error updating payment:', error);

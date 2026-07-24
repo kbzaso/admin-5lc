@@ -27,14 +27,13 @@
 				<a href="/eventos" class={buttonVariants({ variant: 'secondary' })}>Eventos</a>
 				<a href="/ordenes" class={buttonVariants({ variant: 'secondary' })}>Órdenes</a>
 				<a href="/correos" class={buttonVariants({ variant: 'secondary' })}>Correos</a>
+				<a href="/reembolsos" class={buttonVariants({ variant: 'secondary' })}>Reembolsos</a>
 			{/if}
 
 			<Show when="signed-in">
 				<UserButton />
 			</Show>
-			<Show when="signed-out">
-				No estas logeado
-			</Show>
+			<Show when="signed-out">No estas logeado</Show>
 		</div>
 
 		<div class="flex md:hidden items-center gap-2">
@@ -42,20 +41,20 @@
 				<UserButton />
 			</Show>
 			{#if page.data.user?.admin}
-			<button
-				type="button"
-				class={buttonVariants({ variant: 'ghost', size: 'icon' })}
-				aria-label="Abrir menú"
-				aria-expanded={open}
-				aria-controls="mobile-menu"
-				onclick={() => (open = !open)}
-			>
-				{#if open}
-					<X class="h-6 w-6" aria-hidden="true" />
-				{:else}
-					<Menu class="h-6 w-6" aria-hidden="true" />
-				{/if}
-			</button>
+				<button
+					type="button"
+					class={buttonVariants({ variant: 'ghost', size: 'icon' })}
+					aria-label="Abrir menú"
+					aria-expanded={open}
+					aria-controls="mobile-menu"
+					onclick={() => (open = !open)}
+				>
+					{#if open}
+						<X class="h-6 w-6" aria-hidden="true" />
+					{:else}
+						<Menu class="h-6 w-6" aria-hidden="true" />
+					{/if}
+				</button>
 			{/if}
 		</div>
 	</div>
@@ -63,23 +62,17 @@
 	{#if open}
 		<div id="mobile-menu" class="md:hidden flex flex-col gap-2 pb-4">
 			{#if page.data.user?.admin}
-				<a
-					href="/eventos"
-					class={`${buttonVariants({ variant: 'secondary' })} justify-start`}
-				>
+				<a href="/eventos" class={`${buttonVariants({ variant: 'secondary' })} justify-start`}>
 					Entradas
 				</a>
-				<a
-					href="/ordenes"
-					class={`${buttonVariants({ variant: 'secondary' })} justify-start`}
-				>
+				<a href="/ordenes" class={`${buttonVariants({ variant: 'secondary' })} justify-start`}>
 					Órdenes
 				</a>
-				<a
-					href="/correos"
-					class={`${buttonVariants({ variant: 'secondary' })} justify-start`}
-				>
+				<a href="/correos" class={`${buttonVariants({ variant: 'secondary' })} justify-start`}>
 					Correos
+				</a>
+				<a href="/reembolsos" class={`${buttonVariants({ variant: 'secondary' })} justify-start`}>
+					Reembolsos
 				</a>
 			{/if}
 			<Show when="signed-out">

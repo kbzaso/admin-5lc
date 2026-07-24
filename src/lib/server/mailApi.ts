@@ -55,9 +55,32 @@ export interface TicketTransferEmailInput {
 	unitPrice: number;
 }
 
+export interface EventCancellationBatchItem {
+	to: string;
+	customerName: string;
+	ticketAmount: number;
+	totalPaid: number;
+	actionUrl: string;
+	paymentRef: string;
+}
+
+export interface EventCancellationBatchInput {
+	cancelledEventName: string;
+	cancelledEventDate?: string | null;
+	cancelledReason?: string | null;
+	items: EventCancellationBatchItem[];
+}
+
 export type SendEmailResult = { ok: true; id?: string } | { ok: false; error: string };
 
-async function postEmail(path: string, payload: unknown): Promise<SendEmailResult> {
+export type BatchSendResult =
+	| { ok: true; results: { paymentRef: string; id: string | null }[] }
+	| { ok: false; error: string };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PostJsonResult = { ok: true; data: any } | { ok: false; error: string };
+
+async function postJson(path: string, payload: unknown, timeoutMs = 5000): Promise<PostJsonResult> {
 	const mailApiUrl = env.MAIL_API_URL;
 	const sharedSecret = env.MAIL_API_SHARED_SECRET;
 	if (!mailApiUrl || !sharedSecret) {
@@ -72,16 +95,22 @@ async function postEmail(path: string, payload: unknown): Promise<SendEmailResul
 				Authorization: `Bearer ${sharedSecret}`
 			},
 			body: JSON.stringify(payload),
-			signal: AbortSignal.timeout(5000)
+			signal: AbortSignal.timeout(timeoutMs)
 		});
 		const data = await res.json().catch(() => ({}));
 		if (!res.ok) {
 			return { ok: false, error: `${res.status} ${data?.message ?? data?.error ?? ''}`.trim() };
 		}
-		return { ok: true, id: data?.id };
+		return { ok: true, data };
 	} catch (e) {
 		return { ok: false, error: e instanceof Error ? e.message : String(e) };
 	}
+}
+
+async function postEmail(path: string, payload: unknown): Promise<SendEmailResult> {
+	const res = await postJson(path, payload);
+	if (!res.ok) return res;
+	return { ok: true, id: res.data?.id };
 }
 
 export async function sendOrderConfirmationEmail(
@@ -100,4 +129,29 @@ export async function sendTicketTransferEmail(
 	payload: TicketTransferEmailInput
 ): Promise<SendEmailResult> {
 	return postEmail('/v1/emails/ticket-transfer', payload);
+}
+
+export interface RefundCompletedEmailInput {
+	orderId: string;
+	to: string;
+	customerName: string;
+	eventName: string;
+	refundAmount: number;
+	bankName: string;
+	bankAccountNumberLast4: string;
+}
+
+export async function sendRefundCompletedEmail(
+	payload: RefundCompletedEmailInput
+): Promise<SendEmailResult> {
+	return postEmail('/v1/emails/refund-completed', payload);
+}
+
+export async function sendEventCancellationBatch(
+	payload: EventCancellationBatchInput
+): Promise<BatchSendResult> {
+	// Rendering + sending up to 100 emails takes well over the default 5s.
+	const res = await postJson('/v1/emails/event-cancellation-batch', payload, 30000);
+	if (!res.ok) return res;
+	return { ok: true, results: res.data?.results ?? [] };
 }

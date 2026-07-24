@@ -3,10 +3,13 @@ import { client } from '$lib/server/prisma';
 import { redirect } from '@sveltejs/kit';
 import { sanity } from '$lib/sanity';
 import {
+	sendEventCancellationBatch,
 	sendOrderConfirmationEmail,
 	sendTicketConfirmationEmail,
 	sendTicketTransferEmail
 } from '$lib/server/mailApi';
+// PUBLIC_-prefixed vars live in the public env module, not the private one.
+import { env as publicEnv } from '$env/dynamic/public';
 import groq from 'groq';
 
 // Fallback venue info, mirrors 5lc-sveltkit-sanity's $lib/const VENUE — used
@@ -33,6 +36,9 @@ const getEvent = async (slugEvent: string) => {
 		 buys,
 		 boveda,
 		 sell_type,
+		 cancelled,
+		 cancelledAt,
+		 cancelledReason,
 		 "discounts": discounts[] -> {
 			code,
 			active,
@@ -61,15 +67,45 @@ interface BuysSum {
 	[key: string]: Buy;
 }
 
+// Buyers who get the event-cancellation email: real attendees (paid or
+// manually added) whose payment hasn't already been refunded or moved.
+const cancellationRecipientsWhere = (productId: string) => ({
+	productId,
+	payment_status: { in: ['success', 'system'] },
+	refund: false,
+	changeEvent: false
+});
+
+// Replacement options offered to buyers of a cancelled event. Sourced from
+// Sanity (not the Product table) so events that haven't sold anything yet
+// still show up, and restricted to the same método de venta as the cancelled
+// event so its tickets map onto the target's tiers.
+interface EligibleTargetEvent {
+	id: string;
+	name: string;
+	date: string;
+	sell_type: string | null;
+}
+
+const getEligibleTargetEvents = async (
+	currentId: string,
+	sellType: string | null
+): Promise<EligibleTargetEvent[]> => {
+	const query = groq`*[_type == "event" && _id != $currentId && cancelled != true && active == true && defined(date) && dateTime(date) > dateTime(now()) && sell_type == $sellType] | order(date asc) {
+		"id": _id,
+		"name": title,
+		date,
+		sell_type,
+	}`;
+	return await sanity.fetch(query, { currentId, sellType: sellType ?? null });
+};
+
 // Refund / change are tracked as boolean flags. Fall back to legacy
 // payment_status values for rows written before that split.
 const isRefund = (p: Payment) => p.refund === true || p.payment_status === 'refund';
 const isChange = (p: Payment) => p.changeEvent === true || p.payment_status === 'change';
 const isCountable = (p: Payment) =>
-	p?.payment_status === 'success' ||
-	p?.payment_status === 'system' ||
-	isRefund(p) ||
-	isChange(p);
+	p?.payment_status === 'success' || p?.payment_status === 'system' || isRefund(p) || isChange(p);
 
 const createBuysSumObject = (payments: Payment[]): BuysSum => {
 	const buysSum: BuysSum = {};
@@ -87,12 +123,7 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 		if (changed) changePaymentsSum += payment.ticketAmount;
 		if (refunded || changed) return;
 
-		const orderedKeys = [
-			'firsts_tickets',
-			'seconds_tickets',
-			'thirds_tickets',
-			'system_payments'
-		];
+		const orderedKeys = ['firsts_tickets', 'seconds_tickets', 'thirds_tickets', 'system_payments'];
 		const sortedEntries = Object.entries(payment.buys).sort(
 			([a], [b]) => orderedKeys.indexOf(a) - orderedKeys.indexOf(b)
 		);
@@ -295,6 +326,35 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 	};
 
+	// Cancellation campaign (if any) for the "Cancelación" tab: eligible
+	// replacement events, per-buyer email state and responses.
+	const cancellationCampaign = async () => {
+		return await client.cancellationCampaign.findUnique({
+			where: { productId: params.slug },
+			include: {
+				CancellationResponse: {
+					orderBy: { createdAt: 'asc' },
+					include: {
+						Payment: {
+							select: {
+								id: true,
+								customer_name: true,
+								customer_email: true,
+								client_id: true,
+								ticketAmount: true,
+								price: true
+							}
+						}
+					}
+				}
+			}
+		});
+	};
+
+	const cancellationRecipientCount = async () => {
+		return await client.payment.count({ where: cancellationRecipientsWhere(params.slug) });
+	};
+
 	return {
 		sell_type: eventFromSanityStudio?.sell_type,
 		eventFromSupabase: await eventFromSupabase(),
@@ -304,7 +364,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		eventFromSanityStudio,
 		ticketValidated: await ticketValidated(),
 		futureEvents: await futureEvents(),
-		paymentChangeLog: await paymentChangeLog()
+		paymentChangeLog: await paymentChangeLog(),
+		cancellationCampaign: await cancellationCampaign(),
+		cancellationRecipientCount: await cancellationRecipientCount(),
+		cancellationEligibleOptions: eventFromSanityStudio?.cancelled
+			? await getEligibleTargetEvents(params.slug, eventFromSanityStudio?.sell_type ?? null)
+			: []
 	};
 };
 
@@ -426,7 +491,10 @@ export const actions: Actions = {
 
 		if (!result.ok) console.error('Error resending ticket confirmation email:', result.error);
 
-		const emailLog = { status: result.ok ? 'sent' : 'failed', error: result.ok ? null : result.error };
+		const emailLog = {
+			status: result.ok ? 'sent' : 'failed',
+			error: result.ok ? null : result.error
+		};
 		try {
 			await client.emailLog.create({
 				data: {
@@ -617,7 +685,7 @@ export const actions: Actions = {
 					? client.product.findUnique({
 							where: { id: targetEventId },
 							select: { id: true, name: true, date: true }
-						})
+					  })
 					: Promise.resolve(null)
 			]);
 
@@ -634,7 +702,7 @@ export const actions: Actions = {
 				fromProductId: before.productId,
 				fromProductName: before.Product?.name ?? null,
 				toProductId: moveToEvent ? targetEventId : before.productId,
-				toProductName: moveToEvent ? (target?.name ?? null) : (before.Product?.name ?? null),
+				toProductName: moveToEvent ? target?.name ?? null : before.Product?.name ?? null,
 				before: {
 					customer_name: before.customer_name,
 					rut: before.rut,
@@ -671,9 +739,11 @@ export const actions: Actions = {
 							year: 'numeric',
 							month: 'short',
 							day: 'numeric'
-						}).format(before.Product.date)
+					  }).format(before.Product.date)
 					: '';
-				const commentText = `Cambio de evento: este pago proviene de «${before.Product?.name ?? params.slug}»${originDate ? ` (${originDate})` : ''}.`;
+				const commentText = `Cambio de evento: este pago proviene de «${
+					before.Product?.name ?? params.slug
+				}»${originDate ? ` (${originDate})` : ''}.`;
 
 				[updatedPayment] = await client.$transaction([
 					paymentUpdate,
@@ -971,6 +1041,252 @@ export const actions: Actions = {
 			return {
 				status: 500,
 				body: { error: 'Failed to add payment' }
+			};
+		}
+	},
+	saveCancellationCampaign: async ({ request, params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const formData = await request.formData();
+		const eligibleEventIds = formData.getAll('eligibleEventIds').map(String).filter(Boolean);
+
+		if (eligibleEventIds.length === 0) {
+			return {
+				status: 400,
+				body: { error: 'Selecciona al menos un evento elegible para el cambio' }
+			};
+		}
+
+		try {
+			const eventFromSanity = await getEvent(params.slug);
+			if (!eventFromSanity?.cancelled) {
+				return {
+					status: 400,
+					body: { error: 'El evento no está marcado como cancelado en el Studio' }
+				};
+			}
+
+			// Every selected id must be a currently-valid option: future, not
+			// cancelled, and with the same método de venta as this event.
+			const options = await getEligibleTargetEvents(
+				params.slug,
+				eventFromSanity?.sell_type ?? null
+			);
+			const selected = eligibleEventIds.map((id) => options.find((o) => o.id === id));
+			if (selected.some((o) => !o)) {
+				return {
+					status: 400,
+					body: {
+						error:
+							'Alguno de los eventos seleccionados no es válido (debe ser futuro, no cancelado y con el mismo método de venta)'
+					}
+				};
+			}
+
+			// The options come straight from Sanity, so an event with cero ventas
+			// may not have a Product row yet — create/refresh them here so the
+			// buyer-side transfer always has a row to move the payment onto.
+			await client.$transaction(
+				(selected as EligibleTargetEvent[]).map((o) =>
+					client.product.upsert({
+						where: { id: o.id },
+						update: { name: o.name, date: new Date(o.date) },
+						create: { id: o.id, name: o.name, date: new Date(o.date) }
+					})
+				)
+			);
+
+			const campaign = await client.cancellationCampaign.upsert({
+				where: { productId: params.slug },
+				update: { eligibleEventIds },
+				create: {
+					productId: params.slug,
+					eligibleEventIds,
+					createdByUserId: locals.session.userId
+				}
+			});
+
+			return {
+				status: 200,
+				body: { message: 'Eventos elegibles guardados', campaign }
+			};
+		} catch (error) {
+			console.error('Error saving cancellation campaign:', error);
+			return {
+				status: 500,
+				body: { error: 'No se pudo guardar la campaña de cancelación' }
+			};
+		}
+	},
+	sendCancellationEmails: async ({ params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const siteUrl = publicEnv.PUBLIC_SITE_URL;
+		if (!siteUrl) {
+			return {
+				status: 500,
+				body: { error: 'PUBLIC_SITE_URL no está configurado' }
+			};
+		}
+
+		try {
+			const campaign = await client.cancellationCampaign.findUnique({
+				where: { productId: params.slug }
+			});
+			if (!campaign || campaign.eligibleEventIds.length === 0) {
+				return {
+					status: 400,
+					body: { error: 'Guarda primero los eventos elegibles para el cambio' }
+				};
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+			if (!eventFromSanity?.cancelled) {
+				return {
+					status: 400,
+					body: { error: 'El evento no está marcado como cancelado en el Studio' }
+				};
+			}
+
+			// One response row (with its link token) per recipient. Retries and
+			// re-sends skip rows that already exist thanks to the
+			// @@unique([campaignId, paymentId]) constraint, so buyers keep their
+			// original link and nobody is emailed twice.
+			const recipients = await client.payment.findMany({
+				where: cancellationRecipientsWhere(params.slug),
+				select: { id: true }
+			});
+			if (recipients.length === 0) {
+				return {
+					status: 400,
+					body: { error: 'No hay compradores para notificar' }
+				};
+			}
+
+			await client.cancellationResponse.createMany({
+				data: recipients.map((p) => ({
+					campaignId: campaign.id,
+					paymentId: p.id,
+					token: crypto.randomUUID()
+				})),
+				skipDuplicates: true
+			});
+
+			const toSend = await client.cancellationResponse.findMany({
+				where: { campaignId: campaign.id, emailStatus: { in: ['pending', 'failed'] } },
+				include: {
+					Payment: {
+						select: {
+							id: true,
+							customer_email: true,
+							customer_name: true,
+							ticketAmount: true,
+							price: true
+						}
+					}
+				}
+			});
+
+			if (toSend.length === 0) {
+				return {
+					status: 200,
+					body: { message: 'Todos los correos ya fueron enviados', sent: 0, failed: 0 }
+				};
+			}
+
+			let sent = 0;
+			let failed = 0;
+
+			for (let i = 0; i < toSend.length; i += 100) {
+				const chunk = toSend.slice(i, i + 100);
+				const result = await sendEventCancellationBatch({
+					cancelledEventName: eventFromSanity.title,
+					cancelledEventDate: eventFromSanity.date ?? null,
+					cancelledReason: eventFromSanity.cancelledReason ?? null,
+					items: chunk.map((r) => ({
+						to: r.Payment.customer_email,
+						customerName: r.Payment.customer_name,
+						ticketAmount: r.Payment.ticketAmount,
+						totalPaid: r.Payment.price,
+						actionUrl: `${siteUrl}/cancelacion/${r.token}`,
+						paymentRef: r.paymentId
+					}))
+				});
+
+				if (result.ok) {
+					const idByPayment = new Map(result.results.map((r) => [r.paymentRef, r.id]));
+					const sentIds = chunk.map((r) => r.paymentId).filter((id) => idByPayment.get(id));
+					const failedIds = chunk.map((r) => r.paymentId).filter((id) => !idByPayment.get(id));
+
+					await client.$transaction([
+						client.cancellationResponse.updateMany({
+							where: { campaignId: campaign.id, paymentId: { in: sentIds } },
+							data: { emailStatus: 'sent' }
+						}),
+						client.cancellationResponse.updateMany({
+							where: { campaignId: campaign.id, paymentId: { in: failedIds } },
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map((r) => ({
+								emailType: 'event_cancellation',
+								paymentId: r.paymentId,
+								status: idByPayment.get(r.paymentId) ? 'sent' : 'failed',
+								providerId: idByPayment.get(r.paymentId) ?? undefined,
+								error: idByPayment.get(r.paymentId) ? undefined : 'batch item failed'
+							}))
+						})
+					]);
+
+					sent += sentIds.length;
+					failed += failedIds.length;
+				} else {
+					await client.$transaction([
+						client.cancellationResponse.updateMany({
+							where: {
+								campaignId: campaign.id,
+								paymentId: { in: chunk.map((r) => r.paymentId) }
+							},
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map((r) => ({
+								emailType: 'event_cancellation',
+								paymentId: r.paymentId,
+								status: 'failed',
+								error: result.error
+							}))
+						})
+					]);
+					failed += chunk.length;
+				}
+			}
+
+			const remaining = await client.cancellationResponse.count({
+				where: { campaignId: campaign.id, emailStatus: { in: ['pending', 'failed'] } }
+			});
+			if (remaining === 0) {
+				await client.cancellationCampaign.update({
+					where: { id: campaign.id },
+					data: { status: 'sent', sentAt: campaign.sentAt ?? new Date() }
+				});
+			}
+
+			return {
+				status: 200,
+				body: {
+					message: failed
+						? `Correos enviados: ${sent}. Fallidos: ${failed} (reintenta con "Enviar correos")`
+						: `Correos enviados: ${sent}`,
+					sent,
+					failed
+				}
+			};
+		} catch (error) {
+			console.error('Error sending cancellation emails:', error);
+			return {
+				status: 500,
+				body: { error: 'No se pudieron enviar los correos de cancelación' }
 			};
 		}
 	}

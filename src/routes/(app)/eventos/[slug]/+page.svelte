@@ -3,6 +3,7 @@
 	export let data: PageData;
 
 	import Stat from '$lib/components/Stat.svelte';
+	import CancellationPanel from '$lib/components/CancellationPanel.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 	import DataTablePaymentChangeLog from '$lib/components/data-table/DataTablePaymentChangeLog.svelte';
 	import EventDailyTicketsChart from '$lib/components/data-table/EventDailyTicketsChart.svelte';
@@ -198,6 +199,9 @@
 		<Tabs.List>
 			<Tabs.Trigger value="entradas">Entradas</Tabs.Trigger>
 			<Tabs.Trigger value="historial">Historial de cambios</Tabs.Trigger>
+			{#if data.eventFromSanityStudio?.cancelled && $page.data.user.admin}
+				<Tabs.Trigger value="cancelacion">Cancelación</Tabs.Trigger>
+			{/if}
 		</Tabs.List>
 		<Tabs.Content value="entradas" class="flex flex-col gap-4">
 			{#if $page.data.user.admin}
@@ -209,5 +213,14 @@
 		<Tabs.Content value="historial">
 			<DataTablePaymentChangeLog changeLog={data.paymentChangeLog} />
 		</Tabs.Content>
+		{#if data.eventFromSanityStudio?.cancelled && $page.data.user.admin}
+			<Tabs.Content value="cancelacion">
+				<CancellationPanel
+					campaign={data.cancellationCampaign}
+					eventOptions={data.cancellationEligibleOptions}
+					recipientCount={data.cancellationRecipientCount}
+				/>
+			</Tabs.Content>
+		{/if}
 	</Tabs.Root>
 </div>

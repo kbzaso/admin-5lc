@@ -9,11 +9,12 @@ datasource db {
 }
 
 model Product {
-  id      String    @id @unique
-  name    String
-  stock   Int?
-  date    DateTime? @db.Timestamptz(6)
-  Payment Payment[]
+  id                   String                @id @unique
+  name                 String
+  stock                Int?
+  date                 DateTime?             @db.Timestamptz(6)
+  Payment              Payment[]
+  CancellationCampaign CancellationCampaign?
 }
 
 model Payment {
@@ -44,6 +45,7 @@ model Payment {
   Product            Product   @relation(fields: [productId], references: [id])
   EmailLog           EmailLog[]
   PaymentChangeLog   PaymentChangeLog[]
+  CancellationResponse CancellationResponse[]
 
   @@index([orderId, payment_status, paidAt])
 }
@@ -158,4 +160,54 @@ model PaymentChangeLog {
   @@index([fromProductId, createdAt])
   @@index([toProductId, createdAt])
   @@index([paymentId])
+}
+
+/// One row per cancelled event for which the admin launched the buyer
+/// refund-or-change flow. Owns the eligible replacement list and send state.
+/// Table is owned/migrated from 5lc-sveltkit-sanity/prisma; keep this model in
+/// sync with that schema by hand since this repo has no migrations of its own.
+model CancellationCampaign {
+  id               String    @id @default(uuid())
+  productId        String    @unique // cancelled event (Sanity _id)
+  eligibleEventIds String[] // Product ids buyers may move their ticket to
+  status           String    @default("draft") // "draft" | "sent"
+  createdByUserId  String? // Clerk user who created/sent it
+  createdAt        DateTime  @default(now())
+  sentAt           DateTime?
+  Product          Product   @relation(fields: [productId], references: [id])
+  CancellationResponse CancellationResponse[]
+}
+
+/// One row per Payment included in a cancellation campaign, created at send
+/// time. Carries the unique link token, the email-send state, the buyer's
+/// choice and (refund branch) the bank-transfer details — bank data lives
+/// here on purpose, never on Payment.
+/// Table is owned/migrated from 5lc-sveltkit-sanity/prisma; keep this model in
+/// sync with that schema by hand since this repo has no migrations of its own.
+model CancellationResponse {
+  id                String    @id @default(uuid())
+  campaignId        String
+  paymentId         String
+  token             String    @unique // the /cancelacion/[token] link
+  emailStatus       String    @default("pending") // "pending" | "sent" | "failed"
+  choice            String? // null = no response yet | "refund" | "change"
+  respondedAt       DateTime?
+  // refund branch (Chilean bank transfer, processed manually by the admin)
+  bankHolderName    String?
+  bankRut           String?
+  bankName          String?
+  bankAccountType   String? // "corriente" | "vista" | "ahorro" | "cuenta_rut"
+  bankAccountNumber String?
+  bankEmail         String?
+  refundStatus      String? // "pending" | "transferred"
+  refundedAt        DateTime?
+  refundedByUserId  String?
+  // change branch
+  targetProductId   String?
+  createdAt         DateTime  @default(now())
+  CancellationCampaign CancellationCampaign @relation(fields: [campaignId], references: [id])
+  Payment              Payment              @relation(fields: [paymentId], references: [id])
+
+  @@unique([campaignId, paymentId]) // idempotent createMany with skipDuplicates
+  @@index([choice, refundStatus])
 }

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.46] - 2026-07-24
+
+### Add
+
+feat: add event cancellation handling and refund management
+
+    - Introduced new interfaces for event cancellation batch processing in mailApi.ts.
+    - Implemented functions to send cancellation emails and manage cancellation campaigns in +page.server.ts.
+    - Created CancellationPanel component for managing eligible events and sending emails to buyers.
+    - Added new routes for handling refunds, including marking refunds as transferred and sending notification emails.
+    - Updated UI to display refund requests and allow marking them as transferred.
+
 ## [0.0.45] - 2026-07-21
 
 ### Add
@@ -346,7 +358,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.45...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.46...HEAD
+[0.0.46]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.45...v0.0.46
 [0.0.45]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.44...v0.0.45
 [0.0.44]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.43...v0.0.44
 [0.0.43]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.42...v0.0.43

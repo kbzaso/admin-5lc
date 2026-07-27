@@ -5,6 +5,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { toast } from 'svelte-sonner';
 	import { Mail, Save, TriangleAlert } from 'lucide-svelte';
 	import { formatDateToChile } from '$lib';
@@ -26,6 +27,12 @@
 			client_id: string | null;
 			ticketAmount: number;
 			price: number;
+			EmailLog: {
+				id: string;
+				emailType: string;
+				status: string;
+				createdAt: Date | string;
+			}[];
 		};
 	};
 	type Campaign = {
@@ -60,6 +67,14 @@
 	const clp = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' });
 
 	const eventName = (id: string | null) => eventOptions.find((e) => e.id === id)?.name ?? id ?? '—';
+
+	// Successful cancellation emails delivered to a buyer (the tooltip lists all
+	// attempts; this counts only the ones that actually went out).
+	const sentCount = (row: ResponseRow) =>
+		row.Payment.EmailLog.filter((l) => l.status === 'sent').length;
+
+	const emailTypeLabel = (type: string) =>
+		type === 'event_cancellation_reminder' ? 'Recordatorio' : 'Aviso de cancelación';
 </script>
 
 <div class="flex flex-col gap-4">
@@ -297,7 +312,40 @@
 								<Table.Cell>{row.Payment.client_id ?? '—'}</Table.Cell>
 								<Table.Cell>{clp.format(row.Payment.price)}</Table.Cell>
 								<Table.Cell>
-									{#if row.emailStatus === 'sent'}
+									{#if row.Payment.EmailLog.length > 0}
+										<Tooltip.Root openDelay={150}>
+											<Tooltip.Trigger class="cursor-pointer">
+												{#if row.emailStatus === 'sent'}
+													<Badge variant="outline">Enviado</Badge>
+												{:else if row.emailStatus === 'failed'}
+													<Badge variant="destructive">Fallido</Badge>
+												{:else}
+													<Badge variant="secondary">Pendiente</Badge>
+												{/if}
+												{#if sentCount(row) > 0}
+													<div class="mt-1 text-xs text-muted-foreground">
+														{sentCount(row)}
+														{sentCount(row) === 1 ? 'correo enviado' : 'correos enviados'}
+													</div>
+												{/if}
+											</Tooltip.Trigger>
+											<Tooltip.Content side="right" class="max-w-xs text-left normal-case">
+												<ul class="flex flex-col gap-2">
+													{#each row.Payment.EmailLog as log (log.id)}
+														<li class="flex flex-col">
+															<span class="text-xs text-primary">
+																{formatDateToChile(log.createdAt)}
+															</span>
+															<span class="break-words">
+																{emailTypeLabel(log.emailType)} ·
+																{log.status === 'sent' ? 'Enviado' : 'Fallido'}
+															</span>
+														</li>
+													{/each}
+												</ul>
+											</Tooltip.Content>
+										</Tooltip.Root>
+									{:else if row.emailStatus === 'sent'}
 										<Badge variant="outline">Enviado</Badge>
 									{:else if row.emailStatus === 'failed'}
 										<Badge variant="destructive">Fallido</Badge>

@@ -343,7 +343,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 								customer_phone: true,
 								client_id: true,
 								ticketAmount: true,
-								price: true
+								price: true,
+								// Every cancellation email (initial + reminders) sent to this
+								// buyer, so the admin can see how many times and when they were
+								// contacted.
+								EmailLog: {
+									where: {
+										emailType: {
+											in: ['event_cancellation', 'event_cancellation_reminder']
+										}
+									},
+									orderBy: { createdAt: 'asc' },
+									select: {
+										id: true,
+										emailType: true,
+										status: true,
+										createdAt: true
+									}
+								}
 							}
 						}
 					}

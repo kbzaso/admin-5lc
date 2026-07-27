@@ -22,6 +22,7 @@
 			id: string;
 			customer_name: string;
 			customer_email: string;
+			customer_phone: string | null;
 			client_id: string | null;
 			ticketAmount: number;
 			price: number;
@@ -43,6 +44,7 @@
 
 	let saving = false;
 	let sending = false;
+	let reminding = false;
 
 	$: responses = campaign?.CancellationResponse ?? [];
 	$: emailsSent = responses.filter((r) => r.emailStatus === 'sent').length;
@@ -51,6 +53,9 @@
 	$: refundCount = responses.filter((r) => r.choice === 'refund').length;
 	$: changeCount = responses.filter((r) => r.choice === 'change').length;
 	$: noResponseCount = responses.filter((r) => r.choice === null).length;
+	// Buyers who received the email but haven't chosen yet — the ones a reminder
+	// can actually reach.
+	$: pendingReply = responses.filter((r) => r.choice === null && r.emailStatus === 'sent').length;
 
 	const clp = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' });
 
@@ -205,6 +210,60 @@
 		</Card.Content>
 	</Card.Root>
 
+	{#if pendingReply > 0}
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Recordatorio</Card.Title>
+				<Card.Description>
+					Reenvía el mismo correo (con su enlace original) a los compradores que ya lo recibieron
+					pero aún no eligen devolución ni cambio.
+				</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<form
+					method="POST"
+					action="?/remindNonResponders"
+					use:enhance={({ cancel }) => {
+						if (
+							!confirm(
+								`Se reenviará el correo a ${pendingReply} comprador(es) que no han respondido. ¿Continuar?`
+							)
+						) {
+							cancel();
+							return;
+						}
+						reminding = true;
+						return async ({ result }) => {
+							reminding = false;
+							const ok = result.type === 'success' && result.data?.status === 200;
+							const body =
+								result.type === 'success'
+									? (result.data?.body as
+											| { message?: string; error?: string; failed?: number }
+											| undefined)
+									: undefined;
+							if (ok) {
+								if (body?.failed) {
+									toast.warning(body?.message ?? 'Recordatorios enviados con fallidos');
+								} else {
+									toast.success(body?.message ?? 'Recordatorios enviados');
+								}
+							} else {
+								toast.error(body?.error ?? 'No se pudieron enviar los recordatorios');
+							}
+							await invalidateAll();
+						};
+					}}
+				>
+					<Button type="submit" variant="outline" disabled={reminding}>
+						<Mail class="mr-2 h-4 w-4" />
+						{reminding ? 'Enviando...' : `Recordar a ${pendingReply} que no han respondido`}
+					</Button>
+				</form>
+			</Card.Content>
+		</Card.Root>
+	{/if}
+
 	{#if responses.length > 0}
 		<Card.Root>
 			<Card.Header>
@@ -230,8 +289,9 @@
 							<Table.Row>
 								<Table.Cell>
 									<div class="font-medium">{row.Payment.customer_name}</div>
-									<div class="text-sm text-muted-foreground">
-										{row.Payment.customer_email}
+									<div class="text-sm text-muted-foreground flex flex-col">
+										<span>{row.Payment.customer_email}</span>
+										<span>{row.Payment.customer_phone}</span>
 									</div>
 								</Table.Cell>
 								<Table.Cell>{row.Payment.client_id ?? '—'}</Table.Cell>

@@ -340,6 +340,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 								id: true,
 								customer_name: true,
 								customer_email: true,
+								customer_phone: true,
 								client_id: true,
 								ticketAmount: true,
 								price: true
@@ -1288,6 +1289,117 @@ export const actions: Actions = {
 				status: 500,
 				body: { error: 'No se pudieron enviar los correos de cancelación' }
 			};
+		}
+	},
+	// Re-send the cancellation email to buyers who received it but still haven't
+	// chosen refund or change. Reuses the same email/link (their original
+	// token); logged separately as a reminder and does NOT touch emailStatus,
+	// which tracks the first send. Intentionally repeatable — the admin can
+	// remind again later.
+	remindNonResponders: async ({ params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const siteUrl = publicEnv.PUBLIC_SITE_URL;
+		if (!siteUrl) {
+			return { status: 500, body: { error: 'PUBLIC_SITE_URL no está configurado' } };
+		}
+
+		try {
+			const campaign = await client.cancellationCampaign.findUnique({
+				where: { productId: params.slug }
+			});
+			if (!campaign) {
+				return { status: 400, body: { error: 'Aún no se ha enviado la campaña de cancelación' } };
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+			if (!eventFromSanity?.cancelled) {
+				return {
+					status: 400,
+					body: { error: 'El evento no está marcado como cancelado en el Studio' }
+				};
+			}
+
+			const toRemind = await client.cancellationResponse.findMany({
+				where: { campaignId: campaign.id, choice: null, emailStatus: 'sent' },
+				include: {
+					Payment: {
+						select: {
+							id: true,
+							customer_email: true,
+							customer_name: true,
+							ticketAmount: true,
+							price: true
+						}
+					}
+				}
+			});
+
+			if (toRemind.length === 0) {
+				return {
+					status: 200,
+					body: { message: 'No hay compradores pendientes de responder', sent: 0, failed: 0 }
+				};
+			}
+
+			let sent = 0;
+			let failed = 0;
+
+			for (let i = 0; i < toRemind.length; i += 100) {
+				const chunk = toRemind.slice(i, i + 100);
+				const result = await sendEventCancellationBatch({
+					cancelledEventName: eventFromSanity.title,
+					cancelledEventDate: eventFromSanity.date ?? null,
+					cancelledReason: eventFromSanity.cancelledReason ?? null,
+					items: chunk.map((r) => ({
+						to: r.Payment.customer_email,
+						customerName: r.Payment.customer_name,
+						ticketAmount: r.Payment.ticketAmount,
+						totalPaid: r.Payment.price,
+						actionUrl: `${siteUrl}/cancelacion/${r.token}`,
+						paymentRef: r.paymentId
+					}))
+				});
+
+				if (result.ok) {
+					const idByPayment = new Map(result.results.map((r) => [r.paymentRef, r.id]));
+					await client.emailLog.createMany({
+						data: chunk.map((r) => ({
+							emailType: 'event_cancellation_reminder',
+							paymentId: r.paymentId,
+							status: idByPayment.get(r.paymentId) ? 'sent' : 'failed',
+							providerId: idByPayment.get(r.paymentId) ?? undefined,
+							error: idByPayment.get(r.paymentId) ? undefined : 'batch item failed'
+						}))
+					});
+					sent += chunk.filter((r) => idByPayment.get(r.paymentId)).length;
+					failed += chunk.filter((r) => !idByPayment.get(r.paymentId)).length;
+				} else {
+					await client.emailLog.createMany({
+						data: chunk.map((r) => ({
+							emailType: 'event_cancellation_reminder',
+							paymentId: r.paymentId,
+							status: 'failed',
+							error: result.error
+						}))
+					});
+					failed += chunk.length;
+				}
+			}
+
+			return {
+				status: 200,
+				body: {
+					message: failed
+						? `Recordatorios enviados: ${sent}. Fallidos: ${failed}`
+						: `Recordatorios enviados: ${sent}`,
+					sent,
+					failed
+				}
+			};
+		} catch (error) {
+			console.error('Error sending cancellation reminders:', error);
+			return { status: 500, body: { error: 'No se pudieron enviar los recordatorios' } };
 		}
 	}
 };

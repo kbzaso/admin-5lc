@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.49] - 2026-07-31
+
+### Add
+
+- feat: add feedback campaign functionality with survey questions and email notifications
+    - Introduced FeedbackCampaign and FeedbackResponse models in Prisma schema.
+    - Implemented FeedbackPanel component for managing feedback questions and sending surveys.
+    - Created FeedbackRatingsChart component for visualizing feedback results.
+    - Updated mailApi to handle feedback request batches.
+    - Enhanced event page to include feedback management for admins.
+    - Added logic to save feedback questions and send feedback emails after events.
+    - Implemented reminder functionality for non-responders to encourage survey completion.
+
 ## [0.0.48] - 2026-07-27
 
 ### Add
@@ -370,7 +383,8 @@ feat: add event cancellation handling and refund management
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.48...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.49...HEAD
+[0.0.49]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.48...v0.0.49
 [0.0.48]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.47...v0.0.48
 [0.0.47]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.46...v0.0.47
 [0.0.46]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.45...v0.0.46

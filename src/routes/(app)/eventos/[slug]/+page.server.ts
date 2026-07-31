@@ -4,10 +4,12 @@ import { redirect } from '@sveltejs/kit';
 import { sanity } from '$lib/sanity';
 import {
 	sendEventCancellationBatch,
+	sendFeedbackRequestBatch,
 	sendOrderConfirmationEmail,
 	sendTicketConfirmationEmail,
 	sendTicketTransferEmail
 } from '$lib/server/mailApi';
+import { DEFAULT_FEEDBACK_QUESTIONS, FEEDBACK_QUESTION_COUNT } from '$lib/feedbackQuestions';
 // PUBLIC_-prefixed vars live in the public env module, not the private one.
 import { env as publicEnv } from '$env/dynamic/public';
 import groq from 'groq';
@@ -74,6 +76,18 @@ const cancellationRecipientsWhere = (productId: string) => ({
 	payment_status: { in: ['success', 'system'] },
 	refund: false,
 	changeEvent: false
+});
+
+// Who gets the post-event feedback email: people who actually walked in.
+// ticketValidated is a counter of scanned tickets, so > 0 means at least one
+// person on this payment attended — asking a no-show how the event was would
+// just add noise to the averages.
+const feedbackRecipientsWhere = (productId: string) => ({
+	productId,
+	payment_status: { in: ['success', 'system'] },
+	refund: false,
+	changeEvent: false,
+	ticketValidated: { gt: 0 }
 });
 
 // Replacement options offered to buyers of a cancelled event. Sourced from
@@ -373,6 +387,39 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return await client.payment.count({ where: cancellationRecipientsWhere(params.slug) });
 	};
 
+	// Feedback campaign (if any) for the "Feedback" tab: per-recipient send
+	// state plus the ratings themselves. Companion rows (isBuyer = false) have
+	// no email of their own, so Payment is only used for attribution.
+	const feedbackCampaign = async () => {
+		return await client.feedbackCampaign.findUnique({
+			where: { productId: params.slug },
+			include: {
+				FeedbackResponse: {
+					orderBy: { createdAt: 'asc' },
+					include: {
+						Payment: {
+							select: {
+								id: true,
+								customer_name: true,
+								customer_email: true,
+								client_id: true,
+								ticketAmount: true
+							}
+						}
+					}
+				}
+			}
+		});
+	};
+
+	const feedbackRecipientCount = async () => {
+		return await client.payment.count({ where: feedbackRecipientsWhere(params.slug) });
+	};
+
+	// The survey only makes sense once the event has actually happened.
+	const eventDate = eventFromSanityStudio?.date ? new Date(eventFromSanityStudio.date) : null;
+	const eventHasPassed = !!eventDate && eventDate.getTime() < Date.now();
+
 	return {
 		sell_type: eventFromSanityStudio?.sell_type,
 		eventFromSupabase: await eventFromSupabase(),
@@ -387,7 +434,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		cancellationRecipientCount: await cancellationRecipientCount(),
 		cancellationEligibleOptions: eventFromSanityStudio?.cancelled
 			? await getEligibleTargetEvents(params.slug, eventFromSanityStudio?.sell_type ?? null)
-			: []
+			: [],
+		feedbackCampaign: await feedbackCampaign(),
+		feedbackRecipientCount: await feedbackRecipientCount(),
+		feedbackDefaultQuestions: [...DEFAULT_FEEDBACK_QUESTIONS],
+		eventHasPassed
 	};
 };
 
@@ -1416,6 +1467,331 @@ export const actions: Actions = {
 			};
 		} catch (error) {
 			console.error('Error sending cancellation reminders:', error);
+			return { status: 500, body: { error: 'No se pudieron enviar los recordatorios' } };
+		}
+	},
+	// Create or reword the survey. Questions are editable until the campaign is
+	// sent; after that they're frozen, because the answers already collected are
+	// only meaningful against the wording their authors actually saw.
+	saveFeedbackCampaign: async ({ request, params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const formData = await request.formData();
+		const questions = Array.from({ length: FEEDBACK_QUESTION_COUNT }, (_, i) =>
+			String(formData.get(`question${i + 1}`) ?? '').trim()
+		);
+
+		if (questions.some((q) => q.length === 0)) {
+			return { status: 400, body: { error: 'Todas las preguntas deben tener texto' } };
+		}
+		if (questions.some((q) => q.length > 160)) {
+			return { status: 400, body: { error: 'Cada pregunta debe tener máximo 160 caracteres' } };
+		}
+
+		try {
+			const existing = await client.feedbackCampaign.findUnique({
+				where: { productId: params.slug },
+				select: { id: true, status: true }
+			});
+			if (existing?.status === 'sent') {
+				return {
+					status: 400,
+					body: { error: 'La encuesta ya fue enviada; sus preguntas no se pueden cambiar' }
+				};
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+			// Product rows only exist once something sold; make sure there's one to
+			// hang the campaign off (mirrors saveCancellationCampaign).
+			if (eventFromSanity?.title) {
+				await client.product.upsert({
+					where: { id: params.slug },
+					update: {},
+					create: {
+						id: params.slug,
+						name: eventFromSanity.title,
+						date: eventFromSanity.date ? new Date(eventFromSanity.date) : null
+					}
+				});
+			}
+
+			const campaign = await client.feedbackCampaign.upsert({
+				where: { productId: params.slug },
+				update: { questions },
+				create: {
+					productId: params.slug,
+					questions,
+					createdByUserId: locals.session.userId
+				}
+			});
+
+			return { status: 200, body: { message: 'Preguntas guardadas', campaign } };
+		} catch (error) {
+			console.error('Error saving feedback campaign:', error);
+			return { status: 500, body: { error: 'No se pudo guardar la encuesta' } };
+		}
+	},
+	sendFeedbackEmails: async ({ params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const siteUrl = publicEnv.PUBLIC_SITE_URL;
+		if (!siteUrl) {
+			return { status: 500, body: { error: 'PUBLIC_SITE_URL no está configurado' } };
+		}
+
+		try {
+			const campaign = await client.feedbackCampaign.findUnique({
+				where: { productId: params.slug }
+			});
+			if (!campaign) {
+				return { status: 400, body: { error: 'Guarda primero las preguntas de la encuesta' } };
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+			const eventDate = eventFromSanity?.date ? new Date(eventFromSanity.date) : null;
+			if (!eventDate || eventDate.getTime() > Date.now()) {
+				return {
+					status: 400,
+					body: { error: 'La encuesta solo se puede enviar después de la fecha del evento' }
+				};
+			}
+
+			// One response row (with its link token) per attendee-buyer. Re-sends
+			// skip rows that already exist thanks to the
+			// @@unique([campaignId, paymentId, recipientEmail]) constraint, so buyers
+			// keep their original link and nobody is emailed twice.
+			const recipients = await client.payment.findMany({
+				where: feedbackRecipientsWhere(params.slug),
+				select: { id: true, customer_email: true, ticketAmount: true }
+			});
+			if (recipients.length === 0) {
+				return {
+					status: 400,
+					body: { error: 'No hay asistentes con entradas validadas para encuestar' }
+				};
+			}
+
+			await client.feedbackResponse.createMany({
+				data: recipients.map((p) => ({
+					campaignId: campaign.id,
+					paymentId: p.id,
+					recipientEmail: p.customer_email,
+					isBuyer: true,
+					token: crypto.randomUUID(),
+					// Only buyers who brought company need a link to forward.
+					shareToken: p.ticketAmount > 1 ? crypto.randomUUID() : null
+				})),
+				skipDuplicates: true
+			});
+
+			const toSend = await client.feedbackResponse.findMany({
+				where: {
+					campaignId: campaign.id,
+					isBuyer: true,
+					emailStatus: { in: ['pending', 'failed'] }
+				},
+				include: {
+					Payment: { select: { id: true, customer_name: true, ticketAmount: true } }
+				}
+			});
+
+			if (toSend.length === 0) {
+				return {
+					status: 200,
+					body: { message: 'Todos los correos ya fueron enviados', sent: 0, failed: 0 }
+				};
+			}
+
+			let sent = 0;
+			let failed = 0;
+
+			for (let i = 0; i < toSend.length; i += 100) {
+				const chunk = toSend.slice(i, i + 100);
+				const result = await sendFeedbackRequestBatch({
+					eventName: eventFromSanity.title,
+					eventDate: eventFromSanity.date ?? null,
+					items: chunk.map((r) => ({
+						// recipientEmail is always set on buyer rows.
+						to: r.recipientEmail as string,
+						customerName: r.Payment.customer_name,
+						actionUrl: `${siteUrl}/feedback/${r.token}`,
+						shareUrl: r.shareToken ? `${siteUrl}/feedback/${r.shareToken}` : null,
+						ticketAmount: r.Payment.ticketAmount,
+						responseRef: r.id
+					}))
+				});
+
+				if (result.ok) {
+					const idByResponse = new Map(result.results.map((r) => [r.responseRef, r.id]));
+					const sentIds = chunk.map((r) => r.id).filter((id) => idByResponse.get(id));
+					const failedIds = chunk.map((r) => r.id).filter((id) => !idByResponse.get(id));
+
+					await client.$transaction([
+						client.feedbackResponse.updateMany({
+							where: { id: { in: sentIds } },
+							data: { emailStatus: 'sent' }
+						}),
+						client.feedbackResponse.updateMany({
+							where: { id: { in: failedIds } },
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map((r) => ({
+								emailType: 'feedback_request',
+								paymentId: r.paymentId,
+								status: idByResponse.get(r.id) ? 'sent' : 'failed',
+								providerId: idByResponse.get(r.id) ?? undefined,
+								error: idByResponse.get(r.id) ? undefined : 'batch item failed'
+							}))
+						})
+					]);
+
+					sent += sentIds.length;
+					failed += failedIds.length;
+				} else {
+					await client.$transaction([
+						client.feedbackResponse.updateMany({
+							where: { id: { in: chunk.map((r) => r.id) } },
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map((r) => ({
+								emailType: 'feedback_request',
+								paymentId: r.paymentId,
+								status: 'failed',
+								error: result.error
+							}))
+						})
+					]);
+					failed += chunk.length;
+				}
+			}
+
+			const remaining = await client.feedbackResponse.count({
+				where: {
+					campaignId: campaign.id,
+					isBuyer: true,
+					emailStatus: { in: ['pending', 'failed'] }
+				}
+			});
+			if (remaining === 0) {
+				await client.feedbackCampaign.update({
+					where: { id: campaign.id },
+					data: { status: 'sent', sentAt: campaign.sentAt ?? new Date() }
+				});
+			}
+
+			return {
+				status: 200,
+				body: {
+					message: failed
+						? `Correos enviados: ${sent}. Fallidos: ${failed} (reintenta con "Enviar encuesta")`
+						: `Correos enviados: ${sent}`,
+					sent,
+					failed
+				}
+			};
+		} catch (error) {
+			console.error('Error sending feedback emails:', error);
+			return { status: 500, body: { error: 'No se pudieron enviar los correos de la encuesta' } };
+		}
+	},
+	// Re-send the survey to attendees who received it but haven't answered.
+	// Reuses their original link; logged separately as a reminder and does NOT
+	// touch emailStatus, which tracks the first send. Intentionally repeatable.
+	remindFeedbackNonResponders: async ({ params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const siteUrl = publicEnv.PUBLIC_SITE_URL;
+		if (!siteUrl) {
+			return { status: 500, body: { error: 'PUBLIC_SITE_URL no está configurado' } };
+		}
+
+		try {
+			const campaign = await client.feedbackCampaign.findUnique({
+				where: { productId: params.slug }
+			});
+			if (!campaign) {
+				return { status: 400, body: { error: 'Aún no se ha enviado la encuesta' } };
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+
+			const toRemind = await client.feedbackResponse.findMany({
+				where: {
+					campaignId: campaign.id,
+					isBuyer: true,
+					emailStatus: 'sent',
+					respondedAt: null
+				},
+				include: {
+					Payment: { select: { id: true, customer_name: true, ticketAmount: true } }
+				}
+			});
+
+			if (toRemind.length === 0) {
+				return {
+					status: 200,
+					body: { message: 'No hay asistentes pendientes de responder', sent: 0, failed: 0 }
+				};
+			}
+
+			let sent = 0;
+			let failed = 0;
+
+			for (let i = 0; i < toRemind.length; i += 100) {
+				const chunk = toRemind.slice(i, i + 100);
+				const result = await sendFeedbackRequestBatch({
+					eventName: eventFromSanity.title,
+					eventDate: eventFromSanity.date ?? null,
+					items: chunk.map((r) => ({
+						to: r.recipientEmail as string,
+						customerName: r.Payment.customer_name,
+						actionUrl: `${siteUrl}/feedback/${r.token}`,
+						shareUrl: r.shareToken ? `${siteUrl}/feedback/${r.shareToken}` : null,
+						ticketAmount: r.Payment.ticketAmount,
+						responseRef: r.id
+					}))
+				});
+
+				if (result.ok) {
+					const idByResponse = new Map(result.results.map((r) => [r.responseRef, r.id]));
+					await client.emailLog.createMany({
+						data: chunk.map((r) => ({
+							emailType: 'feedback_request_reminder',
+							paymentId: r.paymentId,
+							status: idByResponse.get(r.id) ? 'sent' : 'failed',
+							providerId: idByResponse.get(r.id) ?? undefined,
+							error: idByResponse.get(r.id) ? undefined : 'batch item failed'
+						}))
+					});
+					sent += chunk.filter((r) => idByResponse.get(r.id)).length;
+					failed += chunk.filter((r) => !idByResponse.get(r.id)).length;
+				} else {
+					await client.emailLog.createMany({
+						data: chunk.map((r) => ({
+							emailType: 'feedback_request_reminder',
+							paymentId: r.paymentId,
+							status: 'failed',
+							error: result.error
+						}))
+					});
+					failed += chunk.length;
+				}
+			}
+
+			return {
+				status: 200,
+				body: {
+					message: failed
+						? `Recordatorios enviados: ${sent}. Fallidos: ${failed}`
+						: `Recordatorios enviados: ${sent}`,
+					sent,
+					failed
+				}
+			};
+		} catch (error) {
+			console.error('Error sending feedback reminders:', error);
 			return { status: 500, body: { error: 'No se pudieron enviar los recordatorios' } };
 		}
 	}

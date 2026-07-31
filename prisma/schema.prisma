@@ -15,6 +15,7 @@ model Product {
   date                 DateTime?             @db.Timestamptz(6)
   Payment              Payment[]
   CancellationCampaign CancellationCampaign?
+  FeedbackCampaign     FeedbackCampaign?
 }
 
 model Payment {
@@ -46,6 +47,7 @@ model Payment {
   EmailLog           EmailLog[]
   PaymentChangeLog   PaymentChangeLog[]
   CancellationResponse CancellationResponse[]
+  FeedbackResponse     FeedbackResponse[]
 
   @@index([orderId, payment_status, paidAt])
 }
@@ -210,4 +212,62 @@ model CancellationResponse {
 
   @@unique([campaignId, paymentId]) // idempotent createMany with skipDuplicates
   @@index([choice, refundStatus])
+}
+
+/// One row per event for which the admin launched the post-event feedback
+/// survey. `questions` snapshots the five question texts exactly as they were
+/// sent, so the catalog can be reworded later without changing the meaning of
+/// answers already collected (q1 always maps to questions[0] as sent).
+/// Table is owned/migrated from 5lc-sveltkit-sanity/prisma; keep this model in
+/// sync with that schema by hand since this repo has no migrations of its own.
+model FeedbackCampaign {
+  id              String             @id @default(uuid())
+  productId       String             @unique // surveyed event (Sanity _id)
+  questions       Json // the five question texts as sent
+  status          String             @default("draft") // "draft" | "sent"
+  createdByUserId String? // Clerk user who created/sent it
+  createdAt       DateTime           @default(now())
+  sentAt          DateTime?
+  Product         Product            @relation(fields: [productId], references: [id])
+  FeedbackResponse FeedbackResponse[]
+}
+
+/// One row per feedback *recipient*, NOT per payment — a multi-ticket buyer
+/// can produce several rows (companions answering through the buyer's
+/// shareToken today, co-attendee emails collected at checkout later), so
+/// paymentId is deliberately non-unique.
+///
+/// Idempotent re-send relies on @@unique([campaignId, paymentId, recipientEmail])
+/// instead: a named recipient can never be created twice (createMany with
+/// skipDuplicates), while anonymous companions carry recipientEmail = null and
+/// never collide, because Postgres treats NULLs as distinct in unique indexes.
+/// Table is owned/migrated from 5lc-sveltkit-sanity/prisma; keep this model in
+/// sync with that schema by hand since this repo has no migrations of its own.
+model FeedbackResponse {
+  id             String           @id @default(uuid())
+  campaignId     String
+  paymentId      String
+  token          String           @unique // the /feedback/[token] link
+  /// Buyer rows only: the multi-use link the buyer forwards to the people who
+  /// came with them. Companion submissions through it create sibling rows,
+  /// capped at the payment's ticketAmount.
+  shareToken     String?          @unique
+  /// null = anonymous companion who answered via shareToken
+  recipientEmail String?
+  isBuyer        Boolean          @default(true)
+  emailStatus    String           @default("pending") // "pending" | "sent" | "failed" | "not_emailed"
+  q1             Int?
+  q2             Int?
+  q3             Int?
+  q4             Int?
+  q5             Int?
+  comment        String?
+  respondedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  FeedbackCampaign FeedbackCampaign @relation(fields: [campaignId], references: [id])
+  Payment          Payment          @relation(fields: [paymentId], references: [id])
+
+  @@unique([campaignId, paymentId, recipientEmail])
+  @@index([campaignId, paymentId])
+  @@index([campaignId, respondedAt])
 }

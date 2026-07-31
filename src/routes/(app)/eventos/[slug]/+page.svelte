@@ -4,6 +4,7 @@
 
 	import Stat from '$lib/components/Stat.svelte';
 	import CancellationPanel from '$lib/components/CancellationPanel.svelte';
+	import FeedbackPanel from '$lib/components/FeedbackPanel.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 	import DataTablePaymentChangeLog from '$lib/components/data-table/DataTablePaymentChangeLog.svelte';
 	import EventDailyTicketsChart from '$lib/components/data-table/EventDailyTicketsChart.svelte';
@@ -202,6 +203,9 @@
 			{#if data.eventFromSanityStudio?.cancelled && $page.data.user.admin}
 				<Tabs.Trigger value="cancelacion">Cancelación</Tabs.Trigger>
 			{/if}
+			{#if !data.eventFromSanityStudio?.cancelled && $page.data.user.admin}
+				<Tabs.Trigger value="feedback">Feedback</Tabs.Trigger>
+			{/if}
 		</Tabs.List>
 		<Tabs.Content value="entradas" class="flex flex-col gap-4">
 			{#if $page.data.user.admin}
@@ -219,6 +223,16 @@
 					campaign={data.cancellationCampaign}
 					eventOptions={data.cancellationEligibleOptions}
 					recipientCount={data.cancellationRecipientCount}
+				/>
+			</Tabs.Content>
+		{/if}
+		{#if !data.eventFromSanityStudio?.cancelled && $page.data.user.admin}
+			<Tabs.Content value="feedback">
+				<FeedbackPanel
+					campaign={data.feedbackCampaign}
+					recipientCount={data.feedbackRecipientCount}
+					defaultQuestions={data.feedbackDefaultQuestions}
+					eventHasPassed={data.eventHasPassed}
 				/>
 			</Tabs.Content>
 		{/if}

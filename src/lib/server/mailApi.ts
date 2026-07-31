@@ -71,10 +71,32 @@ export interface EventCancellationBatchInput {
 	items: EventCancellationBatchItem[];
 }
 
+export interface FeedbackRequestBatchItem {
+	to: string;
+	customerName: string;
+	actionUrl: string;
+	/** Multi-ticket buyers only: link forwarded to the people who came with them. */
+	shareUrl?: string | null;
+	ticketAmount: number;
+	/** The FeedbackResponse id — a buyer can own several rows, so results are
+	 * mapped per response, not per payment. */
+	responseRef: string;
+}
+
+export interface FeedbackRequestBatchInput {
+	eventName: string;
+	eventDate?: string | null;
+	items: FeedbackRequestBatchItem[];
+}
+
 export type SendEmailResult = { ok: true; id?: string } | { ok: false; error: string };
 
 export type BatchSendResult =
 	| { ok: true; results: { paymentRef: string; id: string | null }[] }
+	| { ok: false; error: string };
+
+export type FeedbackBatchSendResult =
+	| { ok: true; results: { responseRef: string; id: string | null }[] }
 	| { ok: false; error: string };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,6 +174,15 @@ export async function sendEventCancellationBatch(
 ): Promise<BatchSendResult> {
 	// Rendering + sending up to 100 emails takes well over the default 5s.
 	const res = await postJson('/v1/emails/event-cancellation-batch', payload, 30000);
+	if (!res.ok) return res;
+	return { ok: true, results: res.data?.results ?? [] };
+}
+
+export async function sendFeedbackRequestBatch(
+	payload: FeedbackRequestBatchInput
+): Promise<FeedbackBatchSendResult> {
+	// Rendering + sending up to 100 emails takes well over the default 5s.
+	const res = await postJson('/v1/emails/feedback-request-batch', payload, 30000);
 	if (!res.ok) return res;
 	return { ok: true, results: res.data?.results ?? [] };
 }

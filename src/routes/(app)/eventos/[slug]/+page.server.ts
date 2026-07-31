@@ -90,6 +90,28 @@ const feedbackRecipientsWhere = (productId: string) => ({
 	ticketValidated: { gt: 0 }
 });
 
+// The mail API validates the whole `items` array in one go, so a single bad
+// row makes it reject the entire 100-item chunk. Screening recipients here
+// means one malformed record costs one email instead of a hundred; the culprits
+// are marked failed with a readable reason so they show up in the panel.
+// Mirrors the checks in feedbackRequest.schema.ts — keep the two in step.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type FeedbackRecipientRow = {
+	recipientEmail: string | null;
+	Payment: { customer_name: string; ticketAmount: number };
+};
+
+const feedbackRecipientProblem = (r: FeedbackRecipientRow): string | null => {
+	const email = r.recipientEmail?.trim() ?? '';
+	if (!EMAIL_RE.test(email)) return `correo inválido (${email || 'vacío'})`;
+	if (!r.Payment.customer_name?.trim()) return 'nombre del comprador vacío';
+	if (!Number.isInteger(r.Payment.ticketAmount) || r.Payment.ticketAmount < 1) {
+		return `cantidad de entradas inválida (${r.Payment.ticketAmount})`;
+	}
+	return null;
+};
+
 // Replacement options offered to buyers of a cancelled event. Sourced from
 // Sanity (not the Product table) so events that haven't sold anything yet
 // still show up, and restricted to the same método de venta as the cancelled
@@ -1605,8 +1627,34 @@ export const actions: Actions = {
 			let sent = 0;
 			let failed = 0;
 
-			for (let i = 0; i < toSend.length; i += 100) {
-				const chunk = toSend.slice(i, i + 100);
+			// Screen out rows the mail API would reject, before they can take down a
+			// whole 100-item chunk with them. They stay 'failed', so correcting the
+			// payment and pressing "Reenviar" picks them up again.
+			const problems = toSend
+				.map((r) => ({ row: r, problem: feedbackRecipientProblem(r) }))
+				.filter((x): x is { row: (typeof toSend)[number]; problem: string } => x.problem !== null);
+			const sendable = toSend.filter((r) => feedbackRecipientProblem(r) === null);
+
+			if (problems.length > 0) {
+				await client.$transaction([
+					client.feedbackResponse.updateMany({
+						where: { id: { in: problems.map((p) => p.row.id) } },
+						data: { emailStatus: 'failed' }
+					}),
+					client.emailLog.createMany({
+						data: problems.map((p) => ({
+							emailType: 'feedback_request',
+							paymentId: p.row.paymentId,
+							status: 'failed',
+							error: `datos inválidos: ${p.problem}`
+						}))
+					})
+				]);
+				failed += problems.length;
+			}
+
+			for (let i = 0; i < sendable.length; i += 100) {
+				const chunk = sendable.slice(i, i + 100);
 				const result = await sendFeedbackRequestBatch({
 					eventName: eventFromSanity.title,
 					eventDate: eventFromSanity.date ?? null,
@@ -1681,14 +1729,19 @@ export const actions: Actions = {
 				});
 			}
 
+			const invalidNote = problems.length
+				? ` ${problems.length} con datos inválidos (revisa el correo del comprador).`
+				: '';
+
 			return {
 				status: 200,
 				body: {
 					message: failed
-						? `Correos enviados: ${sent}. Fallidos: ${failed} (reintenta con "Enviar encuesta")`
+						? `Correos enviados: ${sent}. Fallidos: ${failed}.${invalidNote} Reintenta con "Enviar encuesta".`
 						: `Correos enviados: ${sent}`,
 					sent,
-					failed
+					failed,
+					invalid: problems.length
 				}
 			};
 		} catch (error) {
@@ -1739,8 +1792,13 @@ export const actions: Actions = {
 			let sent = 0;
 			let failed = 0;
 
-			for (let i = 0; i < toRemind.length; i += 100) {
-				const chunk = toRemind.slice(i, i + 100);
+			// Same screening as the initial send: one unmailable row must not cost
+			// the other 99 their reminder.
+			const remindable = toRemind.filter((r) => feedbackRecipientProblem(r) === null);
+			failed += toRemind.length - remindable.length;
+
+			for (let i = 0; i < remindable.length; i += 100) {
+				const chunk = remindable.slice(i, i + 100);
 				const result = await sendFeedbackRequestBatch({
 					eventName: eventFromSanity.title,
 					eventDate: eventFromSanity.date ?? null,

@@ -121,7 +121,20 @@ async function postJson(path: string, payload: unknown, timeoutMs = 5000): Promi
 		});
 		const data = await res.json().catch(() => ({}));
 		if (!res.ok) {
-			return { ok: false, error: `${res.status} ${data?.message ?? data?.error ?? ''}`.trim() };
+			// Zod rejections carry the useful part in `issues`; without this the log
+			// only ever said "400 validation_error", which says nothing about which
+			// item or field was actually bad.
+			const issues = Array.isArray(data?.issues)
+				? data.issues
+						.slice(0, 3)
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						.map((i: any) => `${(i.path ?? []).join('.')} ${i.message}`.trim())
+						.join('; ')
+				: '';
+			return {
+				ok: false,
+				error: `${res.status} ${data?.message ?? data?.error ?? ''} ${issues}`.trim()
+			};
 		}
 		return { ok: true, data };
 	} catch (e) {

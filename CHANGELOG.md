@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.52] - 2026-08-04
+
+### Fix
+
+- Remove Umami web analytics integration from scheduled reports
+    - Reports now only cover sales data; Umami stats, referrers, and
+      pages have been dropped from data.ts and notify.ts
+    - Cleans up the now-unused UMAMI_* env vars and period.ts comment
+      referencing Umami bucketing
+
 ## [0.0.51] - 2026-08-04
 
 ### Add
@@ -399,7 +409,8 @@ feat: add event cancellation handling and refund management
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.51...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.52...HEAD
+[0.0.52]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.51...v0.0.52
 [0.0.51]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.50...v0.0.51
 [0.0.50]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.49...v0.0.50
 [0.0.49]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.48...v0.0.49

@@ -1,6 +1,6 @@
 // Period/date-range helpers for scheduled reports.
 // All day boundaries are computed in the site's timezone (Chile) so they line up
-// with how Umami buckets data and with local business days.
+// with local business days.
 
 export const REPORT_TZ = 'America/Santiago';
 

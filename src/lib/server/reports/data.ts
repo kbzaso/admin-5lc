@@ -1,8 +1,5 @@
 import { client } from '$lib/server/prisma';
-import { env } from '$env/dynamic/private';
 import type { Period } from './period';
-
-const UMAMI_BASE = 'https://api.umami.is/v1';
 
 export interface StatusRow {
 	status: string;
@@ -31,21 +28,9 @@ export interface SalesData {
 	merch: { count: number; qty: number; revenue: number };
 }
 
-export interface WebData {
-	pageviews: number;
-	visitors: number;
-	visits: number;
-	bounces: number;
-	bounceRate: number;
-	comparison?: { pageviews: number; visitors: number };
-	topReferrers: { source: string; count: number }[];
-	topPages: { path: string; count: number }[];
-}
-
 export interface ReportData {
 	period: Period;
 	sales: SalesData;
-	web: WebData | null;
 }
 
 // Statuses that represent realized revenue. Adjust here if the payment
@@ -127,48 +112,7 @@ async function gatherSales(period: Period): Promise<SalesData> {
 	};
 }
 
-async function umami<T>(path: string, params: Record<string, string | number>): Promise<T> {
-	const qs = new URLSearchParams(
-		Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
-	);
-	const res = await fetch(`${UMAMI_BASE}/websites/${env.UMAMI_WEBSITE_ID}/${path}?${qs}`, {
-		headers: { 'x-umami-api-key': env.UMAMI_API_KEY ?? '' }
-	});
-	if (!res.ok) throw new Error(`Umami ${path} ${res.status}: ${await res.text()}`);
-	return res.json() as Promise<T>;
-}
-
-async function gatherWeb(period: Period): Promise<WebData | null> {
-	if (!env.UMAMI_API_KEY || !env.UMAMI_WEBSITE_ID) return null;
-
-	const startAt = period.start.getTime();
-	const endAt = period.end.getTime();
-
-	const [stats, referrers, pages] = await Promise.all([
-		umami<{
-			pageviews: number;
-			visitors: number;
-			visits: number;
-			bounces: number;
-			comparison?: { pageviews: number; visitors: number };
-		}>('stats', { startAt, endAt }),
-		umami<{ x: string; y: number }[]>('metrics', { startAt, endAt, type: 'referrer', limit: 6 }),
-		umami<{ x: string; y: number }[]>('metrics', { startAt, endAt, type: 'path', limit: 6 })
-	]);
-
-	return {
-		pageviews: stats.pageviews,
-		visitors: stats.visitors,
-		visits: stats.visits,
-		bounces: stats.bounces,
-		bounceRate: stats.visits ? Math.round((stats.bounces / stats.visits) * 100) : 0,
-		comparison: stats.comparison,
-		topReferrers: referrers.map((r) => ({ source: r.x || '(directo)', count: r.y })),
-		topPages: pages.map((p) => ({ path: p.x, count: p.y }))
-	};
-}
-
 export async function buildReportData(period: Period): Promise<ReportData> {
-	const [sales, web] = await Promise.all([gatherSales(period), gatherWeb(period)]);
-	return { period, sales, web };
+	const sales = await gatherSales(period);
+	return { period, sales };
 }

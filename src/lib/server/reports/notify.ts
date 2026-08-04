@@ -13,18 +13,12 @@ const PERIOD_TITLE: Record<string, string> = {
 	monthly: '🗓️ Reporte mensual'
 };
 
-const pct = (now: number, prev?: number) => {
-	if (prev === undefined || prev === 0) return '';
-	const delta = Math.round(((now - prev) / prev) * 100);
-	return ` (${delta >= 0 ? '+' : ''}${delta}%)`;
-};
-
 /**
  * Plain-text body (with emoji + newlines, no platform-specific bold) so the
  * same string renders correctly in both Slack and Discord.
  */
 export function formatReport(data: ReportData): string {
-	const { period, sales, web } = data;
+	const { period, sales } = data;
 	const t = sales.tickets;
 	const lines: string[] = [];
 
@@ -47,22 +41,6 @@ export function formatReport(data: ReportData): string {
 	}
 	if (sales.merch.count) {
 		lines.push(`👕 Merch: ${sales.merch.qty} u. · ${clp.format(sales.merch.revenue)}`);
-	}
-
-	// Web
-	if (web) {
-		lines.push('');
-		lines.push(
-			`🌐 Web: ${web.pageviews} vistas${pct(web.pageviews, web.comparison?.pageviews)} · ` +
-				`${web.visitors} visitantes${pct(web.visitors, web.comparison?.visitors)} · ` +
-				`rebote ${web.bounceRate}%`
-		);
-		const refs = web.topReferrers
-			.filter((r) => !r.source.includes('5luchas') && !r.source.includes('transbank'))
-			.slice(0, 3)
-			.map((r) => `${r.source} (${r.count})`)
-			.join(', ');
-		if (refs) lines.push(`   Fuentes: ${refs}`);
 	}
 
 	return lines.join('\n');

@@ -5,6 +5,7 @@
 	import Stat from '$lib/components/Stat.svelte';
 	import CancellationPanel from '$lib/components/CancellationPanel.svelte';
 	import FeedbackPanel from '$lib/components/FeedbackPanel.svelte';
+	import StaffFeedbackPanel from '$lib/components/StaffFeedbackPanel.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 	import DataTablePaymentChangeLog from '$lib/components/data-table/DataTablePaymentChangeLog.svelte';
 	import EventDailyTicketsChart from '$lib/components/data-table/EventDailyTicketsChart.svelte';
@@ -205,6 +206,7 @@
 			{/if}
 			{#if !data.eventFromSanityStudio?.cancelled && $page.data.user.admin}
 				<Tabs.Trigger value="feedback">Feedback</Tabs.Trigger>
+				<Tabs.Trigger value="staff-feedback">Feedback staff</Tabs.Trigger>
 			{/if}
 		</Tabs.List>
 		<Tabs.Content value="entradas" class="flex flex-col gap-4">
@@ -232,6 +234,13 @@
 					campaign={data.feedbackCampaign}
 					recipientCount={data.feedbackRecipientCount}
 					defaultQuestions={data.feedbackDefaultQuestions}
+					eventHasPassed={data.eventHasPassed}
+				/>
+			</Tabs.Content>
+			<Tabs.Content value="staff-feedback">
+				<StaffFeedbackPanel
+					campaign={data.staffFeedbackCampaign}
+					defaultQuestions={data.staffFeedbackDefaultQuestions}
 					eventHasPassed={data.eventHasPassed}
 				/>
 			</Tabs.Content>

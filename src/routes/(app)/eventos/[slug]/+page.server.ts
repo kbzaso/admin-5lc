@@ -5,11 +5,16 @@ import { sanity } from '$lib/sanity';
 import {
 	sendEventCancellationBatch,
 	sendFeedbackRequestBatch,
+	sendStaffFeedbackRequestBatch,
 	sendOrderConfirmationEmail,
 	sendTicketConfirmationEmail,
 	sendTicketTransferEmail
 } from '$lib/server/mailApi';
-import { DEFAULT_FEEDBACK_QUESTIONS, FEEDBACK_QUESTION_COUNT } from '$lib/feedbackQuestions';
+import {
+	DEFAULT_FEEDBACK_QUESTIONS,
+	DEFAULT_STAFF_FEEDBACK_QUESTIONS,
+	FEEDBACK_QUESTION_COUNT
+} from '$lib/feedbackQuestions';
 // PUBLIC_-prefixed vars live in the public env module, not the private one.
 import { env as publicEnv } from '$env/dynamic/public';
 import groq from 'groq';
@@ -110,6 +115,40 @@ const feedbackRecipientProblem = (r: FeedbackRecipientRow): string | null => {
 		return `cantidad de entradas inválida (${r.Payment.ticketAmount})`;
 	}
 	return null;
+};
+
+// Staff feedback recipients are typed in by hand (no Payment to derive them
+// from), one email per line or comma-separated. Parsed eagerly at save time so
+// bad entries are caught before they can ever reach the mail API.
+type StaffRecipientParseResult =
+	| { ok: true; emails: string[] }
+	| { ok: false; error: string };
+
+const parseStaffRecipientEmails = (raw: string): StaffRecipientParseResult => {
+	const seen = new Set<string>();
+	const emails: string[] = [];
+	const invalid: string[] = [];
+
+	for (const entry of raw.split(/[\n,]/)) {
+		const email = entry.trim().toLowerCase();
+		if (!email) continue;
+		if (!EMAIL_RE.test(email)) {
+			invalid.push(entry.trim());
+			continue;
+		}
+		if (!seen.has(email)) {
+			seen.add(email);
+			emails.push(email);
+		}
+	}
+
+	if (invalid.length > 0) {
+		return { ok: false, error: `Correos inválidos: ${invalid.join(', ')}` };
+	}
+	if (emails.length === 0) {
+		return { ok: false, error: 'Agrega al menos un correo del staff' };
+	}
+	return { ok: true, emails };
 };
 
 // Replacement options offered to buyers of a cancelled event. Sourced from
@@ -438,6 +477,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return await client.payment.count({ where: feedbackRecipientsWhere(params.slug) });
 	};
 
+	// Staff feedback campaign (if any) for the "Feedback staff" tab. Recipients
+	// are the campaign's own recipientEmails snapshot, not derived from Payment.
+	const staffFeedbackCampaign = async () => {
+		return await client.staffFeedbackCampaign.findUnique({
+			where: { productId: params.slug },
+			include: {
+				StaffFeedbackResponse: { orderBy: { createdAt: 'asc' } }
+			}
+		});
+	};
+
 	// The survey only makes sense once the event has actually happened.
 	const eventDate = eventFromSanityStudio?.date ? new Date(eventFromSanityStudio.date) : null;
 	const eventHasPassed = !!eventDate && eventDate.getTime() < Date.now();
@@ -460,6 +510,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		feedbackCampaign: await feedbackCampaign(),
 		feedbackRecipientCount: await feedbackRecipientCount(),
 		feedbackDefaultQuestions: [...DEFAULT_FEEDBACK_QUESTIONS],
+		staffFeedbackCampaign: await staffFeedbackCampaign(),
+		staffFeedbackDefaultQuestions: [...DEFAULT_STAFF_FEEDBACK_QUESTIONS],
 		eventHasPassed
 	};
 };
@@ -1850,6 +1902,309 @@ export const actions: Actions = {
 			};
 		} catch (error) {
 			console.error('Error sending feedback reminders:', error);
+			return { status: 500, body: { error: 'No se pudieron enviar los recordatorios' } };
+		}
+	},
+	// Create or reword the staff survey, and update its recipient list. Both are
+	// editable until the campaign is sent; after that they're frozen, for the
+	// same reason as buyer feedback's questions (past answers only mean what
+	// their authors actually saw/were asked to answer for).
+	saveStaffFeedbackCampaign: async ({ request, params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const formData = await request.formData();
+		const questions = Array.from({ length: FEEDBACK_QUESTION_COUNT }, (_, i) =>
+			String(formData.get(`question${i + 1}`) ?? '').trim()
+		);
+
+		if (questions.some((q) => q.length === 0)) {
+			return { status: 400, body: { error: 'Todas las preguntas deben tener texto' } };
+		}
+		if (questions.some((q) => q.length > 160)) {
+			return { status: 400, body: { error: 'Cada pregunta debe tener máximo 160 caracteres' } };
+		}
+
+		const recipients = parseStaffRecipientEmails(String(formData.get('recipientEmails') ?? ''));
+		if (!recipients.ok) {
+			return { status: 400, body: { error: recipients.error } };
+		}
+
+		try {
+			const existing = await client.staffFeedbackCampaign.findUnique({
+				where: { productId: params.slug },
+				select: { id: true, status: true }
+			});
+			if (existing?.status === 'sent') {
+				return {
+					status: 400,
+					body: { error: 'La encuesta ya fue enviada; no se puede modificar' }
+				};
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+			// Product rows only exist once something sold; make sure there's one to
+			// hang the campaign off (mirrors saveFeedbackCampaign).
+			if (eventFromSanity?.title) {
+				await client.product.upsert({
+					where: { id: params.slug },
+					update: {},
+					create: {
+						id: params.slug,
+						name: eventFromSanity.title,
+						date: eventFromSanity.date ? new Date(eventFromSanity.date) : null
+					}
+				});
+			}
+
+			const campaign = await client.staffFeedbackCampaign.upsert({
+				where: { productId: params.slug },
+				update: { questions, recipientEmails: recipients.emails },
+				create: {
+					productId: params.slug,
+					questions,
+					recipientEmails: recipients.emails,
+					createdByUserId: locals.session.userId
+				}
+			});
+
+			return { status: 200, body: { message: 'Encuesta de staff guardada', campaign } };
+		} catch (error) {
+			console.error('Error saving staff feedback campaign:', error);
+			return { status: 500, body: { error: 'No se pudo guardar la encuesta de staff' } };
+		}
+	},
+	sendStaffFeedbackEmails: async ({ params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const siteUrl = publicEnv.PUBLIC_SITE_URL;
+		if (!siteUrl) {
+			return { status: 500, body: { error: 'PUBLIC_SITE_URL no está configurado' } };
+		}
+
+		try {
+			const campaign = await client.staffFeedbackCampaign.findUnique({
+				where: { productId: params.slug }
+			});
+			if (!campaign) {
+				return { status: 400, body: { error: 'Guarda primero las preguntas y destinatarios' } };
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+			const eventDate = eventFromSanity?.date ? new Date(eventFromSanity.date) : null;
+			if (!eventDate || eventDate.getTime() > Date.now()) {
+				return {
+					status: 400,
+					body: { error: 'La encuesta solo se puede enviar después de la fecha del evento' }
+				};
+			}
+
+			const recipientEmails = Array.isArray(campaign.recipientEmails)
+				? (campaign.recipientEmails as string[])
+				: [];
+			if (recipientEmails.length === 0) {
+				return { status: 400, body: { error: 'No hay destinatarios para encuestar' } };
+			}
+
+			// One response row (with its link token) per staff email. Re-sends skip
+			// rows that already exist thanks to @@unique([campaignId,
+			// recipientEmail]), so nobody already emailed gets a second link.
+			await client.staffFeedbackResponse.createMany({
+				data: recipientEmails.map((email) => ({
+					campaignId: campaign.id,
+					recipientEmail: email,
+					token: crypto.randomUUID()
+				})),
+				skipDuplicates: true
+			});
+
+			const toSend = await client.staffFeedbackResponse.findMany({
+				where: {
+					campaignId: campaign.id,
+					emailStatus: { in: ['pending', 'failed'] }
+				}
+			});
+
+			if (toSend.length === 0) {
+				return {
+					status: 200,
+					body: { message: 'Todos los correos ya fueron enviados', sent: 0, failed: 0 }
+				};
+			}
+
+			let sent = 0;
+			let failed = 0;
+
+			for (let i = 0; i < toSend.length; i += 100) {
+				const chunk = toSend.slice(i, i + 100);
+				const result = await sendStaffFeedbackRequestBatch({
+					eventName: eventFromSanity.title,
+					eventDate: eventFromSanity.date ?? null,
+					items: chunk.map((r) => ({
+						to: r.recipientEmail,
+						actionUrl: `${siteUrl}/staff-feedback/${r.token}`,
+						responseRef: r.id
+					}))
+				});
+
+				if (result.ok) {
+					const idByResponse = new Map(result.results.map((r) => [r.responseRef, r.id]));
+					const sentIds = chunk.map((r) => r.id).filter((id) => idByResponse.get(id));
+					const failedIds = chunk.map((r) => r.id).filter((id) => !idByResponse.get(id));
+
+					await client.$transaction([
+						client.staffFeedbackResponse.updateMany({
+							where: { id: { in: sentIds } },
+							data: { emailStatus: 'sent' }
+						}),
+						client.staffFeedbackResponse.updateMany({
+							where: { id: { in: failedIds } },
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map((r) => ({
+								emailType: 'staff_feedback_request',
+								status: idByResponse.get(r.id) ? 'sent' : 'failed',
+								providerId: idByResponse.get(r.id) ?? undefined,
+								error: idByResponse.get(r.id) ? undefined : 'batch item failed'
+							}))
+						})
+					]);
+
+					sent += sentIds.length;
+					failed += failedIds.length;
+				} else {
+					await client.$transaction([
+						client.staffFeedbackResponse.updateMany({
+							where: { id: { in: chunk.map((r) => r.id) } },
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map(() => ({
+								emailType: 'staff_feedback_request',
+								status: 'failed',
+								error: result.error
+							}))
+						})
+					]);
+					failed += chunk.length;
+				}
+			}
+
+			const remaining = await client.staffFeedbackResponse.count({
+				where: {
+					campaignId: campaign.id,
+					emailStatus: { in: ['pending', 'failed'] }
+				}
+			});
+			if (remaining === 0) {
+				await client.staffFeedbackCampaign.update({
+					where: { id: campaign.id },
+					data: { status: 'sent', sentAt: campaign.sentAt ?? new Date() }
+				});
+			}
+
+			return {
+				status: 200,
+				body: {
+					message: failed
+						? `Correos enviados: ${sent}. Fallidos: ${failed}. Reintenta con "Enviar encuesta".`
+						: `Correos enviados: ${sent}`,
+					sent,
+					failed
+				}
+			};
+		} catch (error) {
+			console.error('Error sending staff feedback emails:', error);
+			return { status: 500, body: { error: 'No se pudieron enviar los correos de la encuesta' } };
+		}
+	},
+	// Re-send the survey to staff who received it but haven't answered. Reuses
+	// their original link; logged separately as a reminder and does NOT touch
+	// emailStatus, which tracks the first send. Intentionally repeatable.
+	remindStaffFeedbackNonResponders: async ({ params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const siteUrl = publicEnv.PUBLIC_SITE_URL;
+		if (!siteUrl) {
+			return { status: 500, body: { error: 'PUBLIC_SITE_URL no está configurado' } };
+		}
+
+		try {
+			const campaign = await client.staffFeedbackCampaign.findUnique({
+				where: { productId: params.slug }
+			});
+			if (!campaign) {
+				return { status: 400, body: { error: 'Aún no se ha enviado la encuesta' } };
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+
+			const toRemind = await client.staffFeedbackResponse.findMany({
+				where: {
+					campaignId: campaign.id,
+					emailStatus: 'sent',
+					respondedAt: null
+				}
+			});
+
+			if (toRemind.length === 0) {
+				return {
+					status: 200,
+					body: { message: 'No hay staff pendiente de responder', sent: 0, failed: 0 }
+				};
+			}
+
+			let sent = 0;
+			let failed = 0;
+
+			for (let i = 0; i < toRemind.length; i += 100) {
+				const chunk = toRemind.slice(i, i + 100);
+				const result = await sendStaffFeedbackRequestBatch({
+					eventName: eventFromSanity.title,
+					eventDate: eventFromSanity.date ?? null,
+					items: chunk.map((r) => ({
+						to: r.recipientEmail,
+						actionUrl: `${siteUrl}/staff-feedback/${r.token}`,
+						responseRef: r.id
+					}))
+				});
+
+				if (result.ok) {
+					const idByResponse = new Map(result.results.map((r) => [r.responseRef, r.id]));
+					await client.emailLog.createMany({
+						data: chunk.map((r) => ({
+							emailType: 'staff_feedback_request_reminder',
+							status: idByResponse.get(r.id) ? 'sent' : 'failed',
+							providerId: idByResponse.get(r.id) ?? undefined,
+							error: idByResponse.get(r.id) ? undefined : 'batch item failed'
+						}))
+					});
+					sent += chunk.filter((r) => idByResponse.get(r.id)).length;
+					failed += chunk.filter((r) => !idByResponse.get(r.id)).length;
+				} else {
+					await client.emailLog.createMany({
+						data: chunk.map(() => ({
+							emailType: 'staff_feedback_request_reminder',
+							status: 'failed',
+							error: result.error
+						}))
+					});
+					failed += chunk.length;
+				}
+			}
+
+			return {
+				status: 200,
+				body: {
+					message: failed
+						? `Recordatorios enviados: ${sent}. Fallidos: ${failed}`
+						: `Recordatorios enviados: ${sent}`,
+					sent,
+					failed
+				}
+			};
+		} catch (error) {
+			console.error('Error sending staff feedback reminders:', error);
 			return { status: 500, body: { error: 'No se pudieron enviar los recordatorios' } };
 		}
 	}

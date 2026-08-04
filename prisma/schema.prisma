@@ -9,13 +9,14 @@ datasource db {
 }
 
 model Product {
-  id                   String                @id @unique
-  name                 String
-  stock                Int?
-  date                 DateTime?             @db.Timestamptz(6)
-  Payment              Payment[]
-  CancellationCampaign CancellationCampaign?
-  FeedbackCampaign     FeedbackCampaign?
+  id                    String                 @id @unique
+  name                  String
+  stock                 Int?
+  date                  DateTime?              @db.Timestamptz(6)
+  Payment               Payment[]
+  CancellationCampaign  CancellationCampaign?
+  FeedbackCampaign      FeedbackCampaign?
+  StaffFeedbackCampaign StaffFeedbackCampaign?
 }
 
 model Payment {
@@ -269,5 +270,51 @@ model FeedbackResponse {
 
   @@unique([campaignId, paymentId, recipientEmail])
   @@index([campaignId, paymentId])
+  @@index([campaignId, respondedAt])
+}
+
+/// One row per event for which the admin launched the post-event staff
+/// survey. Unlike buyer feedback, recipients are staff emails the admin
+/// types in by hand — there's no Payment to derive them from — so the
+/// current list is snapshotted here and only turned into StaffFeedbackResponse
+/// rows (with their link tokens) at send time.
+/// Table is owned/migrated from 5lc-website/prisma; keep this model in sync
+/// with that schema by hand since this repo has no migrations of its own.
+model StaffFeedbackCampaign {
+  id                    String                  @id @default(uuid())
+  productId             String                  @unique // surveyed event (Sanity _id)
+  questions             Json // the five question texts as sent
+  recipientEmails       Json // string[] of staff emails, editable until sent
+  status                String                  @default("draft") // "draft" | "sent"
+  createdByUserId       String? // Clerk user who created/sent it
+  createdAt             DateTime                @default(now())
+  sentAt                DateTime?
+  Product               Product                 @relation(fields: [productId], references: [id])
+  StaffFeedbackResponse StaffFeedbackResponse[]
+}
+
+/// One row per staff recipient, created at send time from the campaign's
+/// recipientEmails snapshot. Not anonymous to the admin (the results table
+/// shows recipientEmail per row) — "anonymous" here only means staff don't
+/// need an account to respond, just the emailed link.
+/// Table is owned/migrated from 5lc-website/prisma; keep this model in sync
+/// with that schema by hand since this repo has no migrations of its own.
+model StaffFeedbackResponse {
+  id                    String                @id @default(uuid())
+  campaignId            String
+  recipientEmail        String
+  token                 String                @unique // the /staff-feedback/[token] link
+  emailStatus           String                @default("pending") // "pending" | "sent" | "failed"
+  q1                    Int?
+  q2                    Int?
+  q3                    Int?
+  q4                    Int?
+  q5                    Int?
+  comment               String?
+  respondedAt           DateTime?
+  createdAt             DateTime              @default(now())
+  StaffFeedbackCampaign StaffFeedbackCampaign @relation(fields: [campaignId], references: [id])
+
+  @@unique([campaignId, recipientEmail]) // idempotent createMany with skipDuplicates
   @@index([campaignId, respondedAt])
 }

@@ -89,6 +89,19 @@ export interface FeedbackRequestBatchInput {
 	items: FeedbackRequestBatchItem[];
 }
 
+export interface StaffFeedbackRequestBatchItem {
+	to: string;
+	actionUrl: string;
+	/** The StaffFeedbackResponse id — results are mapped back per response. */
+	responseRef: string;
+}
+
+export interface StaffFeedbackRequestBatchInput {
+	eventName: string;
+	eventDate?: string | null;
+	items: StaffFeedbackRequestBatchItem[];
+}
+
 export type SendEmailResult = { ok: true; id?: string } | { ok: false; error: string };
 
 export type BatchSendResult =
@@ -196,6 +209,15 @@ export async function sendFeedbackRequestBatch(
 ): Promise<FeedbackBatchSendResult> {
 	// Rendering + sending up to 100 emails takes well over the default 5s.
 	const res = await postJson('/v1/emails/feedback-request-batch', payload, 30000);
+	if (!res.ok) return res;
+	return { ok: true, results: res.data?.results ?? [] };
+}
+
+export async function sendStaffFeedbackRequestBatch(
+	payload: StaffFeedbackRequestBatchInput
+): Promise<FeedbackBatchSendResult> {
+	// Rendering + sending up to 100 emails takes well over the default 5s.
+	const res = await postJson('/v1/emails/staff-feedback-request-batch', payload, 30000);
 	if (!res.ok) return res;
 	return { ok: true, results: res.data?.results ?? [] };
 }

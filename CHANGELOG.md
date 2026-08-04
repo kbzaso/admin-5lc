@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.51] - 2026-08-04
+
+### Add
+
+- Add staff post-event feedback survey campaigns
+    - Adds StaffFeedbackCampaign/StaffFeedbackResponse models, admin UI panel,
+      and server actions to save recipients/questions, send survey links, and
+      remind non-responders, mirroring the existing buyer feedback flow but
+      targeting staff who worked the event instead of attendees.
+
 ## [0.0.50] - 2026-07-31
 
 ### Add
@@ -389,7 +399,8 @@ feat: add event cancellation handling and refund management
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.50...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.51...HEAD
+[0.0.51]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.50...v0.0.51
 [0.0.50]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.49...v0.0.50
 [0.0.49]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.48...v0.0.49
 [0.0.48]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.47...v0.0.48

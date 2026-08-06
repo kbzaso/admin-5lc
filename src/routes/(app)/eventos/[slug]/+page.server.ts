@@ -2118,6 +2118,157 @@ export const actions: Actions = {
 			return { status: 500, body: { error: 'No se pudieron enviar los correos de la encuesta' } };
 		}
 	},
+	// After a campaign has been sent, an admin may realize they forgot someone
+	// on the staff list. This action appends the new emails to the campaign,
+	// creates their response rows, and sends only to those — existing recipients
+	// aren't touched, so nobody who already received a link gets a second copy.
+	addStaffFeedbackRecipients: async ({ request, params, locals }) => {
+		if (!locals.session?.userId) throw redirect(302, '/login');
+
+		const siteUrl = publicEnv.PUBLIC_SITE_URL;
+		if (!siteUrl) {
+			return { status: 500, body: { error: 'PUBLIC_SITE_URL no está configurado' } };
+		}
+
+		const formData = await request.formData();
+		const parsed = parseStaffRecipientEmails(String(formData.get('newEmails') ?? ''));
+		if (!parsed.ok) {
+			return { status: 400, body: { error: parsed.error } };
+		}
+
+		try {
+			const campaign = await client.staffFeedbackCampaign.findUnique({
+				where: { productId: params.slug }
+			});
+			if (!campaign) {
+				return { status: 400, body: { error: 'Aún no existe una encuesta para este evento' } };
+			}
+
+			const eventFromSanity = await getEvent(params.slug);
+			const eventDate = eventFromSanity?.date ? new Date(eventFromSanity.date) : null;
+			if (!eventDate || eventDate.getTime() > Date.now()) {
+				return {
+					status: 400,
+					body: { error: 'La encuesta solo se puede enviar después de la fecha del evento' }
+				};
+			}
+
+			const existingEmails = Array.isArray(campaign.recipientEmails)
+				? (campaign.recipientEmails as string[])
+				: [];
+			const existingLower = new Set(existingEmails.map((e) => e.toLowerCase()));
+
+			// Keep this strictly additive: filter out anyone already on the list so
+			// a repeated submit can't re-email people who've already been contacted.
+			const newEmails = parsed.emails.filter((e) => !existingLower.has(e));
+			if (newEmails.length === 0) {
+				return {
+					status: 400,
+					body: { error: 'Todos los correos ya estaban en la lista' }
+				};
+			}
+
+			// Append to the stored list and materialize pending response rows in one
+			// go — a mid-flight failure shouldn't leave "phantom" emails saved but
+			// without their tokens/links.
+			await client.$transaction([
+				client.staffFeedbackCampaign.update({
+					where: { id: campaign.id },
+					data: { recipientEmails: [...existingEmails, ...newEmails] }
+				}),
+				client.staffFeedbackResponse.createMany({
+					data: newEmails.map((email) => ({
+						campaignId: campaign.id,
+						recipientEmail: email,
+						token: crypto.randomUUID()
+					})),
+					skipDuplicates: true
+				})
+			]);
+
+			const toSend = await client.staffFeedbackResponse.findMany({
+				where: {
+					campaignId: campaign.id,
+					recipientEmail: { in: newEmails },
+					emailStatus: { in: ['pending', 'failed'] }
+				}
+			});
+
+			let sent = 0;
+			let failed = 0;
+
+			for (let i = 0; i < toSend.length; i += 100) {
+				const chunk = toSend.slice(i, i + 100);
+				const result = await sendStaffFeedbackRequestBatch({
+					eventName: eventFromSanity.title,
+					eventDate: eventFromSanity.date ?? null,
+					items: chunk.map((r) => ({
+						to: r.recipientEmail,
+						actionUrl: `${siteUrl}/staff-feedback/${r.token}`,
+						responseRef: r.id
+					}))
+				});
+
+				if (result.ok) {
+					const idByResponse = new Map(result.results.map((r) => [r.responseRef, r.id]));
+					const sentIds = chunk.map((r) => r.id).filter((id) => idByResponse.get(id));
+					const failedIds = chunk.map((r) => r.id).filter((id) => !idByResponse.get(id));
+
+					await client.$transaction([
+						client.staffFeedbackResponse.updateMany({
+							where: { id: { in: sentIds } },
+							data: { emailStatus: 'sent' }
+						}),
+						client.staffFeedbackResponse.updateMany({
+							where: { id: { in: failedIds } },
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map((r) => ({
+								emailType: 'staff_feedback_request',
+								status: idByResponse.get(r.id) ? 'sent' : 'failed',
+								providerId: idByResponse.get(r.id) ?? undefined,
+								error: idByResponse.get(r.id) ? undefined : 'batch item failed'
+							}))
+						})
+					]);
+
+					sent += sentIds.length;
+					failed += failedIds.length;
+				} else {
+					await client.$transaction([
+						client.staffFeedbackResponse.updateMany({
+							where: { id: { in: chunk.map((r) => r.id) } },
+							data: { emailStatus: 'failed' }
+						}),
+						client.emailLog.createMany({
+							data: chunk.map(() => ({
+								emailType: 'staff_feedback_request',
+								status: 'failed',
+								error: result.error
+							}))
+						})
+					]);
+					failed += chunk.length;
+				}
+			}
+
+			return {
+				status: 200,
+				body: {
+					message: failed
+						? `Agregados: ${newEmails.length}. Enviados: ${sent}. Fallidos: ${failed} (reintenta con "Reenviar pendientes/fallidos").`
+						: `Agregado(s) y notificado(s): ${sent} nuevo(s) destinatario(s)`,
+					added: newEmails.length,
+					sent,
+					failed
+				}
+			};
+		} catch (error) {
+			console.error('Error adding staff feedback recipients:', error);
+			return { status: 500, body: { error: 'No se pudieron agregar los destinatarios' } };
+		}
+	},
 	// Re-send the survey to staff who received it but haven't answered. Reuses
 	// their original link; logged separately as a reminder and does NOT touch
 	// emailStatus, which tracks the first send. Intentionally repeatable.

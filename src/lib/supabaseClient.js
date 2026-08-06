@@ -1,9 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 import { PUBLIC_PROJECT_URL, PUBLIC_ANON_KEY } from '$env/static/public';
+import { browser } from '$app/environment';
 
-const SUPABASE_URL = PUBLIC_PROJECT_URL;
-const SUPABASE_ANON_KEY = PUBLIC_ANON_KEY;
+// createClient() schedules an internal fetch (auth session refresh) on init,
+// which SvelteKit flags as an eager SSR fetch. We only use this client for
+// realtime subscriptions inside onMount, so skip constructing it on the
+// server entirely.
+const supabaseClient = browser ? createClient(PUBLIC_PROJECT_URL, PUBLIC_ANON_KEY) : null;
 
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-
-export default supabaseClient
+export default supabaseClient;

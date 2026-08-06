@@ -16,13 +16,15 @@
 
 ### Add
 
-- [ ] Send email confirmation to buyer from System payments
+
 
 ## Validate Feature
 
 ### Add
 
 ## Events
+
+- [ ] Create a page for teams member and ask for feedback
 
 ### Add
 
@@ -46,3 +48,4 @@
   - [x] Add IVA money count
   - [x] Add Payku money count
   - [x] Discount or not from studio when System payment are added
+  - [x] Send email confirmation to buyer from System payments

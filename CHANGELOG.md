@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Add post-send recipient additions to staff feedback campaigns
+  - Replace textarea with chip-based email input that color-codes recipients by their send/response state
+  - Allow admins to append new recipients after a campaign is sent without re-notifying existing ones
+  - Add `addStaffFeedbackRecipients` server action that appends emails, creates response rows in a transaction, and sends only to newcomers
+  - Guard supabase client construction to browser-only to avoid SSR eager-fetch warnings
+  - Update UI copy to reflect that questions freeze on send but recipients remain open
+
 ## [0.0.52] - 2026-08-04
 
 ### Fix

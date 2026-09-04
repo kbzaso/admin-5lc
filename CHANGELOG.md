@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.55] - 2026-09-04
+
+### Add
+
+Add PDF export for pending merch deliveries
+
+    - New "Merch por entregar" button on the orders page generates a
+      printable landscape PDF sheet with buyer contact/shipping details,
+      per-product totals, and a per-order line item table for pickup
+      tracking.
+    - Add a filter toggle to show only orders with undelivered merch.
+    - Update the PDF header brand text from "5 LUCHA CLUB" to
+      "5 LUCHAS CLANDESTINO" in the feedback report.
+
 ## [0.0.54] - 2026-09-04
 
 ### Add
@@ -436,7 +450,8 @@ feat: add event cancellation handling and refund management
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.54...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.55...HEAD
+[0.0.55]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.54...v0.0.55
 [0.0.54]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.53...v0.0.54
 [0.0.53]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.52...v0.0.53
 [0.0.52]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.51...v0.0.52

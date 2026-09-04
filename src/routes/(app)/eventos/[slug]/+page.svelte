@@ -6,6 +6,7 @@
 	import CancellationPanel from '$lib/components/CancellationPanel.svelte';
 	import FeedbackPanel from '$lib/components/FeedbackPanel.svelte';
 	import StaffFeedbackPanel from '$lib/components/StaffFeedbackPanel.svelte';
+	import FeedbackExportButton from '$lib/components/FeedbackExportButton.svelte';
 	import DataTableEvent from '$lib/components/data-table/DataTableEvent.svelte';
 	import DataTablePaymentChangeLog from '$lib/components/data-table/DataTablePaymentChangeLog.svelte';
 	import EventDailyTicketsChart from '$lib/components/data-table/EventDailyTicketsChart.svelte';
@@ -40,6 +41,11 @@
 	$: totalMoneyRaised.set(data.totalMoneyRaised?._sum.price ?? 0);
 
 	const currentSlug = $page.params.slug;
+
+	// Header data for the feedback PDF exports.
+	$: eventName = data.eventFromSupabase?.name ?? data.eventFromSanityStudio?.title ?? '';
+	$: eventDate = data.eventFromSanityStudio?.date ?? null;
+
 	onMount(() => {
 
 		// Create a function to handle inserts
@@ -178,7 +184,20 @@
 </svelte:head>
 
 <div class="flex flex-col gap-4 mb-6 mt-4">
-	<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<h1 class="text-2xl font-bold">{data.eventFromSupabase?.name}</h1>
+		{#if !data.eventFromSanityStudio?.cancelled && $page.data.user.admin}
+			<FeedbackExportButton
+				{eventName}
+				{eventDate}
+				campaign={data.feedbackCampaign}
+				recipientCount={data.feedbackRecipientCount}
+				defaultQuestions={data.feedbackDefaultQuestions}
+				staffCampaign={data.staffFeedbackCampaign}
+				staffDefaultQuestions={data.staffFeedbackDefaultQuestions}
+			/>
+		{/if}
+	</div>
 	{#if $page.data.user.admin}
 		<Stat
 			totalMoneyRaised={$totalMoneyRaised}

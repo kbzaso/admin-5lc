@@ -9,6 +9,7 @@
 	import { Mail, Save, Star, TriangleAlert } from 'lucide-svelte';
 	import { formatDateToChile } from '$lib';
 	import { FEEDBACK_RATING_KEYS, parseFeedbackQuestions } from '$lib/feedbackQuestions';
+	import { countEmailStatus, responseRate, summarizeFeedback } from '$lib/feedbackStats';
 	import FeedbackRatingsChart from './FeedbackRatingsChart.svelte';
 
 	type ResponseRow = {
@@ -57,36 +58,24 @@
 	// Email state is only tracked for buyer rows — companions arrive through the
 	// shared link and are never emailed.
 	$: buyerRows = responses.filter((r) => r.isBuyer);
-	$: emailsSent = buyerRows.filter((r) => r.emailStatus === 'sent').length;
-	$: emailsFailed = buyerRows.filter((r) => r.emailStatus === 'failed').length;
-	$: emailsPending = buyerRows.filter((r) => r.emailStatus === 'pending').length;
+	$: emailCounts = countEmailStatus(buyerRows);
+	$: emailsSent = emailCounts.sent;
+	$: emailsFailed = emailCounts.failed;
+	$: emailsPending = emailCounts.pending;
 
-	$: answered = responses.filter((r) => r.respondedAt !== null);
+	$: summary = summarizeFeedback(responses);
+	$: answered = summary.answered;
 	$: companionAnswers = answered.filter((r) => !r.isBuyer).length;
 	// Buyers who got the email but haven't answered — the ones a reminder reaches.
 	$: pendingReply = buyerRows.filter(
 		(r) => r.respondedAt === null && r.emailStatus === 'sent'
 	).length;
-	$: responseRate = emailsSent > 0 ? Math.round((answered.length / emailsSent) * 100) : 0;
+	$: rate = responseRate(answered.length, emailsSent);
 
-	$: perQuestion = FEEDBACK_RATING_KEYS.map((key) => {
-		const values = answered
-			.map((r) => r[key])
-			.filter((v): v is number => typeof v === 'number' && v > 0);
-		return {
-			count: values.length,
-			average: values.length ? values.reduce((a, b) => a + b, 0) / values.length : null
-		};
-	});
-	$: averages = perQuestion.map((q) => q.average);
-	$: counts = perQuestion.map((q) => q.count);
-	$: overall = (() => {
-		const valid = perQuestion.filter((q) => q.average !== null);
-		if (valid.length === 0) return null;
-		return valid.reduce((a, q) => a + (q.average ?? 0), 0) / valid.length;
-	})();
-
-	$: withComment = answered.filter((r) => r.comment && r.comment.trim().length > 0);
+	$: averages = summary.averages;
+	$: counts = summary.counts;
+	$: overall = summary.overall;
+	$: withComment = summary.answeredWithComment;
 
 	const ratingLabel = (v: number | null) => (v === null ? '—' : `${v}/5`);
 </script>
@@ -307,7 +296,7 @@
 			<div class="mb-4 flex flex-wrap items-center gap-2">
 				<Badge variant="outline">Respuestas: {answered.length}</Badge>
 				{#if emailsSent > 0}
-					<Badge variant="outline">Tasa de respuesta: {responseRate}%</Badge>
+					<Badge variant="outline">Tasa de respuesta: {rate}%</Badge>
 				{/if}
 				{#if companionAnswers > 0}
 					<Badge variant="secondary">Acompañantes: {companionAnswers}</Badge>

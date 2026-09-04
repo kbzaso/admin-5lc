@@ -221,7 +221,7 @@ function drawHeader(doc: Doc, input: FeedbackPdfInput, left: number, width: numb
 	doc.setFont('helvetica', 'bold');
 	doc.setFontSize(9);
 	doc.setTextColor(MUTED);
-	doc.text('5 LUCHA CLUB', left, y);
+	doc.text('5 LUCHAS CLANDESTINO', left, y);
 
 	y += 22;
 	doc.setFontSize(17);

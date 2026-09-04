@@ -8,6 +8,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
+	import MerchDeliveryExportButton from '$lib/components/MerchDeliveryExportButton.svelte';
 	import { PackageOpen, Mail } from 'lucide-svelte';
 	import supabaseClient from '$lib/supabaseClient';
 	import { toast } from 'svelte-sonner';
@@ -37,6 +38,7 @@
 
 	let searchTerm = '';
 	let showRejected = false;
+	let onlyPendingMerch = false;
 	let drawerOpen = false;
 	let selectedOrder: (typeof data.orders)[number] | null = null;
 
@@ -57,7 +59,9 @@
 
 		const matchesStatus = showRejected ? order.status !== 'success' : order.status === 'success';
 
-		return matchesSearch && matchesStatus;
+		const matchesDelivery = !onlyPendingMerch || order.MerchPayment.some((m) => !m.delivered);
+
+		return matchesSearch && matchesStatus && matchesDelivery;
 	});
 
 	function orderType(order: (typeof data.orders)[number]) {
@@ -136,9 +140,18 @@
 	placeholder="Buscador..."
 	ariaLabel="Buscar órdenes por ID, cliente, email, teléfono o RUT"
 >
-	<div slot="filters" class="flex items-center space-x-2">
-		<Switch id="rejected-orders" bind:checked={showRejected} />
-		<Label for="rejected-orders">Mostrar pagos rechazados</Label>
+	<div slot="filters" class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+		<div class="flex items-center space-x-2">
+			<Switch id="rejected-orders" bind:checked={showRejected} />
+			<Label for="rejected-orders">Mostrar pagos rechazados</Label>
+		</div>
+		<div class="flex items-center space-x-2">
+			<Switch id="pending-merch" bind:checked={onlyPendingMerch} />
+			<Label for="pending-merch">Solo merch por entregar</Label>
+		</div>
+	</div>
+	<div slot="actions">
+		<MerchDeliveryExportButton orders={filteredOrders} />
 	</div>
 </TableToolbar>
 

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.54] - 2026-09-04
+
+### Add
+
+Add PDF export for attendee and staff feedback surveys
+
+    - Introduces a single "Descargar feedback (PDF)" button that generates an
+      anonymized PDF report covering both surveys, since admins previously had
+      no way to share feedback results outside the dashboard.
+    - Extracts shared response-aggregation logic (averages, counts, response
+      rate, email status) into feedbackStats.ts so FeedbackPanel,
+      StaffFeedbackPanel, and the new PDF export all compute identical numbers
+      instead of duplicating the math.
+    - Adds jspdf/jspdf-autotable as dependencies, loaded dynamically so they
+      stay out of the initial bundle.
+
 ## [0.0.53] - 2026-08-06
 
 ### Add
@@ -420,7 +436,8 @@ feat: add event cancellation handling and refund management
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.53...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.54...HEAD
+[0.0.54]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.53...v0.0.54
 [0.0.53]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.52...v0.0.53
 [0.0.52]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.51...v0.0.52
 [0.0.51]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.50...v0.0.51

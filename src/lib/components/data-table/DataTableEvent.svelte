@@ -6,6 +6,8 @@
 	import { page } from '$app/stores';
 	import { formatDateToChile } from '$lib';
 	import DialogToUpdatePayments from '../SheetToUpdatePayments.svelte';
+	import QrScannerDialog from '../QrScannerDialog.svelte';
+	import { toast } from 'svelte-sonner';
 	import { formatPriceToCLP } from '$lib';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Switch } from '$lib/components/ui/switch/index.js';
@@ -101,10 +103,24 @@
 		? Payments.find((p) => p.id === activePaymentId)
 		: undefined;
 
+	// Tab the sheet opens on; scans land straight on the validator counter.
+	let initialTab: string | undefined;
+
 	function openDialog(paymentId: string) {
+		initialTab = undefined;
 		activePaymentId = paymentId;
 		idUpdateDialogOpen.set({ open: true, id: paymentId });
 		dialogOpen = true;
+	}
+
+	function onScan(e: CustomEvent<string>) {
+		const payment = Payments.find((p) => p.id === e.detail);
+		if (!payment) {
+			toast.error('Esta entrada no pertenece a este evento.');
+			return;
+		}
+		openDialog(payment.id);
+		initialTab = 'validator';
 	}
 
 	$: if (!dialogOpen) {
@@ -231,7 +247,10 @@
 		<Switch id="rejected-payments" bind:checked={$showRejected} />
 		<Label for="rejected-payments">Ver pagos rechazados</Label>
 	</div>
-	<DialogToAddPayments slot="actions" />
+	<div slot="actions" class="flex items-center gap-2">
+		<QrScannerDialog on:scan={onScan} />
+		<DialogToAddPayments />
+	</div>
 </TableToolbar>
 
 <div class="rounded-xl border border-base-content/20 overflow-hidden">
@@ -401,6 +420,6 @@
 	     validatedTickets, …) is reinitialized from the freshly opened payment
 	     instead of carrying over from the previous one. -->
 	{#key activePayment.id}
-		<DialogToUpdatePayments bind:dialogOpen payment={activePayment} />
+		<DialogToUpdatePayments bind:dialogOpen payment={activePayment} {initialTab} />
 	{/key}
 {/if}

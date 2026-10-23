@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Add QR scanner to open and validate tickets from event table
+
 ## [0.0.55] - 2026-09-04
 
 ### Add

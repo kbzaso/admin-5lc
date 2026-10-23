@@ -28,6 +28,8 @@
 	let confirmationDialogOpen: boolean = false;
 
 	export let payment: any;
+	// Optional tab to open on (e.g. 'validator' after a QR scan).
+	export let initialTab: string | undefined = undefined;
 
 	let validatedTickets = payment.ticketValidated;
 	// A payment that's part of a cart order (tickets + merch) never gets its
@@ -257,7 +259,7 @@
 						<Alert.Description>{STATUS.rejected.description}</Alert.Description>
 					</Alert.Root>
 				{:else}
-					<Tabs.Root class="w-full">
+					<Tabs.Root class="w-full" value={initialTab}>
 						<Tabs.List class="w-full mb-4">
 							{#if !$page.data.user.validator}
 								<Tabs.Trigger class="w-full" value="general">General</Tabs.Trigger>

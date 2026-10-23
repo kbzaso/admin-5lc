@@ -57,6 +57,7 @@
 		"groq": "^3.43.0",
 		"jspdf": "^4.2.1",
 		"jspdf-autotable": "^5.0.8",
+		"jsqr": "^1.4.0",
 		"svelte-chartjs": "^4.0.1",
 		"svelte-clerk": "^1.1.5",
 		"tailwind-merge": "^2.3.0",

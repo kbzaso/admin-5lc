@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.56] - 2026-10-23
+
 ### Add
 
 - Add QR scanner to open and validate tickets from event table
@@ -454,7 +456,8 @@ feat: add event cancellation handling and refund management
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.55...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.56...HEAD
+[0.0.56]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.55...v0.0.56
 [0.0.55]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.54...v0.0.55
 [0.0.54]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.53...v0.0.54
 [0.0.53]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.52...v0.0.53

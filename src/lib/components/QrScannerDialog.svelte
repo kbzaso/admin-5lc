@@ -54,7 +54,8 @@
 	}
 
 	function stop() {
-		cancelAnimationFrame(frame);
+		if (frame) cancelAnimationFrame(frame);
+		frame = 0;
 		stream?.getTracks().forEach((t) => t.stop());
 		stream = null;
 	}
@@ -78,8 +79,8 @@
 			<p class="text-sm text-destructive">{error}</p>
 		{:else}
 			<!-- svelte-ignore a11y-media-has-caption -->
-			<video bind:this={video} class="w-full rounded-lg bg-black aspect-square object-cover" muted />
+			<video bind:this={video} class="w-full rounded-lg bg-black aspect-square object-cover" muted></video>
 		{/if}
-		<canvas bind:this={canvas} class="hidden" />
+		<canvas bind:this={canvas} class="hidden"></canvas>
 	</Dialog.Content>
 </Dialog.Root>

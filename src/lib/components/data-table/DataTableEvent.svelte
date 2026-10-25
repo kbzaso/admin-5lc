@@ -216,6 +216,18 @@
 	const commentDate = (comment: Payment['Comment'][number]) =>
 		new Date(comment.createdAt).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
 
+	// Outlined (not filled) so the ticket type never reads as a payment status.
+	function ticketTypeVariant(ticketsType: string) {
+		switch (ticketsType) {
+			case 'General':
+				return 'outline-info';
+			case 'Ringside':
+				return 'outline-warning';
+			default:
+				return 'outline';
+		}
+	}
+
 	// Function to determine the badge class based on payment status
 	function getBadgeClass(paymentStatus: string): string {
 		switch (paymentStatus) {
@@ -269,7 +281,7 @@
 				</Table.Head>
 				<Table.Head class="hidden md:table-cell">RUT</Table.Head>
 				<Table.Head class="hidden lg:table-cell">Fecha</Table.Head>
-				<Table.Head class="px-3 sm:px-4">
+				<Table.Head class="hidden sm:table-cell px-3 sm:px-4">
 					<button
 						type="button"
 						class="flex items-center gap-1 hover:text-base-content"
@@ -280,7 +292,7 @@
 					</button>
 				</Table.Head>
 				<Table.Head class="hidden md:table-cell">Descuento</Table.Head>
-				<Table.Head class="px-3 sm:px-4 text-right">
+				<Table.Head class="hidden sm:table-cell px-3 sm:px-4 text-right">
 					<button
 						type="button"
 						class="ml-auto flex items-center gap-1 hover:text-base-content"
@@ -321,55 +333,84 @@
 					}`}
 				>
 					<Table.Cell class="px-3 py-3 sm:p-4 align-top">
-						<div class="flex flex-col">
-							<span class="text-xs text-primary uppercase flex gap-1.5 items-center">
-								{payment.client_id ? payment.client_id : ''}
-								{#if payment.Comment?.length > 0}
-									<Tooltip.Root openDelay={200}>
-										<Tooltip.Trigger class="cursor-pointer">
-											<Badge variant="default"><MessageSquare class="h-3" aria-hidden="true" />{payment.Comment.length}</Badge>
-										</Tooltip.Trigger>
-										<Tooltip.Content side="right" class="max-w-xs text-left normal-case">
-											<ul class="flex flex-col gap-2">
-												{#each recentComments(payment) as comment (comment.id)}
-													<li class="flex flex-col">
-														<span class="text-xs text-primary">
-															{commentAuthor(comment)} · {commentDate(comment)}
-														</span>
-														<span class="break-words">{comment.commentText}</span>
-													</li>
-												{/each}
-											</ul>
-											{#if payment.Comment.length > MAX_TOOLTIP_COMMENTS}
-												<p class="mt-2 text-xs text-muted-foreground">
-													+{payment.Comment.length - MAX_TOOLTIP_COMMENTS} más — abre el pago para verlos
-												</p>
-											{/if}
-										</Tooltip.Content>
-									</Tooltip.Root>
+							<div class="flex min-w-0 flex-col gap-0.5">
+								<span class="font-medium md:text-base break-words">{payment.customer_name}</span>
+								<span class="text-sm text-zinc-300 break-all">{payment.customer_email}</span>
+								{#if payment.customer_phone}
+									<span class="text-sm text-zinc-300">{payment.customer_phone}</span>
 								{/if}
-							</span>
-							<span class="font-medium md:text-base">{payment.customer_name}</span>
-							<span class="text-xs text-zinc-400">{payment.customer_email}</span>
-							{#if payment.customer_phone}
-								<span class="text-xs text-zinc-400">{payment.customer_phone}</span>
-							{/if}
-							<span class="text-xs text-zinc-400 md:hidden">{payment.rut}</span>
-							<span class="text-xs text-zinc-400 uppercase lg:hidden">
-								{formatDateToChile(payment.date)}
-							</span>
-							{#if payment.discount_code}
-								<span class="md:hidden mt-1">
-									<Badge variant="outline">{payment.discount_code}</Badge>
+								<span class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400">
+									{#if payment.client_id}
+										<span class="uppercase break-all">{payment.client_id}</span>
+									{/if}
+									{#if payment.Comment?.length > 0}
+										<Tooltip.Root openDelay={200}>
+											<Tooltip.Trigger
+												class="inline-flex cursor-pointer items-center gap-1 text-primary"
+												aria-label={`${payment.Comment.length} comentarios`}
+											>
+												<MessageSquare class="h-3.5 w-3.5" aria-hidden="true" />
+												{payment.Comment.length}
+											</Tooltip.Trigger>
+											<Tooltip.Content side="right" class="max-w-xs text-left normal-case">
+												<ul class="flex flex-col gap-2">
+													{#each recentComments(payment) as comment (comment.id)}
+														<li class="flex flex-col">
+															<span class="text-xs text-primary">
+																{commentAuthor(comment)} · {commentDate(comment)}
+															</span>
+															<span class="break-words">{comment.commentText}</span>
+														</li>
+													{/each}
+												</ul>
+												{#if payment.Comment.length > MAX_TOOLTIP_COMMENTS}
+													<p class="mt-2 text-xs text-muted-foreground">
+														+{payment.Comment.length - MAX_TOOLTIP_COMMENTS} más — abre el pago para verlos
+													</p>
+												{/if}
+											</Tooltip.Content>
+										</Tooltip.Root>
+									{/if}
+									<span class="uppercase lg:hidden">{formatDateToChile(payment.date)}</span>
 								</span>
-							{/if}
-						</div>
-					</Table.Cell>
-					<Table.Cell class="hidden md:table-cell text-sm align-top">{payment.rut}</Table.Cell>
+								<div class="mt-2 flex flex-wrap items-center gap-1.5 sm:hidden">
+									<Badge class={getBadgeClass(originStatus(payment))}>
+										{traductions[originStatus(payment)]}
+									</Badge>
+									{#if isRefund(payment)}
+										<Badge class={getBadgeClass('refund')}>{traductions.refund}</Badge>
+									{/if}
+									{#if isChange(payment)}
+										<Badge class={getBadgeClass('change')}>{traductions.change}</Badge>
+									{/if}
+									{#if payment.ticketAmount === payment.ticketValidated}
+										<Badge class="bg-green-400 hover:bg-green-500">Validado</Badge>
+									{/if}
+									<span class="flex items-center gap-1 text-sm whitespace-nowrap">
+										<Ticket class="h-4" aria-hidden="true" />
+										{payment.ticketValidated}/{payment.ticketAmount}
+										{#if payment.ticketsType && payment.ticketsType !== 'Tandas'}
+											<Badge variant={ticketTypeVariant(payment.ticketsType)} size="sm">
+												{payment.ticketsType}
+											</Badge>
+										{/if}
+									</span>
+									<span class="ml-auto text-sm font-medium whitespace-nowrap">
+										{formatPriceToCLP(payment.price)}
+									</span>
+								</div>
+								{#if payment.discount_code}
+									<span class="md:hidden mt-1">
+										<Badge variant="outline">{payment.discount_code}</Badge>
+									</span>
+								{/if}
+							</div>
+						</Table.Cell>
+						<Table.Cell class="hidden md:table-cell text-sm align-top">{payment.rut}</Table.Cell>
 					<Table.Cell class="hidden lg:table-cell text-xs uppercase text-zinc-400 align-top truncate">
 						{formatDateToChile(payment.date)}
 					</Table.Cell>
-					<Table.Cell class="px-3 py-3 sm:p-4 align-top">
+					<Table.Cell class="hidden sm:table-cell px-3 py-3 sm:p-4 align-top">
 						<div class="flex flex-wrap gap-1.5">
 							<Badge class={getBadgeClass(originStatus(payment))}>
 								{traductions[originStatus(payment)]}
@@ -392,14 +433,16 @@
 							<span class="text-zinc-500">—</span>
 						{/if}
 					</Table.Cell>
-					<Table.Cell class="px-3 py-3 sm:p-4 text-right align-top">
+					<Table.Cell class="hidden sm:table-cell px-3 py-3 sm:p-4 text-right align-top">
 						<span class="flex gap-1.5 items-center justify-end whitespace-nowrap">
 							<Ticket class="h-4" aria-hidden="true" />
 							{payment.ticketValidated}/{payment.ticketAmount}
-							<span class="hidden md:inline">
-								{$page.data.eventFromSanityStudio?.sell_type === 'batch' ? '' : payment.ticketsType}
-							</span>
 						</span>
+						{#if payment.ticketsType && payment.ticketsType !== 'Tandas'}
+							<Badge variant={ticketTypeVariant(payment.ticketsType)} class="mt-1">
+								{payment.ticketsType}
+							</Badge>
+						{/if}
 					</Table.Cell>
 					<Table.Cell class="hidden sm:table-cell text-right whitespace-nowrap align-top">
 						{formatPriceToCLP(payment.price)}

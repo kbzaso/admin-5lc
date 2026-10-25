@@ -31,7 +31,10 @@
 
 <Sheet.Root bind:open>
 	<Sheet.Trigger asChild let:builder>
-		<Button class="w-full md:w-40 mt-4" builders={[builder]}
+		<Button
+			variant="outline"
+			class="h-11 w-full border-base-content/30 md:w-40"
+			builders={[builder]}
 			>Agregar pago</Button
 		>
 	</Sheet.Trigger>

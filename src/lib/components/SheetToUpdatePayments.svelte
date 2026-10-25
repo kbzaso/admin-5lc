@@ -214,7 +214,7 @@
 						}}
 					>
 						<input type="hidden" name="paymentId" value={payment.id} />
-						<Button type="submit" variant="outline" size="sm" class="gap-1">
+						<Button type="submit" variant="outline" size="sm" class="w-full gap-1 md:w-auto">
 							<Mail class="h-4 w-4" />
 							{payment.orderId ? 'Reenviar confirmación de orden' : 'Reenviar confirmación'}
 						</Button>

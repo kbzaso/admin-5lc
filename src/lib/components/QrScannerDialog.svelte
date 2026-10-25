@@ -66,7 +66,7 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Button type="button" variant="outline" class="h-11 gap-2" on:click={() => (open = true)}>
+	<Button type="button" class="h-11 w-full gap-2 md:w-40" on:click={() => (open = true)}>
 		<ScanLine class="h-4 w-4" aria-hidden="true" />
 		Escanear QR
 	</Button>

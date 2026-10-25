@@ -14,7 +14,7 @@
 	import * as Table from '$lib/components/ui/table';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
-	import { getContext, setContext } from 'svelte';
+	import { getContext, setContext, tick } from 'svelte';
 
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import {
@@ -106,9 +106,15 @@
 	// Tab the sheet opens on; scans land straight on the validator counter.
 	let initialTab: string | undefined;
 
-	function openDialog(paymentId: string) {
-		initialTab = undefined;
+	// Mount the sheet closed, then open it on the next tick. Svelte 5
+	// transitions are local: if the sheet were created already open, its
+	// slide-in would be skipped (it's part of the parent block's creation)
+	// and the panel would pop in instead of animating.
+	async function openDialog(paymentId: string, tab?: string) {
+		dialogOpen = false;
+		initialTab = tab;
 		activePaymentId = paymentId;
+		await tick();
 		idUpdateDialogOpen.set({ open: true, id: paymentId });
 		dialogOpen = true;
 	}
@@ -119,8 +125,7 @@
 			toast.error('Esta entrada no pertenece a este evento.');
 			return;
 		}
-		openDialog(payment.id);
-		initialTab = 'validator';
+		openDialog(payment.id, 'validator');
 	}
 
 	$: if (!dialogOpen) {
@@ -259,7 +264,7 @@
 		<Switch id="rejected-payments" bind:checked={$showRejected} />
 		<Label for="rejected-payments">Ver pagos rechazados</Label>
 	</div>
-	<div slot="actions" class="flex items-center gap-2">
+	<div slot="actions" class="grid grid-cols-2 gap-2 md:flex md:items-center">
 		<QrScannerDialog on:scan={onScan} />
 		<DialogToAddPayments />
 	</div>
@@ -390,7 +395,7 @@
 										<Ticket class="h-4" aria-hidden="true" />
 										{payment.ticketValidated}/{payment.ticketAmount}
 										{#if payment.ticketsType && payment.ticketsType !== 'Tandas'}
-											<Badge variant={ticketTypeVariant(payment.ticketsType)} size="sm">
+											<Badge variant={ticketTypeVariant(payment.ticketsType)}>
 												{payment.ticketsType}
 											</Badge>
 										{/if}
@@ -401,7 +406,7 @@
 								</div>
 								{#if payment.discount_code}
 									<span class="md:hidden mt-1">
-										<Badge variant="outline">{payment.discount_code}</Badge>
+										Codigo: <code class="font-mono text-xs uppercase tracking-wide text-zinc-300">{payment.discount_code}</code>
 									</span>
 								{/if}
 							</div>
@@ -428,7 +433,7 @@
 					</Table.Cell>
 					<Table.Cell class="hidden md:table-cell align-top">
 						{#if payment.discount_code}
-							<Badge variant="outline">{payment.discount_code}</Badge>
+							Código: <code class="font-mono text-xs uppercase tracking-wide text-zinc-300">{payment.discount_code}</code>
 						{:else}
 							<span class="text-zinc-500">—</span>
 						{/if}

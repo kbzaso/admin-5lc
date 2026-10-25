@@ -1,5 +1,6 @@
 import { Dialog as SheetPrimitive } from "bits-ui";
 import { type VariantProps, tv } from "tailwind-variants";
+import { cubicInOut, quartOut } from "svelte/easing";
 
 import Portal from "./sheet-portal.svelte";
 import Overlay from "./sheet-overlay.svelte";
@@ -38,7 +39,7 @@ export {
 };
 
 export const sheetVariants = tv({
-	base: "bg-background fixed z-50 gap-4 p-6 shadow-lg",
+	base: "bg-background fixed z-50 gap-4 p-6 shadow-lg will-change-transform",
 	variants: {
 		side: {
 			top: "inset-x-0 top-0 border-b border-base-content/10",
@@ -52,55 +53,31 @@ export const sheetVariants = tv({
 	},
 });
 
-export const sheetTransitions = {
-	top: {
-		in: {
-			y: "-100%",
-			duration: 500,
-			opacity: 1,
+// Quartic ease-out on enter (fast start, soft landing). Exit uses ease-in-out:
+// a pure ease-in ends at full speed, which on a tall bottom sheet means
+// 120px+ jumps per frame in the last frames and reads as a stutter. Both skip the animation for
+// people who ask for reduced motion.
+const reduced = () =>
+	typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const offscreen = {
+	top: { y: "-100%" },
+	bottom: { y: "100%" },
+	left: { x: "-100%" },
+	right: { x: "100%" },
+} as const;
+
+export const sheetTransitions = Object.fromEntries(
+	(Object.keys(offscreen) as (keyof typeof offscreen)[]).map((side) => [
+		side,
+		{
+			in: { ...offscreen[side], opacity: 1, duration: reduced() ? 0 : 380, easing: quartOut },
+			out: { ...offscreen[side], opacity: 1, duration: reduced() ? 0 : 280, easing: cubicInOut },
 		},
-		out: {
-			y: "-100%",
-			duration: 300,
-			opacity: 1,
-		},
-	},
-	bottom: {
-		in: {
-			y: "100%",
-			duration: 500,
-			opacity: 1,
-		},
-		out: {
-			y: "100%",
-			duration: 300,
-			opacity: 1,
-		},
-	},
-	left: {
-		in: {
-			x: "-100%",
-			duration: 500,
-			opacity: 1,
-		},
-		out: {
-			x: "-100%",
-			duration: 300,
-			opacity: 1,
-		},
-	},
-	right: {
-		in: {
-			x: "100%",
-			duration: 500,
-			opacity: 1,
-		},
-		out: {
-			x: "100%",
-			duration: 300,
-			opacity: 1,
-		},
-	},
-};
+	])
+) as Record<
+	keyof typeof offscreen,
+	Record<"in" | "out", { x?: string; y?: string; opacity: number; duration: number; easing: (t: number) => number }>
+>;
 
 export type Side = VariantProps<typeof sheetVariants>["side"];

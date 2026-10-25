@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Chore
 
 - Redesign mobile payment rows and add badge variants
+- Smooth sheet animations and fix event table sheet opening
 
 ## [0.0.56] - 2026-10-23
 

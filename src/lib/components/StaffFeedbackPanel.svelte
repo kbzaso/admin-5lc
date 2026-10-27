@@ -355,16 +355,16 @@
 					{#if responses.length > 0}
 						<div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
 							<span class="inline-flex items-center gap-1">
-								<span class="h-2 w-2 rounded-full bg-green-500"></span> Respondió
+								<span class="h-2 w-2 rounded-full bg-green-500" /> Respondió
 							</span>
 							<span class="inline-flex items-center gap-1">
-								<span class="h-2 w-2 rounded-full bg-yellow-500"></span> Enviado, sin respuesta
+								<span class="h-2 w-2 rounded-full bg-yellow-500" /> Enviado, sin respuesta
 							</span>
 							<span class="inline-flex items-center gap-1">
-								<span class="h-2 w-2 rounded-full bg-red-500"></span> Falló
+								<span class="h-2 w-2 rounded-full bg-red-500" /> Falló
 							</span>
 							<span class="inline-flex items-center gap-1">
-								<span class="h-2 w-2 rounded-full border border-border"></span> Pendiente
+								<span class="h-2 w-2 rounded-full border border-border" /> Pendiente
 							</span>
 						</div>
 					{/if}

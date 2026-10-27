@@ -84,8 +84,8 @@
 				bind:this={video}
 				class="w-full rounded-lg bg-black aspect-square object-cover"
 				muted
-			></video>
+			/>
 		{/if}
-		<canvas bind:this={canvas} class="hidden"></canvas>
+		<canvas bind:this={canvas} class="hidden" />
 	</Dialog.Content>
 </Dialog.Root>

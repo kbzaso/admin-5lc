@@ -151,8 +151,11 @@
 			);
 		};
 
+		const client = supabaseClient;
+		if (!client) return;
+
 		// Listen to inserts, updates, and deletes
-		const subscription = supabaseClient
+		const subscription = client
 			.channel('Payment')
 			.on(
 				'postgres_changes',
@@ -173,7 +176,7 @@
 
 		// Cleanup subscription on component unmount
 		return () => {
-			supabaseClient.removeChannel(subscription);
+			client.removeChannel(subscription);
 		};
 	});
 </script>

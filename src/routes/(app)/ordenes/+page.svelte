@@ -17,6 +17,8 @@
 	export let data;
 
 	async function toggleMerchDelivered(merch: (typeof data.orders)[number]['MerchPayment'][number]) {
+		if (!supabaseClient) return;
+
 		const next = !merch.delivered;
 		const { error } = await supabaseClient
 			.from('MerchPayment')

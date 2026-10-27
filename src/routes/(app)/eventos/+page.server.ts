@@ -44,14 +44,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 		});
 
-		const productsWithTotal = await Promise.all(events.map(async (product) => {
-			const totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
-			const totalTicketsSold = product.Payment.reduce(
-				(sum, payment) => sum + payment.ticketAmount,
-				0
-			);
-			return { ...product, totalPayment, totalTicketsSold };
-		}));
+		const productsWithTotal = await Promise.all(
+			events.map(async (product) => {
+				const totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
+				const totalTicketsSold = product.Payment.reduce(
+					(sum, payment) => sum + payment.ticketAmount,
+					0
+				);
+				return { ...product, totalPayment, totalTicketsSold };
+			})
+		);
 
 		return {
 			events: productsWithTotal

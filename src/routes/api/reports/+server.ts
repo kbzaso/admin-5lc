@@ -42,7 +42,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 			? [requested]
 			: (() => {
 					throw error(400, `Invalid period. Use one of: ${VALID.join(', ')}`);
-				})()
+			  })()
 		: duePeriods();
 
 	const now = new Date();

@@ -120,9 +120,7 @@ const feedbackRecipientProblem = (r: FeedbackRecipientRow): string | null => {
 // Staff feedback recipients are typed in by hand (no Payment to derive them
 // from), one email per line or comma-separated. Parsed eagerly at save time so
 // bad entries are caught before they can ever reach the mail API.
-type StaffRecipientParseResult =
-	| { ok: true; emails: string[] }
-	| { ok: false; error: string };
+type StaffRecipientParseResult = { ok: true; emails: string[] } | { ok: false; error: string };
 
 const parseStaffRecipientEmails = (raw: string): StaffRecipientParseResult => {
 	const seen = new Set<string>();

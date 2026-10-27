@@ -88,7 +88,9 @@
 					<Table.Cell class="whitespace-nowrap text-xs text-zinc-400 align-top">
 						{new Date(log.createdAt).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}
 					</Table.Cell>
-					<Table.Cell class="align-top text-sm">{TYPE_LABEL[log.emailType] ?? log.emailType}</Table.Cell>
+					<Table.Cell class="align-top text-sm"
+						>{TYPE_LABEL[log.emailType] ?? log.emailType}</Table.Cell
+					>
 					<Table.Cell class="align-top">
 						<div class="flex flex-col">
 							<span class="font-medium">{name}</span>

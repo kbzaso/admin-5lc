@@ -16,9 +16,7 @@
 
 	export let data;
 
-	async function toggleMerchDelivered(
-		merch: (typeof data.orders)[number]['MerchPayment'][number]
-	) {
+	async function toggleMerchDelivered(merch: (typeof data.orders)[number]['MerchPayment'][number]) {
 		const next = !merch.delivered;
 		const { error } = await supabaseClient
 			.from('MerchPayment')
@@ -80,10 +78,7 @@
 	}
 
 	function pendingMerchUnits(order: (typeof data.orders)[number]) {
-		return order.MerchPayment.filter((m) => !m.delivered).reduce(
-			(sum, m) => sum + m.quantity,
-			0
-		);
+		return order.MerchPayment.filter((m) => !m.delivered).reduce((sum, m) => sum + m.quantity, 0);
 	}
 
 	function hasPendingMerch(order: (typeof data.orders)[number]) {
@@ -120,9 +115,7 @@
 			</Card.Header>
 			<Card.Content>
 				<div
-					class={`text-2xl font-bold ${
-						pendingTotals.units > 0 ? 'text-warning' : 'text-success'
-					}`}
+					class={`text-2xl font-bold ${pendingTotals.units > 0 ? 'text-warning' : 'text-success'}`}
 				>
 					{pendingTotals.units}
 				</div>
@@ -190,7 +183,9 @@
 							{order.orderId ?? order.id}
 						</span>
 					</Table.Cell>
-					<Table.Cell class="hidden lg:table-cell text-xs uppercase text-zinc-400 align-top whitespace-nowrap">
+					<Table.Cell
+						class="hidden lg:table-cell text-xs uppercase text-zinc-400 align-top whitespace-nowrap"
+					>
 						{new Date(order.createdAt).toLocaleString('es-CL', { timeZone: 'America/Santiago' })}
 					</Table.Cell>
 					<Table.Cell class="px-3 py-3 sm:p-4 align-top">
@@ -237,9 +232,7 @@
 			{/each}
 			{#if filteredOrders.length === 0}
 				<Table.Row>
-					<Table.Cell colspan={7} class="text-center text-zinc-400 py-8">
-						Sin resultados
-					</Table.Cell>
+					<Table.Cell colspan={7} class="text-center text-zinc-400 py-8">Sin resultados</Table.Cell>
 				</Table.Row>
 			{/if}
 		</Table.Body>
@@ -266,7 +259,7 @@
 								class={log?.status === 'sent'
 									? 'bg-green-300 text-green-900 hover:bg-green-400'
 									: 'bg-red-800 text-red-300 hover:bg-red-900'}
-								title={log?.status === 'failed' ? (log?.error ?? undefined) : undefined}
+								title={log?.status === 'failed' ? log?.error ?? undefined : undefined}
 							>
 								{log?.status === 'sent' ? '✓ Correo enviado' : '⚠ Error al enviar correo'}
 							</Badge>
@@ -377,7 +370,7 @@
 						<Table.Root>
 							<Table.Header>
 								<Table.Row>
-									<Table.Head></Table.Head>
+									<Table.Head />
 									<Table.Head>ID</Table.Head>
 									<Table.Head>Transbank ID</Table.Head>
 									<Table.Head>Producto</Table.Head>
@@ -488,7 +481,7 @@
 											</Badge>
 										</Table.Cell>
 										<Table.Cell class="align-top text-xs text-zinc-400 wrap-break-word max-w-xs">
-											{log.status === 'sent' ? (log.providerId ?? '—') : (log.error ?? '—')}
+											{log.status === 'sent' ? log.providerId ?? '—' : log.error ?? '—'}
 										</Table.Cell>
 									</Table.Row>
 								{/each}

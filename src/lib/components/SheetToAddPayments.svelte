@@ -34,8 +34,7 @@
 		<Button
 			variant="outline"
 			class="h-11 w-full border-base-content/30 md:w-40"
-			builders={[builder]}
-			>Agregar pago</Button
+			builders={[builder]}>Agregar pago</Button
 		>
 	</Sheet.Trigger>
 	<Sheet.Content side={$isDesktop ? 'right' : 'bottom'}>

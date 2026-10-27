@@ -44,7 +44,7 @@
 			{
 				label: metric === 'revenue' ? 'Recaudación' : 'Entradas',
 				data: sorted.map((e) =>
-					metric === 'revenue' ? (e.totalPayment ?? 0) : (e.totalTicketsSold ?? 0)
+					metric === 'revenue' ? e.totalPayment ?? 0 : e.totalTicketsSold ?? 0
 				),
 				backgroundColor: '#facc15',
 				borderRadius: 4,
@@ -62,9 +62,7 @@
 				callbacks: {
 					title: (items: any[]) => sorted[items[0].dataIndex]?.name ?? '',
 					label: (ctx: any) =>
-						metric === 'revenue'
-							? priceFormatter.format(ctx.parsed.y)
-							: `${ctx.parsed.y} entradas`
+						metric === 'revenue' ? priceFormatter.format(ctx.parsed.y) : `${ctx.parsed.y} entradas`
 				}
 			}
 		},

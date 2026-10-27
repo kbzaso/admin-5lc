@@ -20,24 +20,32 @@
 		<form class="grid items-start gap-4" method="POST" action="?/addPayment" use:enhance>
 			<div class="grid gap-2">
 				<Label for="name">Nombres</Label>
-				<Input type="text" id="name" name="name"/>
+				<Input type="text" id="name" name="name" />
 			</div>
 			<div class="grid gap-2">
 				<Label for="rut">RUT</Label>
-				<Input type="text" id="rut" name="rut"   />
+				<Input type="text" id="rut" name="rut" />
 			</div>
 			<div class="grid gap-2">
 				<Label for="email">Email</Label>
-				<Input type="email" id="email" name="email"   />
+				<Input type="email" id="email" name="email" />
 			</div>
 			<div class="grid gap-2">
 				<Label for="phone">Teléfono</Label>
-				<Input id="phone" name="phone" type="text"  />
+				<Input id="phone" name="phone" type="text" />
 			</div>
 			<div class="flex gap-4">
 				<div class="grid gap-2 w-full">
 					<Label for="ticketAmount">Entradas</Label>
-					<Input type="number" name="ticketAmount" min="0" max="10" id="ticketAmount" required value="1" />
+					<Input
+						type="number"
+						name="ticketAmount"
+						min="0"
+						max="10"
+						id="ticketAmount"
+						required
+						value="1"
+					/>
 				</div>
 				<div class="grid gap-2 w-full">
 					<Label for="price">Precio</Label>

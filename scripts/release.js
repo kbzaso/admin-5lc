@@ -39,7 +39,9 @@ function bump(version, type) {
 			return `${major}.${minor}.${patch + 1}`;
 		default:
 			if (!/^\d+\.\d+\.\d+$/.test(type)) {
-				console.error(`Invalid argument "${type}". Use major, minor, patch or an explicit version like 1.2.3.`);
+				console.error(
+					`Invalid argument "${type}". Use major, minor, patch or an explicit version like 1.2.3.`
+				);
 				process.exit(1);
 			}
 			return type;
@@ -117,4 +119,6 @@ writeFileSync(changelogPath, updatedChangelog);
 
 console.log(`Released ${current} -> ${next} (${date})`);
 console.log('Updated: package.json, CHANGELOG.md');
-console.log(`\nNext steps:\n  git add package.json CHANGELOG.md\n  git commit -m "release: ${next}"`);
+console.log(
+	`\nNext steps:\n  git add package.json CHANGELOG.md\n  git commit -m "release: ${next}"`
+);

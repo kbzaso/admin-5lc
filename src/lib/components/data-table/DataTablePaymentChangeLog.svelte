@@ -115,7 +115,9 @@
 		<Table.Body>
 			{#each filteredChangeLog as entry (entry.id)}
 				<Table.Row>
-					<Table.Cell class="px-3 py-3 sm:p-4 align-top text-xs uppercase text-zinc-400 whitespace-nowrap">
+					<Table.Cell
+						class="px-3 py-3 sm:p-4 align-top text-xs uppercase text-zinc-400 whitespace-nowrap"
+					>
 						{formatDateToChile(entry.createdAt)}
 					</Table.Cell>
 					<Table.Cell class="align-top text-sm">{entry.Users?.name ?? 'Sistema'}</Table.Cell>

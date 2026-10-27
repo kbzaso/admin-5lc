@@ -2,6 +2,6 @@
 import { writable } from 'svelte/store';
 
 export const idUpdateDialogOpen = writable({
-    open: false,
-    id: ''
+	open: false,
+	id: ''
 });

@@ -43,7 +43,8 @@
 			canvas.height = video.videoHeight;
 			ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
 			const img = ctx?.getImageData(0, 0, canvas.width, canvas.height);
-			const result = img && jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+			const result =
+				img && jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
 			if (result?.data) {
 				open = false;
 				dispatch('scan', result.data.trim());
@@ -79,8 +80,12 @@
 			<p class="text-sm text-destructive">{error}</p>
 		{:else}
 			<!-- svelte-ignore a11y-media-has-caption -->
-			<video bind:this={video} class="w-full rounded-lg bg-black aspect-square object-cover" muted></video>
+			<video
+				bind:this={video}
+				class="w-full rounded-lg bg-black aspect-square object-cover"
+				muted
+			/>
 		{/if}
-		<canvas bind:this={canvas} class="hidden"></canvas>
+		<canvas bind:this={canvas} class="hidden" />
 	</Dialog.Content>
 </Dialog.Root>

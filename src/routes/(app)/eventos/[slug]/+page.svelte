@@ -47,7 +47,6 @@
 	$: eventDate = data.eventFromSanityStudio?.date ?? null;
 
 	onMount(() => {
-
 		// Create a function to handle inserts
 		const handleInserts = (payload: any) => {
 			if (payload.new.productId !== currentSlug) return;

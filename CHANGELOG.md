@@ -66,20 +66,20 @@ Add PDF export for attendee and staff feedback surveys
 ### Fix
 
 - Remove Umami web analytics integration from scheduled reports
-    - Reports now only cover sales data; Umami stats, referrers, and
-      pages have been dropped from data.ts and notify.ts
-    - Cleans up the now-unused UMAMI_* env vars and period.ts comment
-      referencing Umami bucketing
+  - Reports now only cover sales data; Umami stats, referrers, and
+    pages have been dropped from data.ts and notify.ts
+  - Cleans up the now-unused UMAMI\_\* env vars and period.ts comment
+    referencing Umami bucketing
 
 ## [0.0.51] - 2026-08-04
 
 ### Add
 
 - Add staff post-event feedback survey campaigns
-    - Adds StaffFeedbackCampaign/StaffFeedbackResponse models, admin UI panel,
-      and server actions to save recipients/questions, send survey links, and
-      remind non-responders, mirroring the existing buyer feedback flow but
-      targeting staff who worked the event instead of attendees.
+  - Adds StaffFeedbackCampaign/StaffFeedbackResponse models, admin UI panel,
+    and server actions to save recipients/questions, send survey links, and
+    remind non-responders, mirroring the existing buyer feedback flow but
+    targeting staff who worked the event instead of attendees.
 
 ## [0.0.50] - 2026-07-31
 
@@ -92,13 +92,13 @@ Add PDF export for attendee and staff feedback surveys
 ### Add
 
 - feat: add feedback campaign functionality with survey questions and email notifications
-    - Introduced FeedbackCampaign and FeedbackResponse models in Prisma schema.
-    - Implemented FeedbackPanel component for managing feedback questions and sending surveys.
-    - Created FeedbackRatingsChart component for visualizing feedback results.
-    - Updated mailApi to handle feedback request batches.
-    - Enhanced event page to include feedback management for admins.
-    - Added logic to save feedback questions and send feedback emails after events.
-    - Implemented reminder functionality for non-responders to encourage survey completion.
+  - Introduced FeedbackCampaign and FeedbackResponse models in Prisma schema.
+  - Implemented FeedbackPanel component for managing feedback questions and sending surveys.
+  - Created FeedbackRatingsChart component for visualizing feedback results.
+  - Updated mailApi to handle feedback request batches.
+  - Enhanced event page to include feedback management for admins.
+  - Added logic to save feedback questions and send feedback emails after events.
+  - Implemented reminder functionality for non-responders to encourage survey completion.
 
 ## [0.0.48] - 2026-07-27
 

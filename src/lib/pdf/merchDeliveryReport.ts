@@ -215,7 +215,9 @@ function drawProductSummary(
 		});
 	});
 
-	const rows = [...totals.values()].sort((a, b) => b.units - a.units || a.label.localeCompare(b.label));
+	const rows = [...totals.values()].sort(
+		(a, b) => b.units - a.units || a.label.localeCompare(b.label)
+	);
 	if (rows.length === 0) return startY;
 
 	doc.setFont('helvetica', 'bold');

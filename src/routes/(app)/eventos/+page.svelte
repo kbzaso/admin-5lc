@@ -6,4 +6,4 @@
 	$: ({ events } = data);
 </script>
 
-<DataTableEvents Events={events} />	
+<DataTableEvents Events={events} />

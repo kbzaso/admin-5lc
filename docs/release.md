@@ -13,10 +13,10 @@ pnpm run release 1.2.3      # explicit version
 
 ### Flags
 
-| Flag        | Description                                                  |
-| ----------- | ------------------------------------------------------------ |
-| `--dry-run` | Print the changes without writing any files.                 |
-| `--force`   | Release even if the `[Unreleased]` section has no entries.   |
+| Flag        | Description                                                |
+| ----------- | ---------------------------------------------------------- |
+| `--dry-run` | Print the changes without writing any files.               |
+| `--force`   | Release even if the `[Unreleased]` section has no entries. |
 
 Flags can be combined with any bump type, e.g. `pnpm run release minor --dry-run`.
 

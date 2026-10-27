@@ -92,8 +92,7 @@
 		return sortDir === 'asc' ? cmp : -cmp;
 	});
 
-	$: visibleEvents =
-		pageSize === 'all' ? sortedEvents : sortedEvents.slice(0, Number(pageSize));
+	$: visibleEvents = pageSize === 'all' ? sortedEvents : sortedEvents.slice(0, Number(pageSize));
 
 	$: colspan = isValidator ? 2 : 4;
 

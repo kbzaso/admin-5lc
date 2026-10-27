@@ -86,7 +86,10 @@ export const actions: Actions = {
 		}
 
 		if (!result.ok) {
-			return { status: 502, body: { error: 'No se pudo reenviar el correo', detail: result.error } };
+			return {
+				status: 502,
+				body: { error: 'No se pudo reenviar el correo', detail: result.error }
+			};
 		}
 		return { status: 200, body: { message: 'Correo de confirmación reenviado' } };
 	}

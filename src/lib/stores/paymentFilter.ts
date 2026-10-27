@@ -19,10 +19,7 @@ export const isChange = (p: any) => p?.changeEvent === true || p?.payment_status
 // ticket to exactly one category — the same partition as "Resumen de venta".
 // Refund / change / system take precedence; web sales split into zones
 // (ubication) or batch tiers (with any unmapped remainder as "Otros").
-export function slicesFor(
-	p: any,
-	isUbication: boolean
-): { category: string; amount: number }[] {
+export function slicesFor(p: any, isUbication: boolean): { category: string; amount: number }[] {
 	const amount = p?.ticketAmount ?? 0;
 	if (isRefund(p)) return [{ category: 'Reembolso', amount }];
 	if (isChange(p)) return [{ category: 'Cambio', amount }];
@@ -76,8 +73,7 @@ export const showRejected = writable(false);
 
 // A payment whose tickets weren't all checked in at the door (a no-show or
 // partial no-show). Only meaningful once the event has happened.
-export const isNotFullyValidated = (p: any) =>
-	(p?.ticketValidated ?? 0) < (p?.ticketAmount ?? 0);
+export const isNotFullyValidated = (p: any) => (p?.ticketValidated ?? 0) < (p?.ticketAmount ?? 0);
 
 // When on, restrict both the chart and the table to not-fully-validated
 // payments. Surfaced as a chip only after the event date has passed.

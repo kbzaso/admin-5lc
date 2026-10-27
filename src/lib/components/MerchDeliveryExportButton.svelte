@@ -81,7 +81,9 @@
 	size="sm"
 	disabled={pending.length === 0 || exporting}
 	title={pending.length > 0
-		? `Descargar ${pending.length} ${pending.length === 1 ? 'orden' : 'órdenes'} con merch por entregar`
+		? `Descargar ${pending.length} ${
+				pending.length === 1 ? 'orden' : 'órdenes'
+		  } con merch por entregar`
 		: 'No hay merch pendiente de entrega'}
 	on:click={exportPdf}
 >

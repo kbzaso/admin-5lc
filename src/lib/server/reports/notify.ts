@@ -26,7 +26,11 @@ export function formatReport(data: ReportData): string {
 	lines.push('');
 
 	// Sales
-	lines.push(`🎟️ Entradas pagadas: ${t.paidTxns} ventas · ${clp.format(t.paidRevenue)} · ${t.paidTickets} tickets`);
+	lines.push(
+		`🎟️ Entradas pagadas: ${t.paidTxns} ventas · ${clp.format(t.paidRevenue)} · ${
+			t.paidTickets
+		} tickets`
+	);
 	if (t.refunds) lines.push(`   ↩️ Reembolsos: ${t.refunds}`);
 	if (t.byEvent.length) {
 		lines.push('   Por evento:');

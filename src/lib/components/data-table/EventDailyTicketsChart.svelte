@@ -66,7 +66,7 @@
 				// Rejected view: plot the non-success payments, ignoring the
 				// category and validation chips (which don't apply to them).
 				if (!isRejectedBucket(p)) continue;
-				count = metric === 'buys' ? 1 : (p.ticketAmount ?? 0);
+				count = metric === 'buys' ? 1 : p.ticketAmount ?? 0;
 			} else {
 				if ($onlyUnvalidated && !isNotFullyValidated(p)) continue;
 				let tickets = 0;
@@ -93,8 +93,8 @@
 			? 'Compras no exitosas por día'
 			: 'Entradas no exitosas por día'
 		: metric === 'buys'
-			? 'Compras por día'
-			: 'Entradas vendidas por día';
+		? 'Compras por día'
+		: 'Entradas vendidas por día';
 	$: emptyMessage = $showRejected
 		? 'No hay pagos no exitosos registrados'
 		: 'Aún no hay ventas registradas';
@@ -154,11 +154,7 @@
 			>
 				Entradas
 			</button>
-			<button
-				type="button"
-				on:click={() => (metric = 'buys')}
-				class={chipClass(metric === 'buys')}
-			>
+			<button type="button" on:click={() => (metric = 'buys')} class={chipClass(metric === 'buys')}>
 				Compras
 			</button>
 		</div>

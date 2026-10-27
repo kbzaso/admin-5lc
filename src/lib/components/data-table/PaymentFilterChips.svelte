@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { chipClass } from '$lib';
+	import type { PaymentRow } from '$lib/stores/payments';
 	import {
 		slicesFor,
 		orderCategories,
@@ -11,7 +12,7 @@
 		STATUS_CATEGORIES
 	} from '$lib/stores/paymentFilter';
 
-	export let payments: any[];
+	export let payments: PaymentRow[];
 
 	$: isUbication = $page.data.sell_type === 'ubication';
 

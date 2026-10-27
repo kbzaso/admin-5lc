@@ -7,12 +7,14 @@
 		Legend,
 		BarElement,
 		CategoryScale,
-		LinearScale
+		LinearScale,
+		type TooltipItem
 	} from 'chart.js';
+	import type { EventSummary } from '$lib/types/event';
 
 	ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
-	export let events: any[];
+	export let events: EventSummary[];
 	export let metric: 'revenue' | 'tickets' = 'revenue';
 
 	const priceFormatter = new Intl.NumberFormat('es-CL', {
@@ -31,7 +33,7 @@
 	});
 
 	$: sorted = [...events]
-		.filter((e) => e?.date)
+		.filter((e): e is EventSummary & { date: Date } => !!e?.date)
 		.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 	$: hasValues = sorted.some(
@@ -60,9 +62,11 @@
 			legend: { display: false },
 			tooltip: {
 				callbacks: {
-					title: (items: any[]) => sorted[items[0].dataIndex]?.name ?? '',
-					label: (ctx: any) =>
-						metric === 'revenue' ? priceFormatter.format(ctx.parsed.y) : `${ctx.parsed.y} entradas`
+					title: (items: TooltipItem<'bar'>[]) => sorted[items[0].dataIndex]?.name ?? '',
+					label: (ctx: TooltipItem<'bar'>) =>
+						metric === 'revenue'
+							? priceFormatter.format(ctx.parsed.y ?? 0)
+							: `${ctx.parsed.y} entradas`
 				}
 			}
 		},

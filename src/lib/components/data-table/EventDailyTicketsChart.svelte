@@ -7,8 +7,10 @@
 		Legend,
 		BarElement,
 		CategoryScale,
-		LinearScale
+		LinearScale,
+		type TooltipItem
 	} from 'chart.js';
+	import type { PaymentRow } from '$lib/stores/payments';
 	import { page } from '$app/stores';
 	import { chipClass } from '$lib';
 	import {
@@ -22,7 +24,7 @@
 
 	ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
-	export let payments: any[];
+	export let payments: PaymentRow[];
 
 	// 'batch' events sell tiers stored in `buys`; 'ubication' events sell zones
 	// stored in `ticketsType`. The selected categories are shared with the
@@ -121,8 +123,9 @@
 			legend: { display: false },
 			tooltip: {
 				callbacks: {
-					title: (items: any[]) => fullDateFormatter.format(dailyTotals[items[0].dataIndex].date),
-					label: (ctx: any) => `${ctx.parsed.y} ${metricLabel}`
+					title: (items: TooltipItem<'bar'>[]) =>
+						fullDateFormatter.format(dailyTotals[items[0].dataIndex].date),
+					label: (ctx: TooltipItem<'bar'>) => `${ctx.parsed.y} ${metricLabel}`
 				}
 			}
 		},

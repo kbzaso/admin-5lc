@@ -1,5 +1,4 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -9,7 +8,7 @@
 	import { mediaQuery } from '$lib/stores/mediaQuery';
 	import { ClipboardPenLine } from 'lucide-svelte';
 	import { toast } from 'svelte-sonner';
-	import { payments } from '$lib/stores/payments';
+	import { payments, type PaymentRow } from '$lib/stores/payments';
 	const isDesktop = mediaQuery('(min-width: 768px)');
 	let open = false;
 
@@ -61,7 +60,7 @@
 				return async ({ result, update }) => {
 					if (result.type === 'success') {
 						const body = result.data?.body as
-							| { payment?: { id: string }; emailLog?: { status: string; error?: string | null } | null }
+							| { payment?: PaymentRow; emailLog?: { status: string; error?: string | null } | null }
 							| undefined;
 
 						// Don't rely solely on the Supabase Realtime subscription to add

@@ -14,8 +14,8 @@ declare global {
 			auth: () => import('@clerk/backend').AuthObject;
 			session: {
 				userId: string | undefined;
-				claims: any;
-				user: any;
+				claims: Record<string, unknown> | null | undefined;
+				user: import('svelte-clerk/server').User | null;
 			};
 		}
 	}

@@ -7,8 +7,9 @@
 	import { goto, preloadData } from '$app/navigation';
 	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
 	import { chipClass } from '$lib';
+	import type { EventSummary } from '$lib/types/event';
 
-	export let Events: any[];
+	export let Events: EventSummary[];
 
 	let filterValue = '';
 	let selectedYear: string = String(new Date().getFullYear());
@@ -60,12 +61,12 @@
 		currency: 'CLP'
 	});
 
-	function formatDate(value: string | Date | undefined) {
+	function formatDate(value: string | Date | null | undefined) {
 		if (!value) return '';
 		return dateFormatter.format(new Date(value));
 	}
 
-	function getYear(value: string | Date | undefined): number | null {
+	function getYear(value: string | Date | null | undefined): number | null {
 		if (!value) return null;
 		const d = new Date(value);
 		return Number.isNaN(d.getTime()) ? null : d.getFullYear();

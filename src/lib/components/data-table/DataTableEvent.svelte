@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { TANDAS_NAMES } from '$lib/consts';
 	import DialogToAddPayments from '../SheetToAddPayments.svelte';
 	import { Ticket, MessageSquare, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-svelte';
 	import { Badge } from '$lib/components/ui/badge';
@@ -16,6 +15,7 @@
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
 	import { getContext, setContext, tick } from 'svelte';
 
+	import type { PaymentComment, PaymentRow } from '$lib/stores/payments';
 	import { idUpdateDialogOpen } from '$lib/stores/idUpdatePaymentsDialogOpen';
 	import {
 		categoriesFor,
@@ -28,38 +28,7 @@
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
 	getContext('idUpdateDialogOpen');
 
-	type Payment = {
-		Comment: {
-			createdAt: string;
-			commentText: string;
-			userId: string;
-			id: string;
-			// Server rows carry User; comments added optimistically carry name.
-			name?: string;
-			User?: { id: string; name: string };
-		}[];
-		id: string;
-		date: string;
-		customer_name: string;
-		rut: string;
-		customer_email: string;
-		customer_phone: string;
-		price: number;
-		ticketAmount: number;
-		ticketValidated: number;
-		ticketsType: string;
-		payment_status: string;
-		client_id: string;
-		discount_code: string | null;
-		refund: boolean;
-		changeEvent: boolean;
-		buys: {
-			amount: number;
-			status: string;
-		}[];
-		status: string;
-		// status: 'pending' | 'processing' | 'success' | 'failed';
-	};
+	type Payment = PaymentRow;
 
 	const traductions: { [key: string]: string } = {
 		success: 'Web',
@@ -81,13 +50,13 @@
 		if (payment.payment_status === 'refund' || payment.payment_status === 'change') {
 			return 'success';
 		}
-		return payment.payment_status;
+		return payment.payment_status ?? '';
 	}
 	// Combined value used for search/filter so users can still type 'refund' etc.
 	function effectiveStatus(payment: Payment): string {
 		if (isRefund(payment)) return 'refund';
 		if (isChange(payment)) return 'change';
-		return payment.payment_status;
+		return payment.payment_status ?? '';
 	}
 
 	export let Payments: Payment[];
@@ -212,9 +181,8 @@
 			.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 			.slice(0, MAX_TOOLTIP_COMMENTS);
 	}
-	const commentAuthor = (comment: Payment['Comment'][number]) =>
-		comment.name ?? comment.User?.name ?? '';
-	const commentDate = (comment: Payment['Comment'][number]) =>
+	const commentAuthor = (comment: PaymentComment) => comment.name ?? comment.User?.name ?? '';
+	const commentDate = (comment: PaymentComment) =>
 		new Date(comment.createdAt).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
 
 	// Outlined (not filled) so the ticket type never reads as a payment status.
@@ -352,7 +320,7 @@
 								{#if payment.client_id}
 									<span class="uppercase break-all">{payment.client_id}</span>
 								{/if}
-								{#if payment.Comment?.length > 0}
+								{#if payment.Comment?.length}
 									<Tooltip.Root openDelay={200}>
 										<Tooltip.Trigger
 											class="inline-flex cursor-pointer items-center gap-1 text-primary"

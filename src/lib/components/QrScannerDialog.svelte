@@ -79,7 +79,6 @@
 		{#if error}
 			<p class="text-sm text-destructive">{error}</p>
 		{:else}
-			<!-- svelte-ignore a11y-media-has-caption -->
 			<video
 				bind:this={video}
 				class="w-full rounded-lg bg-black aspect-square object-cover"

@@ -2,6 +2,10 @@
 // both the daily-tickets chart and the payments table, so the classification
 // logic and the selected-state live here rather than in any one component.
 import { writable } from 'svelte/store';
+import type { PaymentRow } from './payments';
+
+// The helpers below also receive raw realtime rows, so accept any partial row.
+type PaymentLike = Partial<PaymentRow> | null | undefined;
 
 // 'batch' events sell tiers stored in `buys`; 'ubication' events sell zones
 // stored in `ticketsType`. Everything else partitions into status categories.
@@ -12,14 +16,18 @@ export const BATCH_TIERS = [
 ];
 export const STATUS_CATEGORIES = ['Sistema', 'Reembolso', 'Cambio'];
 
-export const isRefund = (p: any) => p?.refund === true || p?.payment_status === 'refund';
-export const isChange = (p: any) => p?.changeEvent === true || p?.payment_status === 'change';
+export const isRefund = (p: PaymentLike) => p?.refund === true || p?.payment_status === 'refund';
+export const isChange = (p: PaymentLike) =>
+	p?.changeEvent === true || p?.payment_status === 'change';
 
 // Decompose a payment into { category, amount } slices, attributing every
 // ticket to exactly one category — the same partition as "Resumen de venta".
 // Refund / change / system take precedence; web sales split into zones
 // (ubication) or batch tiers (with any unmapped remainder as "Otros").
-export function slicesFor(p: any, isUbication: boolean): { category: string; amount: number }[] {
+export function slicesFor(
+	p: PaymentLike,
+	isUbication: boolean
+): { category: string; amount: number }[] {
 	const amount = p?.ticketAmount ?? 0;
 	if (isRefund(p)) return [{ category: 'Reembolso', amount }];
 	if (isChange(p)) return [{ category: 'Cambio', amount }];
@@ -30,7 +38,7 @@ export function slicesFor(p: any, isUbication: boolean): { category: string; amo
 		return [{ category: p?.ticketsType || 'Otros', amount }];
 	}
 
-	const buys = p?.buys ?? {};
+	const buys = (p?.buys ?? {}) as Record<string, { amount?: number } | undefined>;
 	const slices = BATCH_TIERS.map(({ key, label }) => ({
 		category: label,
 		amount: buys[key]?.amount ?? 0
@@ -42,7 +50,7 @@ export function slicesFor(p: any, isUbication: boolean): { category: string; amo
 
 // The distinct categories a payment belongs to (used by the table to decide
 // whether a row is visible under the current selection).
-export function categoriesFor(p: any, isUbication: boolean): string[] {
+export function categoriesFor(p: PaymentLike, isUbication: boolean): string[] {
 	return slicesFor(p, isUbication).map((s) => s.category);
 }
 
@@ -60,7 +68,7 @@ export function orderCategories(present: Set<string>, isUbication: boolean): str
 // The "non-success" bucket shown by the rejected switch: registrations,
 // rejected attempts and rows without a status (refund/change are layered on a
 // successful origin, so they don't belong here).
-export const isRejectedBucket = (p: any) => {
+export const isRejectedBucket = (p: PaymentLike) => {
 	if (isRefund(p) || isChange(p)) return false;
 	const s = p?.payment_status;
 	return s === 'register' || s === 'rejected' || s == null;
@@ -73,7 +81,8 @@ export const showRejected = writable(false);
 
 // A payment whose tickets weren't all checked in at the door (a no-show or
 // partial no-show). Only meaningful once the event has happened.
-export const isNotFullyValidated = (p: any) => (p?.ticketValidated ?? 0) < (p?.ticketAmount ?? 0);
+export const isNotFullyValidated = (p: PaymentLike) =>
+	(p?.ticketValidated ?? 0) < (p?.ticketAmount ?? 0);
 
 // When on, restrict both the chart and the table to not-fully-validated
 // payments. Surfaced as a chip only after the event date has passed.

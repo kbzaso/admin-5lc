@@ -17,7 +17,7 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { ScrollArea } from '$lib/components/ui/scroll-area/index.js';
-	import { payments } from '$lib/stores/payments';
+	import { payments, type PaymentRow } from '$lib/stores/payments';
 	import { formatDateToChile } from '$lib';
 
 	setContext('idUpdateDialogOpen', idUpdateDialogOpen);
@@ -27,7 +27,7 @@
 	export let dialogOpen: boolean = false;
 	let confirmationDialogOpen: boolean = false;
 
-	export let payment: any;
+	export let payment: PaymentRow;
 	// Optional tab to open on (e.g. 'validator' after a QR scan).
 	export let initialTab: string | undefined = undefined;
 
@@ -58,7 +58,7 @@
 	// never submitted.
 	let targetEventId = '';
 	$: futureEvents = $page.data.futureEvents ?? [];
-	$: selectedFutureEvent = futureEvents.find((e: any) => e.id === targetEventId);
+	$: selectedFutureEvent = futureEvents.find((e: { id: string }) => e.id === targetEventId);
 
 	const STATUS = {
 		register: {
@@ -74,7 +74,7 @@
 		}
 	};
 
-	function closeDialog(paymentId?: string) {
+	function closeDialog() {
 		dialogOpen = false;
 	}
 
@@ -116,8 +116,8 @@
 			name: `${$page.data.user.first_name} ${$page.data.user.last_name}`
 		};
 
-		payments.update((currentPayments: any) => {
-			return currentPayments.map((p: any) => {
+		payments.update((currentPayments) => {
+			return currentPayments.map((p) => {
 				if (p.id === payment.id) {
 					return {
 						...p,
@@ -130,12 +130,12 @@
 	}
 
 	function deleteComment(commentId: string) {
-		payments.update((currentPayments: any) => {
-			return currentPayments.map((p: any) => {
+		payments.update((currentPayments) => {
+			return currentPayments.map((p) => {
 				if (p.id === payment.id) {
 					return {
 						...p,
-						Comment: p.Comment.filter((comment: any) => comment.id !== commentId)
+						Comment: p.Comment?.filter((comment) => comment.id !== commentId)
 					};
 				}
 				return p;
@@ -520,13 +520,13 @@
 							<ScrollArea
 								class="h-[200px] text-left rounded-md border border-base-content/20 bg-muted/20 p-4 mb-4"
 							>
-								{#each payment.Comment?.slice().sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) ?? [] as comment (comment.id)}
+								{#each payment.Comment?.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) ?? [] as comment (comment.id)}
 									<div
 										class="flex flex-col gap-2 py-4 border-b border-base-content"
 										id={comment.id}
 									>
 										<div class="relative flex flex-col items-start justify-between w-full">
-											<span class="text-xs text-primary">{comment.name || comment.User.name}</span>
+											<span class="text-xs text-primary">{comment.name || comment.User?.name}</span>
 											<span class="text-xs">
 												{new Date(comment.createdAt).toLocaleString('es-CL', {
 													day: 'numeric',
@@ -609,7 +609,7 @@
 					if (ok) {
 						// Quita el pago de la lista sin esperar el evento realtime;
 						// handleDeletes detecta que ya no está y no lo duplica.
-						payments.update((current) => current.filter((p: any) => p?.id !== payment.id));
+						payments.update((current) => current.filter((p) => p?.id !== payment.id));
 						toast.warning(`Se eliminó el pago de ${payment.customer_name}`, {});
 					} else {
 						toast.error(`No se pudo eliminar el pago de ${payment.customer_name}`);

@@ -7,6 +7,16 @@ const config = {
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
 
+	// Prettier's Svelte plugin writes empty elements as self-closing (`<span />`),
+	// which Svelte 5 warns about. Keep the formatter's style and drop the warning.
+	onwarn: (warning, handler) => {
+		if (warning.code === 'element_invalid_self_closing_tag') return;
+		handler(warning);
+	},
+	compilerOptions: {
+		warningFilter: (warning) => warning.code !== 'element_invalid_self_closing_tag'
+	},
+
 	kit: {
 		// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
 		// If your environment is not supported or you settled on a specific environment, switch out the adapter.

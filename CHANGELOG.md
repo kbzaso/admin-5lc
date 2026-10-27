@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Chore
 
 - Update node version
+- Patch @sveltejs/adapter-vercel to keep nft tracing inside project
 
 ## [0.0.57] - 2026-10-25
 

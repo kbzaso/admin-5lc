@@ -5,3 +5,5 @@ allowBuilds:
   core-js: false
   esbuild: true
   prisma: true
+patchedDependencies:
+  '@sveltejs/adapter-vercel': patches/@sveltejs__adapter-vercel.patch

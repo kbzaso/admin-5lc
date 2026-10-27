@@ -1,0 +1,19 @@
+diff --git a/index.js b/index.js
+index 20fbb52d651bb3237efadd0a285bbf80c0d17e10..8baad7cf77abee742404da89d73eff61de4f3d2a 100644
+--- a/index.js
++++ b/index.js
+@@ -689,7 +689,13 @@ async function create_function_bundle(builder, entry, dir, config) {
+ 	let base = entry;
+ 	while (base !== (base = path.dirname(base)));
+ 
+-	const traced = await nodeFileTrace([entry], { base });
++	// Keep nft inside the project: on case-insensitive macOS, string literals like
++	// "/users" (from @clerk/backend) match /Users and make nft glob the whole home dir.
++	const root = process.cwd() + path.sep;
++	const traced = await nodeFileTrace([entry], {
++		base,
++		ignore: (file) => !path.resolve(base, file).startsWith(root)
++	});
+ 
+ 	/** @type {Map<string, string[]>} */
+ 	const resolution_failures = new Map();

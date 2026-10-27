@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.58] - 2026-10-27
+
 ### Chore
 
 - Update node version
@@ -467,7 +469,8 @@ feat: add event cancellation handling and refund management
 
 - ticketType to the list
 
-[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.57...HEAD
+[unreleased]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/0.0.58...HEAD
+[0.0.58]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.57...v0.0.58
 [0.0.57]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.56...v0.0.57
 [0.0.56]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.55...v0.0.56
 [0.0.55]: https://github.com/kbzaso/5lc-sveltkit-sanity/compare/v0.0.54...v0.0.55

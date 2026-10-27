@@ -4,7 +4,7 @@
 	import TableToolbar from '$lib/components/TableToolbar.svelte';
 	import EventsBarChart from '$lib/components/data-table/EventsBarChart.svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { goto, preloadData } from '$app/navigation';
 	import { ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-svelte';
 	import { chipClass } from '$lib';
 
@@ -227,6 +227,7 @@
 					tabindex={0}
 					role="link"
 					aria-label={`Ver detalle de ${event.name}`}
+					on:mouseenter={() => preloadData(`/eventos/${event.id}`)}
 					on:click={() => goto(`/eventos/${event.id}`)}
 					on:keydown={(e) => {
 						if (e.key === 'Enter' || e.key === ' ') {

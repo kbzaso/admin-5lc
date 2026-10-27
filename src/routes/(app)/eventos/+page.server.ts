@@ -29,31 +29,37 @@ export const load: PageServerLoad = async ({ locals }) => {
 			throw redirect(302, '/no-event');
 		}
 	} else {
-		const events = await client.product.findMany({
-			orderBy: {
-				date: 'desc'
-			},
-			include: {
-				Payment: {
-					where: {
-						payment_status: 'success',
-						refund: false,
-						changeEvent: false
-					}
+		// Sum revenue and tickets per event in the database instead of loading
+		// every payment row just to add them up here.
+		const [events, totals] = await Promise.all([
+			client.product.findMany({
+				orderBy: {
+					date: 'desc'
 				}
-			}
-		});
-
-		const productsWithTotal = await Promise.all(
-			events.map(async (product) => {
-				const totalPayment = product.Payment.reduce((sum, payment) => sum + payment.price, 0);
-				const totalTicketsSold = product.Payment.reduce(
-					(sum, payment) => sum + payment.ticketAmount,
-					0
-				);
-				return { ...product, totalPayment, totalTicketsSold };
+			}),
+			client.payment.groupBy({
+				by: ['productId'],
+				where: {
+					payment_status: 'success',
+					refund: false,
+					changeEvent: false
+				},
+				_sum: {
+					price: true,
+					ticketAmount: true
+				}
 			})
-		);
+		]);
+
+		const totalsByProduct = new Map(totals.map((t) => [t.productId, t._sum]));
+		const productsWithTotal = events.map((product) => {
+			const sum = totalsByProduct.get(product.id);
+			return {
+				...product,
+				totalPayment: sum?.price ?? 0,
+				totalTicketsSold: sum?.ticketAmount ?? 0
+			};
+		});
 
 		return {
 			events: productsWithTotal

@@ -221,28 +221,8 @@ const createBuysSumObject = (payments: Payment[]): BuysSum => {
 export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!locals.session?.userId) throw redirect(302, '/login');
 
-	// Get the available tickets on the Studio
-	const eventFromSanityStudio = await getEvent(params.slug);
-
-	let studioTicketsAvailable;
-
-	if (eventFromSanityStudio?.sell_type === 'ubication') {
-		const ticketTypes = eventFromSanityStudio?.ticket.ubication;
-		let total = 0;
-		for (const key in ticketTypes) {
-			total += ticketTypes[key].amount;
-		}
-		studioTicketsAvailable = total;
-	} else {
-		const ticketTypes = eventFromSanityStudio?.ticket?.batch
-			? eventFromSanityStudio?.ticket?.batch
-			: eventFromSanityStudio?.ticket;
-		let total = 0;
-		for (const key in ticketTypes) {
-			total += ticketTypes[key].amount;
-		}
-		studioTicketsAvailable = total;
-	}
+	// Kick off the Sanity fetch now; it runs alongside the DB queries below.
+	const eventFromSanityStudioPromise = getEvent(params.slug);
 
 	const eventFromSupabase = async () => {
 		const product = await client.product.findUnique({
@@ -486,29 +466,79 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 	};
 
+	// Every query is independent, so run them in parallel instead of one by one.
+	const [
+		eventFromSanityStudio,
+		eventFromSupabaseResult,
+		totalMoneyRaisedResult,
+		ticketsSoldResult,
+		ticketValidatedResult,
+		futureEventsResult,
+		paymentChangeLogResult,
+		cancellationCampaignResult,
+		cancellationRecipientCountResult,
+		feedbackCampaignResult,
+		feedbackRecipientCountResult,
+		staffFeedbackCampaignResult
+	] = await Promise.all([
+		eventFromSanityStudioPromise,
+		eventFromSupabase(),
+		totalMoneyRaised(),
+		ticketsSold(),
+		ticketValidated(),
+		futureEvents(),
+		paymentChangeLog(),
+		cancellationCampaign(),
+		cancellationRecipientCount(),
+		feedbackCampaign(),
+		feedbackRecipientCount(),
+		staffFeedbackCampaign()
+	]);
+
+	// Get the available tickets on the Studio
+	let studioTicketsAvailable;
+
+	if (eventFromSanityStudio?.sell_type === 'ubication') {
+		const ticketTypes = eventFromSanityStudio?.ticket.ubication;
+		let total = 0;
+		for (const key in ticketTypes) {
+			total += ticketTypes[key].amount;
+		}
+		studioTicketsAvailable = total;
+	} else {
+		const ticketTypes = eventFromSanityStudio?.ticket?.batch
+			? eventFromSanityStudio?.ticket?.batch
+			: eventFromSanityStudio?.ticket;
+		let total = 0;
+		for (const key in ticketTypes) {
+			total += ticketTypes[key].amount;
+		}
+		studioTicketsAvailable = total;
+	}
+
 	// The survey only makes sense once the event has actually happened.
 	const eventDate = eventFromSanityStudio?.date ? new Date(eventFromSanityStudio.date) : null;
 	const eventHasPassed = !!eventDate && eventDate.getTime() < Date.now();
 
 	return {
 		sell_type: eventFromSanityStudio?.sell_type,
-		eventFromSupabase: await eventFromSupabase(),
-		totalMoneyRaised: await totalMoneyRaised(),
-		ticketsSold: await ticketsSold(),
+		eventFromSupabase: eventFromSupabaseResult,
+		totalMoneyRaised: totalMoneyRaisedResult,
+		ticketsSold: ticketsSoldResult,
 		studioTicketsAvailable,
 		eventFromSanityStudio,
-		ticketValidated: await ticketValidated(),
-		futureEvents: await futureEvents(),
-		paymentChangeLog: await paymentChangeLog(),
-		cancellationCampaign: await cancellationCampaign(),
-		cancellationRecipientCount: await cancellationRecipientCount(),
+		ticketValidated: ticketValidatedResult,
+		futureEvents: futureEventsResult,
+		paymentChangeLog: paymentChangeLogResult,
+		cancellationCampaign: cancellationCampaignResult,
+		cancellationRecipientCount: cancellationRecipientCountResult,
 		cancellationEligibleOptions: eventFromSanityStudio?.cancelled
 			? await getEligibleTargetEvents(params.slug, eventFromSanityStudio?.sell_type ?? null)
 			: [],
-		feedbackCampaign: await feedbackCampaign(),
-		feedbackRecipientCount: await feedbackRecipientCount(),
+		feedbackCampaign: feedbackCampaignResult,
+		feedbackRecipientCount: feedbackRecipientCountResult,
 		feedbackDefaultQuestions: [...DEFAULT_FEEDBACK_QUESTIONS],
-		staffFeedbackCampaign: await staffFeedbackCampaign(),
+		staffFeedbackCampaign: staffFeedbackCampaignResult,
 		staffFeedbackDefaultQuestions: [...DEFAULT_STAFF_FEEDBACK_QUESTIONS],
 		eventHasPassed
 	};

@@ -51,6 +51,7 @@ model Payment {
   FeedbackResponse     FeedbackResponse[]
 
   @@index([orderId, payment_status, paidAt])
+  @@index([productId])
 }
 
 model Comment {

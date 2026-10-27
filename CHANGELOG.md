@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fix
+
+- Speed up events pages with parallel queries and caching
+
 ## [0.0.58] - 2026-10-27
 
 ### Chore
